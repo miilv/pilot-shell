@@ -217,3 +217,7 @@ __marimo__/
 
 # Cipher
 data/
+
+# Claude Code
+# Override global ignore for project settings that should be committed
+!.claude/settings.local.json
