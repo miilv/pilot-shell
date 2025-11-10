@@ -160,8 +160,10 @@ Run: `newman run postman/collections/feature.json -e postman/environments/dev.js
 4. Write failing test FIRST (TDD mandatory - NO exceptions)
 5. Implement minimal code to pass test
 6. Run `mcp__ide__getDiagnostics()` again to verify no errors
-7. **Execute actual code** to verify functionality (MANDATORY - show output)
-8. Mark task as `completed` in TodoWrite ONLY if tests pass AND code executes successfully
+7. **RUN ACTUAL PROGRAM** (if applicable - MANDATORY):
+   - **Show actual output - never claim "should work"**
+   - Skip only if task has no runnable code (e.g., model-only changes)
+8. Mark task as `completed` in TodoWrite ONLY if tests pass AND program runs successfully
 9. **UPDATE PLAN FILE:** Change `[ ]` to `[x]` for this task ONLY after completing ALL work
 10. Check context usage (see below)
 
@@ -169,7 +171,7 @@ Run: `newman run postman/collections/feature.json -e postman/environments/dev.js
 - [ ] Test written and initially FAILED (RED phase)
 - [ ] Implementation code written
 - [ ] Test now PASSES (GREEN phase)
-- [ ] Actual code executed and output verified
+- [ ] Program executed and output verified (if applicable)
 - [ ] No diagnostics errors
 - [ ] Task fully complete - no shortcuts taken
 

@@ -95,40 +95,40 @@ uv run pytest -m integration -v --tb=short
 3. Re-run the failing test specifically
 4. Continue until all integration tests pass
 
-### Step 4: Execute & Fix the Actual Program
+### Step 4: Execute & Fix the Actual Program (MANDATORY)
 
-**Run the real application and fix any runtime issues:**
+**⚠️ CRITICAL: Tests passing ≠ Program works. MUST run actual program and verify output.**
 
 ```bash
-# Identify the main entry point from the plan or codebase
-# Examples based on common patterns:
-
-# ETL Pipeline
+# ETL Pipeline - Run and verify logs + database
 uv run python src/main.py
-# If fails: Check logs, fix configuration, retry
+# MUST verify: 1) Logs show extraction/loading 2) Check DB records created 3) No errors in output
 
-# API Server
-uv run python src/app.py &  # Start server
-sleep 2  # Wait for startup
-curl -X GET localhost:8000/health  # Health check
-# If fails: Fix startup issues, port conflicts, missing env vars
+# API Server - Start and test endpoints
+uv run python src/app.py &
+curl -X GET localhost:8000/health && curl -X POST localhost:8000/api/endpoint -d '{}'
+# MUST verify: 1) Server starts 2) Endpoints respond 3) Check response data
 
-# CLI Tool
-uv run python src/cli.py --help
-# Then run actual commands based on implementation
-# If fails: Fix argument parsing, missing dependencies
+# CLI Tool - Run actual commands
+uv run python src/cli.py command --flag
+# MUST verify: Output matches expected behavior
 
-# Background Job/Worker
+# Background Job - Run and check processing
 uv run python src/worker.py
-# If fails: Fix queue connections, task definitions
+# MUST verify: Tasks process correctly, check logs/queue
 ```
 
-**Common runtime fixes:**
-- Missing environment variables → Add to .env file
-- Database connection errors → Check credentials, network
-- Import errors → Install missing packages with `uv add`
-- Configuration issues → Update config files
-- Permission errors → Fix file/directory permissions
+**Verification checklist:**
+- [ ] Program executes without errors
+- [ ] Logs show expected behavior (extraction, loading, processing)
+- [ ] Output data is correct (check DB, files, API responses)
+- [ ] No warnings or unexpected errors in logs
+
+**If program fails:**
+1. Read error message carefully
+2. Fix configuration/env vars/imports
+3. Re-run until successful
+4. Show actual output - never claim "should work"
 
 ### Step 5: Run & Fix Coverage Issues
 
@@ -245,50 +245,55 @@ SELECT COUNT(*) FROM target_table WHERE created_at > NOW() - INTERVAL '1 hour';
 -- If no data, debug the pipeline
 ```
 
-### Step 9: Final Verification Loop
+### Step 9: Final Verification & Context Management
 
-**Run everything one more time to ensure all fixes work together:**
+**Check context usage FIRST** (see Context Management section below for calculation)
+- If ≥ 80%: `/remember` → STOP → Tell user to `/clear` and `/verify` again
+- If < 80%: Continue with final verification
 
+**Run everything one more time:**
 ```bash
-# Quick final check
-uv run pytest -q  # Quiet mode for quick pass/fail
-uv run python src/main.py  # Or whatever the main entry point is
-mcp__ide__getDiagnostics()  # Must return zero issues
-coderabbit --prompt-only --type uncommitted  # Final CodeRabbit check
+uv run pytest -q  # Quick pass/fail
+uv run python src/main.py  # Actual program execution
+mcp__ide__getDiagnostics()  # Must be zero
+coderabbit --prompt-only --type uncommitted  # Final check
 ```
 
-**If anything fails:** Go back to the specific step and fix it
+**If anything fails:** Go back to specific step and fix
 
 **Success criteria:**
 - All tests passing
-- No IDE diagnostics errors
+- No IDE diagnostics
 - No critical/high CodeRabbit findings
-- Program executes successfully
-- Coverage meets threshold (80%+)
+- **Program executes successfully with correct output**
+- Coverage ≥ 80%
 
-## Store Progress in Cipher
+## Context Management & Storage
 
-**After fixing each CodeRabbit finding:**
+**After EACH major step (tests, CodeRabbit, quality):** Check context
 ```
-mcp__cipher__ask_cipher("Fixed CodeRabbit finding: [severity] - [issue description] in [file]:line.
-Solution: [what was done]
-Impact: [what improved]")
-```
+MESSAGE tokens from <system_warning>: X/200000
+Add 35k overhead: TOTAL = X + 35000
+Calculate: (TOTAL / 200000) * 100
 
-**After fixing each test failure:**
-```
-mcp__cipher__ask_cipher("Fixed: [issue description] in [file].
-Solution: [what was done]
-Tests now passing: [test names]")
+If ≥ 80% (160k total): `/remember` → STOP → Tell user to `/clear` and `/verify` again
+If < 80%: Continue to next step
 ```
 
-**After successful completion:**
+**Store in Cipher after fixing:**
 ```
-mcp__cipher__ask_cipher("Verification complete for [feature/plan].
-All tests passing, coverage at X%, program runs successfully.
-CodeRabbit findings: X critical, Y high (all resolved).
-Key fixes applied: [list of major fixes]")
+mcp__cipher__ask_cipher("Fixed [issue] in [file]. Solution: [description]")
 ```
+
+**Store after completion:**
+```
+mcp__cipher__ask_cipher("Verification complete for [feature].
+Tests: X passing, Coverage: Y%, Program execution: [verified/failed].
+CodeRabbit: [findings resolved].
+Key fixes: [list]")
+```
+
+**Preserved after /clear:** ✅ Code fixes, Cipher learnings, Plan updates | ❌ Conversation
 
 ## Key Principles
 

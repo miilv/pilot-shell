@@ -248,14 +248,15 @@ Options: ["Session storage" (secure), "Local storage" (persistent), "Cookies" (S
    - Key pattern: [Brief description of approach]
    - Critical logic: [Include code example ONLY if complex/non-obvious]
 
-3. **Verify implementation** - Confirm test passes
+3. **Verify tests pass** - Confirm test passes
    - Test command: `uv run pytest tests/path/test.py::test_name -v`
    - Expected: Test PASSES
 
-4. **Execute actual code** - Run program to verify behavior
-   - Run command: `uv run python src/main.py` (if applicable)
-   - Expected: [Specific output/behavior]
-   - (IF API) Create Postman collection and run with Newman
+4. **RUN ACTUAL PROGRAM** (MANDATORY if applicable) - Verify real-world behavior
+   - ⚠️ Tests passing ≠ Program works! Must verify actual execution
+   - Expected: [Specific logs/output/DB records/API responses]
+   - Show actual output - never claim "should work"
+   - Skip only if no runnable code (e.g., pure model/config changes)
 
 **Skills:** @skill-name @another-skill
 
@@ -400,8 +401,9 @@ Go backward when: New constraints revealed, validation gaps found, approach ques
 
 **Always include:**
 - Exact file paths for all creates/modifies/tests
-- 4-step implementation flow (test fail, implement, test pass, execute)
-- Clear expected outputs for each verification step
+- 4-step flow: (1) test fail, (2) implement, (3) test pass, (4) **RUN ACTUAL PROGRAM**
+- Step 4 is MANDATORY - tests alone don't prove program works
+- Clear expected outputs: logs, DB records, API responses, file contents
 - Code examples ONLY for complex/non-obvious patterns
 - @ skill references for automatic enforcement
 - E2E tests (Postman/Newman) for APIs
