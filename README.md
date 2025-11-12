@@ -109,7 +109,7 @@ cr
 
 1. Open Claude Code in the IDE Terminal, Extension or an external Terminal like Warp with the `cc` command
 
-2. In CC, run `/config` to set auto-connect to IDE to true and set `Auto-compact=false` for best experience
+2. In CC, run `/config` to set `Auto-connect to IDE=true` and set `Auto-compact=false` for best experience
 <img src="docs/img/ide-setup-config.png" alt="Setup config Screenshot" width="600">
 
 3. In CC, run `/ide` to connect to VS Code diagnostics and make sure all MCP servers for `/mcp` are online
