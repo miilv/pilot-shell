@@ -86,15 +86,14 @@ get_repo_files() {
 	local response
 	response=$(curl -sL "$tree_url")
 
-	if command -v python3 &>/dev/null; then
-		echo "$response" | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-for item in data.get('tree', []):
-    if item.get('type') == 'blob' and item.get('path', '').startswith('$dir_path'):
-        print(item.get('path', ''))
-"
+	# Ensure jq is available
+	if ! ensure_jq; then
+		print_error "jq is required but not available"
+		return 1
 	fi
+
+	# Parse JSON with jq to extract file paths
+	echo "$response" | jq -r ".tree[]? | select(.type == \"blob\" and (.path | startswith(\"$dir_path\"))) | .path"
 }
 
 # -----------------------------------------------------------------------------
@@ -509,29 +508,45 @@ main() {
 	# Remove Python hook from settings.local.json if Python not selected
 	if [[ ! $INSTALL_PYTHON =~ ^[Yy]$ ]] && [[ -f "$PROJECT_DIR/.claude/settings.local.json" ]]; then
 		print_status "Removing Python hook from settings.local.json..."
-		# Use Python to cleanly remove the Python hook entry from JSON
-		python3 -c "
-import json
-with open('$PROJECT_DIR/.claude/settings.local.json', 'r') as f:
-    config = json.load(f)
 
-# Remove Python hook
-if 'hooks' in config and 'PostToolUse' in config['hooks']:
-    for hook_group in config['hooks']['PostToolUse']:
-        if 'hooks' in hook_group:
-            hook_group['hooks'] = [h for h in hook_group['hooks'] if 'file_checker_python.sh' not in h.get('command', '')]
-
-# Remove Python-related permissions
-python_perms = ['Bash(basedpyright:*)', 'Bash(mypy:*)', 'Bash(python tests:*)', 'Bash(python:*)',
-                'Bash(pyright:*)', 'Bash(pytest:*)', 'Bash(ruff check:*)', 'Bash(ruff format:*)',
-                'Bash(uv add:*)', 'Bash(uv pip show:*)', 'Bash(uv pip:*)', 'Bash(uv run:*)']
-if 'permissions' in config and 'allow' in config['permissions']:
-    config['permissions']['allow'] = [p for p in config['permissions']['allow'] if p not in python_perms]
-
-with open('$PROJECT_DIR/.claude/settings.local.json', 'w') as f:
-    json.dump(config, f, indent=2)
-"
-		print_success "Configured settings.local.json without Python support"
+		# Ensure jq is available
+		if ! ensure_jq; then
+			print_warning "jq not available, skipping Python hook removal"
+		else
+			# Use jq to cleanly remove Python hook and permissions
+			local temp_file="${TEMP_DIR}/settings-temp.json"
+			jq '
+				# Remove Python hook from PostToolUse
+				if .hooks.PostToolUse then
+					.hooks.PostToolUse |= map(
+						if .hooks then
+							.hooks |= map(select(.command | contains("file_checker_python.sh") | not))
+						else . end
+					)
+				else . end |
+				# Remove Python-related permissions
+				if .permissions.allow then
+					.permissions.allow |= map(
+						select(
+							. != "Bash(basedpyright:*)" and
+							. != "Bash(mypy:*)" and
+							. != "Bash(python tests:*)" and
+							. != "Bash(python:*)" and
+							. != "Bash(pyright:*)" and
+							. != "Bash(pytest:*)" and
+							. != "Bash(ruff check:*)" and
+							. != "Bash(ruff format:*)" and
+							. != "Bash(uv add:*)" and
+							. != "Bash(uv pip show:*)" and
+							. != "Bash(uv pip:*)" and
+							. != "Bash(uv run:*)"
+						)
+					)
+				else . end
+			' "$PROJECT_DIR/.claude/settings.local.json" >"$temp_file"
+			mv "$temp_file" "$PROJECT_DIR/.claude/settings.local.json"
+			print_success "Configured settings.local.json without Python support"
+		fi
 	fi
 
 	chmod +x "$PROJECT_DIR/.claude/hooks/"*.sh 2>/dev/null || true
