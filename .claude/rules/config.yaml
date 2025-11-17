@@ -1,6 +1,10 @@
 ---
 # Rule Configuration
 # Defines which rules are included in which commands
+#
+# Standard Rules: Located in standard/ (always updated by install script)
+# Custom Rules: Located in custom/ (never touched by install script)
+#
 # Commands: Assembled from workflow/ and core/ rules
 # Skills: Auto-generated from extended/ rules (one file = one skill)
 
@@ -10,61 +14,71 @@ commands:
     model: opus
     inject_skills: true
     rules:
-      - plan
-      - git-operations
-      - project-conventions
-      - context-management
-      - mcp-tools
+      standard:
+        - plan
+        - git-operations
+        - mcp-tools
+        - project-conventions
+        - context-management
+      custom: []
 
   implement:
     description: Execute implementation plans in batches
     model: sonnet
     inject_skills: true
     rules:
-      - implement
-      - tdd-enforcement
-      - git-operations
-      - coding-standards
-      - project-conventions
-      - error-handling
-      - validation
-      - execution-verification
-      - testing-strategies
-      - context-management
-      - mcp-tools
+      standard:
+        - implement
+        - tdd-enforcement
+        - git-operations
+        - mcp-tools
+        - coding-standards
+        - project-conventions
+        - error-handling
+        - validation
+        - execution-verification
+        - testing-strategies
+        - context-management
+      custom: []
 
   verify:
     description: Run tests and fix issues end-to-end
     model: sonnet
     inject_skills: true
     rules:
-      - verify
-      - testing-strategies
-      - git-operations
-      - execution-verification
-      - coding-standards
-      - error-handling
-      - validation
-      - context-management
-      - mcp-tools
+      standard:
+        - verify
+        - testing-strategies
+        - git-operations
+        - mcp-tools
+        - execution-verification
+        - coding-standards
+        - error-handling
+        - validation
+        - context-management
+      custom: []
 
   quick:
     description: Fast, focused development without spec-driven workflow overhead
     model: sonnet
     inject_skills: true
     rules:
-      - quick
-      - git-operations
-      - coding-standards
-      - project-conventions
-      - error-handling
-      - validation
-      - execution-verification
-      - context-management
-      - mcp-tools
+      standard:
+        - quick
+        - git-operations
+        - coding-standards
+        - mcp-tools
+        - project-conventions
+        - error-handling
+        - validation
+        - execution-verification
+        - context-management
+      custom: []
 
   remember:
     description: Store learnings before clearing context
     model: sonnet
     rules:
-      - remember
+      standard:
+        - remember
+      custom: []

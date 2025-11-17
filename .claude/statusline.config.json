@@ -9,7 +9,9 @@
           "directory": { "enabled": true, "showBasename": true },
           "git": { "enabled": true },
           "model": { "enabled": true },
-          "version": { "enabled": true }
+          "version": { "enabled": true },
+          "context": { "enabled": true, "showPercentageOnly": false },
+          "session": { "enabled": false }
         }
       }
     ]

@@ -33,7 +33,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "mcp-funnel"
+        "mcp-funnel@0.0.6"
       ]
     }
   }

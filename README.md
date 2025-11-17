@@ -117,12 +117,24 @@ curl -sSL https://raw.githubusercontent.com/maxritter/claude-codepro/v2.1.10/scr
 
 The system uses a modular rules-based architecture that automatically generates slash commands and skills:
 
-- `.claude/rules/core/` - Fundamental rules injected into all commands
-- `.claude/rules/workflow/` - Command-specific behavior (plan.md, implement.md, verify.md, quick.md, remember.md)
-- `.claude/rules/extended/` - Domain-specific rules auto-converted to individual skills
+**Standard Rules** (always updated by install script):
+- `.claude/rules/standard/core/` - Fundamental rules injected into all commands
+- `.claude/rules/standard/workflow/` - Command-specific behavior (plan.md, implement.md, verify.md, quick.md, remember.md)
+- `.claude/rules/standard/extended/` - Domain-specific rules auto-converted to individual skills
+
+**Custom Rules** (never touched by install script):
+- `.claude/rules/custom/core/` - Your custom fundamental rules
+- `.claude/rules/custom/workflow/` - Your custom command behaviors
+- `.claude/rules/custom/extended/` - Your custom skills (auto-converted like standard rules)
+
+**Configuration:**
 - `.claude/rules/config.yaml` - Defines which rules are included in which commands
+  - `standard:` section - Lists standard rules (updated on install)
+  - `custom:` section - Lists your custom rules (always preserved)
 
 **Auto-Rebuild:** Commands and skills are automatically regenerated on every `ccp` startup, making customization seamless.
+
+**How Updates Work:** When you run the install script, standard rules are always updated to the latest version, while custom rules and the custom sections in config.yaml are never modified. This ensures you always get the latest features while preserving your customizations.
 
 ## ⚖️ What Makes This Different
 
