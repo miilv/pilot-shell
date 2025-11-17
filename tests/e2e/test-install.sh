@@ -22,6 +22,7 @@ FAILED_TESTS=0
 PASSED_TESTS=0
 
 # Cleanup function
+# shellcheck disable=SC2329  # Invoked via trap on EXIT
 cleanup() {
 	if [[ -d $TEST_DIR ]]; then
 		rm -rf "$TEST_DIR"
@@ -57,6 +58,7 @@ print_info() {
 	echo -e "${BLUE}ℹ $1${NC}"
 }
 
+# shellcheck disable=SC2329  # Invoked in test output
 print_note() {
 	echo -e "${YELLOW}  → $1${NC}"
 }
@@ -74,6 +76,7 @@ assert_file_exists() {
 	fi
 }
 
+# shellcheck disable=SC2329  # Invoked in test functions
 assert_dir_exists() {
 	local dir=$1
 	local description=$2
@@ -86,6 +89,7 @@ assert_dir_exists() {
 	fi
 }
 
+# shellcheck disable=SC2329  # Invoked conditionally in tests
 assert_command_exists() {
 	local cmd=$1
 	local description=$2
@@ -108,6 +112,11 @@ test_non_interactive_install() {
 	local test_dir="$TEST_DIR/test-basic"
 	mkdir -p "$test_dir"
 	cd "$test_dir"
+
+	# Initialize git repo (required for qlty)
+	git init
+	git config user.email "test@example.com"
+	git config user.name "Test User"
 
 	print_test "Running install.sh with --non-interactive --local flags"
 
@@ -190,6 +199,11 @@ test_python_support_flag() {
 	mkdir -p "$test_dir"
 	cd "$test_dir"
 
+	# Initialize git repo (required for qlty)
+	git init
+	git config user.email "test@example.com"
+	git config user.name "Test User"
+
 	print_test "Running install.sh with INSTALL_PYTHON=N and --local"
 
 	export INSTALL_PYTHON=N
@@ -255,6 +269,11 @@ test_idempotency() {
 	local test_dir="$TEST_DIR/test-idempotent"
 	mkdir -p "$test_dir"
 	cd "$test_dir"
+
+	# Initialize git repo (required for qlty)
+	git init
+	git config user.email "test@example.com"
+	git config user.name "Test User"
 
 	export INSTALL_PYTHON=Y
 	export OVERWRITE_SETTINGS=N
@@ -327,6 +346,11 @@ test_bootstrap_download() {
 	local test_dir="$TEST_DIR/test-bootstrap"
 	mkdir -p "$test_dir"
 	cd "$test_dir"
+
+	# Initialize git repo (required for qlty)
+	git init
+	git config user.email "test@example.com"
+	git config user.name "Test User"
 
 	print_test "Simulating fresh curl | bash installation"
 
