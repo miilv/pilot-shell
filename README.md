@@ -23,8 +23,11 @@ Start shipping systematically with Spec-Driven Development, Skills, TDD, Semanti
 Run this command in **any project directory** for a **fresh install** or to **update to the latest version**:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/maxritter/claude-codepro/v2.4.1/scripts/install.py | python3
+curl -sSL https://raw.githubusercontent.com/maxritter/claude-codepro/v2.4.1/scripts/install.py -o install.py
+python3 install.py
 ```
+
+The installer will guide you through the setup process with interactive prompts.
 
 **Recommended:** Install via Dev Container for complete isolation from your host system. The installer will offer to set up the dev container configuration automatically.
 

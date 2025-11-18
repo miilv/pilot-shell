@@ -24,7 +24,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "sed -i 's/^VERSION = \".*\"/VERSION = \"${nextRelease.version}\"/' scripts/install.py"
+        "prepareCmd": "sed -i 's/^VERSION = \".*\"/VERSION = \"v${nextRelease.version}\"/' scripts/install.py"
       }
     ],
     [
