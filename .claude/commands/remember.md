@@ -1,5 +1,6 @@
 ---
 description: Cross-session persistent memory storage with Claude CodePro
+model: opus
 ---
 # REMEMBER: Session Learnings with Structured Knowledge
 

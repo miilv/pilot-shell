@@ -1,5 +1,6 @@
 ---
 description: Initialize project context and indexing with Claude CodePro
+model: opus
 ---
 # SETUP MODE: Project Initialization and Context Building
 
