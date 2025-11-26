@@ -19,7 +19,7 @@ from pathlib import Path
 # This VERSION is updated by releasebot during release
 # - In main branch: VERSION = "main"
 # - In release tags: VERSION = "v2.4.0" (or whatever the release version is)
-VERSION = "v2.4.5"
+VERSION = "v2.4.8"
 REPO_URL = "https://github.com/maxritter/claude-codepro"
 
 
@@ -473,7 +473,9 @@ def main() -> None:
         print(f"{ui.BLUE}What's next?{ui.NC} Follow these steps to get started:")
         print("")
         print(f"{ui.YELLOW}STEP 1: Reload Your Shell{ui.NC}")
-        print("   → Run: source ~/.zshrc  (or 'source ~/.bashrc' for bash)")
+        print("   → For zsh: source ~/.zshrc")
+        print("   → For bash: source ~/.bashrc")
+        print("   → For fish: source ~/.config/fish/config.fish")
         print("")
         print(f"{ui.YELLOW}STEP 2: Start Claude Code{ui.NC}")
         print("   → Launch with: ccp")
