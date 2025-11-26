@@ -48,7 +48,7 @@ The installer will guide you through the setup process with interactive prompts.
 ### 💡 Context-Loaded Rules System
 
 - **Auto-Generated** - Regenerated on every `ccp` command from `.claude/rules/` markdown files
-- **Standard Rules** - Coding standards, TDD enforcement, systematic debugging, context management, etc. loaded into `.claude/CLAUDE.md`
+- **Standard Rules** - Best-Practices for TDD, Context Management, etc. loaded into `.claude/CLAUDE.md`
 - **Custom Rules** - Project-specific rules (never touched by updates) loaded into `CLAUDE.local.md`
 - **Commands** - Workflow-specific modes: /plan, /implement, /verify, /remember, /setup
 - **Skills** - Domain-specific @-referenceable guides (e.g., @backend-python-standards)
