@@ -141,6 +141,33 @@ def save_license_to_env(project_dir: Path, license_key: str) -> None:
     env_file.write_text("\n".join(filtered_lines) + "\n")
 
 
+def add_premium_hook_to_settings(settings_file: Path, binary_path: Path) -> bool:
+    """Add context-monitor hook to settings.local.json for premium users."""
+    if not settings_file.exists():
+        return False
+
+    try:
+        settings = json.loads(settings_file.read_text())
+
+        if "hooks" not in settings:
+            settings["hooks"] = {}
+        if "PostToolUse" not in settings["hooks"]:
+            settings["hooks"]["PostToolUse"] = []
+
+        # Add premium hook
+        settings["hooks"]["PostToolUse"].append(
+            {
+                "matcher": "Bash|Read|Grep|Glob",
+                "hooks": [{"type": "command", "command": f"{binary_path} context-monitor"}],
+            }
+        )
+
+        settings_file.write_text(json.dumps(settings, indent=2) + "\n")
+        return True
+    except (json.JSONDecodeError, OSError):
+        return False
+
+
 def prompt_for_premium(non_interactive: bool) -> str | None:
     """Prompt user for premium license key."""
     from lib import ui
@@ -209,6 +236,12 @@ def install_premium_features(project_dir: Path, non_interactive: bool) -> bool:
 
     binary_path = Path(result)
     ui.print_success(f"Installed premium binary to {binary_path}")
-    ui.print_success("Premium context monitor enabled (hook in settings template)")
+
+    # Add hook to settings.local.json
+    settings_file = project_dir / ".claude" / "settings.local.json"
+    if add_premium_hook_to_settings(settings_file, binary_path):
+        ui.print_success("Added context-monitor hook to settings")
+    else:
+        ui.print_warning("Could not add hook - configure manually in settings.local.json")
 
     return True
