@@ -471,7 +471,10 @@ def main() -> None:
         print("")
 
         ui.print_section("Premium Features")
-        premium.install_premium_features(project_dir, args.non_interactive)
+        is_premium = premium.install_premium_features(project_dir, args.non_interactive)
+        if not is_premium:
+            # Remove premium hook from settings (it's in template but user is not premium)
+            premium.remove_premium_hook_from_settings(settings_file)
         print("")
 
         ui.print_section("Configuring Shell")

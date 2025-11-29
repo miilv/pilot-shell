@@ -141,26 +141,21 @@ def save_license_to_env(project_dir: Path, license_key: str) -> None:
     env_file.write_text("\n".join(filtered_lines) + "\n")
 
 
-def add_premium_hook_to_settings(settings_file: Path, binary_path: Path) -> bool:
-    """Add context-monitor hook to settings.local.json for premium users."""
+def remove_premium_hook_from_settings(settings_file: Path) -> bool:
+    """Remove context-monitor hook from settings.local.json for non-premium users."""
     if not settings_file.exists():
         return False
 
     try:
         settings = json.loads(settings_file.read_text())
 
-        if "hooks" not in settings:
-            settings["hooks"] = {}
-        if "PostToolUse" not in settings["hooks"]:
-            settings["hooks"]["PostToolUse"] = []
-
-        # Add premium hook
-        settings["hooks"]["PostToolUse"].append(
-            {
-                "matcher": "Bash|Read|Grep|Glob",
-                "hooks": [{"type": "command", "command": f"{binary_path} context-monitor"}],
-            }
-        )
+        if "hooks" in settings and "PostToolUse" in settings["hooks"]:
+            # Filter out hook groups that contain ccp-premium
+            settings["hooks"]["PostToolUse"] = [
+                hook_group
+                for hook_group in settings["hooks"]["PostToolUse"]
+                if not any("ccp-premium" in h.get("command", "") for h in hook_group.get("hooks", []))
+            ]
 
         settings_file.write_text(json.dumps(settings, indent=2) + "\n")
         return True
@@ -236,12 +231,6 @@ def install_premium_features(project_dir: Path, non_interactive: bool) -> bool:
 
     binary_path = Path(result)
     ui.print_success(f"Installed premium binary to {binary_path}")
-
-    # Add hook to settings.local.json
-    settings_file = project_dir / ".claude" / "settings.local.json"
-    if add_premium_hook_to_settings(settings_file, binary_path):
-        ui.print_success("Added context-monitor hook to settings")
-    else:
-        ui.print_warning("Could not add hook - configure manually in settings.local.json")
+    ui.print_success("Context monitor hook enabled (from template)")
 
     return True
