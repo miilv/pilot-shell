@@ -42,14 +42,15 @@ class TestBuildHelpers:
 class TestBuildTimestamp:
     """Test build timestamp functions."""
 
-    def test_set_build_timestamp_returns_string(self):
-        """set_build_timestamp returns a timestamp string."""
+    def test_set_build_timestamp_returns_version_and_timestamp(self):
+        """set_build_timestamp returns (version, timestamp) tuple."""
         from installer.build_cicd import set_build_timestamp
 
-        result = set_build_timestamp()
-        assert isinstance(result, str)
-        # Should contain UTC
-        assert "UTC" in result
+        version, timestamp = set_build_timestamp()
+        assert isinstance(version, str)
+        assert isinstance(timestamp, str)
+        # Timestamp should contain UTC
+        assert "UTC" in timestamp
 
     def test_reset_build_timestamp_sets_dev(self):
         """reset_build_timestamp resets to dev."""

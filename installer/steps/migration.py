@@ -19,15 +19,12 @@ def needs_migration(project_dir: Path) -> bool:
     if not claude_dir.exists():
         return False
 
-    # Check for old nested directory structure
     standard_dir = claude_dir / "rules" / "standard"
     if not standard_dir.exists():
         return False
 
-    # Check if there are nested subdirectories (old structure)
     for item in standard_dir.iterdir():
         if item.is_dir() and not item.name.startswith("."):
-            # Check if subdirectory contains .md files
             if list(item.glob("*.md")):
                 return True
 
@@ -41,10 +38,8 @@ def flatten_directory(source_dir: Path, dest_dir: Path) -> int:
 
     for item in source_dir.rglob("*"):
         if item.is_file():
-            # For nested files, prefix with parent dir name
             relative = item.relative_to(source_dir)
             if len(relative.parts) > 1:
-                # Nested file - flatten name
                 new_name = "-".join(relative.parts)
             else:
                 new_name = item.name
@@ -79,20 +74,17 @@ class MigrationStep(BaseStep):
             ui.section("Migration Required")
             ui.status("Migrating from old directory structure...")
 
-        # Create backup of standard rules
         backup_dir = claude_dir / "rules" / ".standard_backup"
         if standard_dir.exists() and not backup_dir.exists():
             shutil.copytree(standard_dir, backup_dir)
             ctx.config["migration_backup"] = str(backup_dir)
 
-        # Flatten nested directories
         migrated_count = 0
         temp_dir = claude_dir / "rules" / ".migration_temp"
         temp_dir.mkdir(parents=True, exist_ok=True)
 
         for item in standard_dir.iterdir():
             if item.is_dir() and not item.name.startswith("."):
-                # Flatten this subdirectory
                 for md_file in item.rglob("*.md"):
                     relative = md_file.relative_to(item)
                     if len(relative.parts) > 1:
@@ -103,11 +95,9 @@ class MigrationStep(BaseStep):
                     shutil.copy2(md_file, dest_file)
                     migrated_count += 1
             elif item.is_file():
-                # Keep root-level files
                 shutil.copy2(item, temp_dir / item.name)
                 migrated_count += 1
 
-        # Replace standard dir with flattened version
         if migrated_count > 0:
             shutil.rmtree(standard_dir)
             shutil.move(str(temp_dir), str(standard_dir))
@@ -115,7 +105,6 @@ class MigrationStep(BaseStep):
             if ui:
                 ui.success(f"Migrated {migrated_count} files")
         else:
-            # Clean up temp if nothing migrated
             if temp_dir.exists():
                 shutil.rmtree(temp_dir)
 

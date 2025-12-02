@@ -20,8 +20,8 @@ class TestPremiumStep:
         step = PremiumStep()
         assert step.name == "premium"
 
-    def test_check_returns_true_when_no_premium_key(self):
-        """check() returns True when no premium key provided."""
+    def test_check_always_returns_false(self):
+        """check() always returns False - premium step always runs for setup or cleanup."""
         from installer.context import InstallContext
         from installer.steps.premium import PremiumStep
         from installer.ui import Console
@@ -29,44 +29,24 @@ class TestPremiumStep:
         step = PremiumStep()
         with tempfile.TemporaryDirectory() as tmpdir:
             project_dir = Path(tmpdir)
+
+            # Without premium key
             ctx = InstallContext(
                 project_dir=project_dir,
                 premium_key=None,
                 ui=Console(non_interactive=True),
             )
+            assert step.check(ctx) is False
 
-            # No premium key means skip this step
-            assert step.check(ctx) is True
-
-    def test_check_returns_false_when_premium_key_provided(self):
-        """check() returns False when premium key is provided."""
-        from installer.context import InstallContext
-        from installer.steps.premium import PremiumStep
-        from installer.ui import Console
-
-        step = PremiumStep()
-        with tempfile.TemporaryDirectory() as tmpdir:
-            project_dir = Path(tmpdir)
+            # With premium key
             ctx = InstallContext(
                 project_dir=project_dir,
                 premium_key="TEST-LICENSE-KEY",
                 ui=Console(non_interactive=True),
             )
-
-            # Has premium key, need to run
             assert step.check(ctx) is False
 
-    def test_check_returns_true_when_premium_already_installed(self):
-        """check() returns True when premium binary already exists."""
-        from installer.context import InstallContext
-        from installer.steps.premium import PremiumStep
-        from installer.ui import Console
-
-        step = PremiumStep()
-        with tempfile.TemporaryDirectory() as tmpdir:
-            project_dir = Path(tmpdir)
-
-            # Create premium binary
+            # Even with binary already installed
             bin_dir = project_dir / ".claude" / "bin"
             bin_dir.mkdir(parents=True)
             (bin_dir / "ccp-premium").write_text("binary")
@@ -76,8 +56,7 @@ class TestPremiumStep:
                 premium_key="TEST-LICENSE-KEY",
                 ui=Console(non_interactive=True),
             )
-
-            assert step.check(ctx) is True
+            assert step.check(ctx) is False
 
 
 class TestPremiumHelpers:

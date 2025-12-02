@@ -24,12 +24,20 @@ BUILD_DIR = INSTALLER_DIR / "dist"
 INIT_FILE = INSTALLER_DIR / "__init__.py"
 
 
+def get_current_version() -> str:
+    """Read the current version from __init__.py."""
+    import re
+
+    content = INIT_FILE.read_text()
+    match = re.search(r'__version__\s*=\s*["\']([^"\']+)["\']', content)
+    return match.group(1) if match else "0.0.0"
+
+
 def get_platform_suffix() -> str:
     """Get platform-specific binary suffix."""
     system = platform.system().lower()
     machine = platform.machine().lower()
 
-    # Normalize architecture names
     if machine in ("x86_64", "amd64"):
         arch = "x86_64"
     elif machine in ("arm64", "aarch64"):
@@ -40,23 +48,25 @@ def get_platform_suffix() -> str:
     return f"{system}-{arch}"
 
 
-def set_build_timestamp() -> str:
-    """Set build timestamp in __init__.py and return the timestamp."""
+def set_build_timestamp() -> tuple[str, str]:
+    """Set build timestamp in __init__.py and return (version, timestamp)."""
+    version = get_current_version()
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     content = f'''"""Claude CodePro Installer - Professional step-based installation pipeline."""
 
-__version__ = "1.0.0"
+__version__ = "{version}"
 __build__ = "{timestamp}"
 '''
     INIT_FILE.write_text(content)
-    return timestamp
+    return version, timestamp
 
 
 def reset_build_timestamp() -> None:
-    """Reset __init__.py to dev mode."""
-    content = '''"""Claude CodePro Installer - Professional step-based installation pipeline."""
+    """Reset __init__.py to dev mode, preserving version."""
+    version = get_current_version()
+    content = f'''"""Claude CodePro Installer - Professional step-based installation pipeline."""
 
-__version__ = "1.0.0"
+__version__ = "{version}"
 __build__ = "dev"  # Updated by CI during release builds
 '''
     INIT_FILE.write_text(content)
@@ -85,13 +95,11 @@ def build_with_pyinstaller() -> Path:
         str(BUILD_DIR / "build"),
         "--clean",
         "--noconfirm",
-        # Add hidden imports for dependencies
         "--hidden-import=rich",
         "--hidden-import=InquirerPy",
         "--hidden-import=httpx",
         "--hidden-import=typer",
         "--hidden-import=platformdirs",
-        # Entry point
         str(INSTALLER_DIR / "cli.py"),
     ]
 
@@ -119,8 +127,8 @@ def main() -> int:
 
     BUILD_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Set build timestamp before building
-    timestamp = set_build_timestamp()
+    version, timestamp = set_build_timestamp()
+    print(f"Version: {version}")
     print(f"Build timestamp: {timestamp}")
 
     try:
@@ -135,7 +143,6 @@ def main() -> int:
         return 1
 
     finally:
-        # Reset to dev mode after build
         reset_build_timestamp()
 
 

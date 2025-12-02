@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from installer.steps.base import BaseStep
@@ -35,14 +34,12 @@ class EnvironmentStep(BaseStep):
             ui.section("Environment Setup")
             ui.status("Setting up API keys...")
 
-        # Read existing content if any
         existing_content = ""
         if env_file.exists():
             existing_content = env_file.read_text()
 
         new_entries: list[str] = []
 
-        # Prompt for each API key if not already set
         api_keys = [
             ("ZILLIZ_API_KEY", "Zilliz Cloud API Key (for Cipher memory)"),
             ("OPENAI_API_KEY", "OpenAI API Key (for embeddings)"),
@@ -56,7 +53,6 @@ class EnvironmentStep(BaseStep):
                     if value:
                         new_entries.append(f"{key}={value}")
 
-        # Append new entries
         if new_entries:
             with open(env_file, "a") as f:
                 if existing_content and not existing_content.endswith("\n"):

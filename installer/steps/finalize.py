@@ -25,13 +25,10 @@ class FinalizeStep(BaseStep):
 
     def run(self, ctx: InstallContext) -> None:
         """Run final cleanup tasks and display success."""
-        # Build rules
         self._build_rules(ctx)
 
-        # Install statusline config
         self._install_statusline_config(ctx)
 
-        # Display success panel
         self._display_success(ctx)
 
     def _build_rules(self, ctx: InstallContext) -> None:
@@ -48,7 +45,6 @@ class FinalizeStep(BaseStep):
             ui.section("Building Rules")
             ui.status("Running rules build script...")
 
-        # Try uv first, then fall back to sys.executable
         python_commands = [
             ["uv", "run", "python", str(build_script)],
             [sys.executable, str(build_script)],
@@ -57,7 +53,6 @@ class FinalizeStep(BaseStep):
 
         for cmd in python_commands:
             try:
-                # Check if command exists (for uv)
                 if cmd[0] == "uv" and shutil.which("uv") is None:
                     continue
 
@@ -111,7 +106,6 @@ class FinalizeStep(BaseStep):
         if not ui:
             return
 
-        # Show summary of what was installed
         installed_items = []
         if ctx.config.get("installed_dependencies"):
             for dep in ctx.config["installed_dependencies"]:
@@ -130,7 +124,6 @@ class FinalizeStep(BaseStep):
 
         ui.success_box("Installation Complete!", installed_items)
 
-        # Show next steps using the enhanced UI
         ui.next_steps(
             [
                 ("Reload your shell", "source ~/.zshrc (or ~/.bashrc)"),

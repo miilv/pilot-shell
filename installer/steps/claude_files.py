@@ -25,7 +25,6 @@ class ClaudeFilesStep(BaseStep):
         if not claude_dir.exists():
             return False
 
-        # Check for key files that indicate installation
         key_files = [
             "settings.local.template.json",
             "rules/standard",
@@ -41,7 +40,6 @@ class ClaudeFilesStep(BaseStep):
         """Install all .claude files from repository."""
         ui = ctx.ui
 
-        # Build download config
         config = DownloadConfig(
             repo_url="https://github.com/maxritter/claude-codepro",
             repo_branch="main",
@@ -52,7 +50,6 @@ class ClaudeFilesStep(BaseStep):
         if ui:
             ui.status("Installing .claude files...")
 
-        # Get list of files to install
         claude_files = get_repo_files(".claude", config)
 
         installed_files: list[str] = []
@@ -62,11 +59,9 @@ class ClaudeFilesStep(BaseStep):
             if not file_path:
                 continue
 
-            # Skip settings.local.json (handled separately)
             if "settings.local.json" in file_path and "settings.local.template.json" not in file_path:
                 continue
 
-            # Skip Python files if not installing Python support
             if not ctx.install_python:
                 if "file_checker_python.py" in file_path:
                     continue
@@ -80,10 +75,8 @@ class ClaudeFilesStep(BaseStep):
                 if ui:
                     ui.print(f"   ✓ {Path(file_path).name}")
 
-        # Store installed files for potential rollback
         ctx.config["installed_files"] = installed_files
 
-        # Set executable permissions on hooks
         hooks_dir = ctx.project_dir / ".claude" / "hooks"
         if hooks_dir.exists():
             for hook_file in hooks_dir.glob("*.sh"):
@@ -91,7 +84,6 @@ class ClaudeFilesStep(BaseStep):
             for hook_file in hooks_dir.glob("*.py"):
                 hook_file.chmod(0o755)
 
-        # Create custom and skills directories if they don't exist
         custom_dir = ctx.project_dir / ".claude" / "rules" / "custom"
         if not custom_dir.exists():
             custom_dir.mkdir(parents=True, exist_ok=True)

@@ -48,7 +48,6 @@ class BootstrapStep(BaseStep):
         ui = ctx.ui
         claude_dir = ctx.project_dir / ".claude"
 
-        # Detect fresh install vs upgrade
         is_upgrade = claude_dir.exists()
         old_version = self._get_installed_version(ctx) if is_upgrade else None
 
@@ -63,7 +62,6 @@ class BootstrapStep(BaseStep):
                 else:
                     ui.status(f"Detected existing installation at {claude_dir}")
 
-            # Create backup
             backup_name = f".claude.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
             backup_path = ctx.project_dir / backup_name
 
@@ -85,10 +83,8 @@ class BootstrapStep(BaseStep):
                 ui.status("Fresh installation detected")
             ctx.config["is_upgrade"] = False
 
-        # Create .claude directory structure
         claude_dir.mkdir(parents=True, exist_ok=True)
 
-        # Create subdirectories
         subdirs = [
             "rules/standard",
             "rules/custom",
@@ -100,7 +96,6 @@ class BootstrapStep(BaseStep):
         for subdir in subdirs:
             (claude_dir / subdir).mkdir(parents=True, exist_ok=True)
 
-        # Save version for future upgrades
         self._save_version(ctx)
 
         if ui:

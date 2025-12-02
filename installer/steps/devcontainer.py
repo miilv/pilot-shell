@@ -29,11 +29,9 @@ class DevcontainerStep(BaseStep):
 
     def check(self, ctx: InstallContext) -> bool:
         """Check if devcontainer setup is needed."""
-        # Skip if already in a container
         if is_in_devcontainer():
             return True
 
-        # Skip if .devcontainer already exists
         if has_devcontainer(ctx.project_dir):
             return True
 
@@ -43,25 +41,21 @@ class DevcontainerStep(BaseStep):
         """Offer devcontainer setup if applicable."""
         ui = ctx.ui
 
-        # Skip in non-interactive mode
         if ctx.non_interactive:
             if ui:
                 ui.status("Skipping devcontainer setup (non-interactive mode)")
             return
 
-        # Skip if already in container
         if is_in_devcontainer():
             if ui:
                 ui.status("Already running in container, skipping devcontainer setup")
             return
 
-        # Skip if .devcontainer exists
         if has_devcontainer(ctx.project_dir):
             if ui:
                 ui.status(".devcontainer already exists, skipping setup")
             return
 
-        # Offer devcontainer setup
         if ui:
             ui.section("Dev Container Setup (Recommended)")
             ui.print()
@@ -76,13 +70,11 @@ class DevcontainerStep(BaseStep):
                 ui.warning("Proceeding with local installation")
                 return
 
-            # Get container name
             default_name = ctx.project_dir.name
             container_name = ui.input(f"Container name (default: {default_name})", default=default_name)
             if not container_name:
                 container_name = default_name
 
-            # Install devcontainer files
             self._install_devcontainer(ctx, container_name)
 
     def _install_devcontainer(self, ctx: InstallContext, container_name: str) -> None:
@@ -112,10 +104,8 @@ class DevcontainerStep(BaseStep):
                 if ui:
                     ui.success(f"Installed {Path(file_path).name}")
 
-        # Create slug from container name (lowercase, replace spaces with hyphens)
         container_slug = container_name.lower().replace(" ", "-").replace("_", "-")
 
-        # Update devcontainer.json with custom name
         devcontainer_json = project_dir / ".devcontainer" / "devcontainer.json"
         if devcontainer_json.exists():
             content = devcontainer_json.read_text()
@@ -123,7 +113,6 @@ class DevcontainerStep(BaseStep):
             content = content.replace("{{PROJECT_SLUG}}", container_slug)
             devcontainer_json.write_text(content)
 
-        # Make postCreateCommand.sh executable
         post_create = project_dir / ".devcontainer" / "postCreateCommand.sh"
         if post_create.exists():
             post_create.chmod(0o755)

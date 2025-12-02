@@ -36,17 +36,17 @@ def get_all_steps() -> list[BaseStep]:
     """Get all installation steps in order."""
     return [
         PreflightStep(),
-        DevcontainerStep(),  # Offer devcontainer early, before other changes
+        DevcontainerStep(),
         BootstrapStep(),
         MigrationStep(),
-        GitSetupStep(),  # Git setup before dependencies (qlty requires git)
+        GitSetupStep(),
         ClaudeFilesStep(),
         ConfigFilesStep(),
         DependenciesStep(),
         EnvironmentStep(),
-        PremiumStep(),  # Premium after environment setup
+        PremiumStep(),
         ShellConfigStep(),
-        FinalizeStep(),  # Final step: build rules, statusline, success panel
+        FinalizeStep(),
     ]
 
 
@@ -56,10 +56,8 @@ def rollback_completed_steps(ctx: InstallContext, steps: list[BaseStep]) -> None
     if ui:
         ui.warning("Rolling back installation...")
 
-    # Get completed step names
     completed_names = set(ctx.completed_steps)
 
-    # Rollback in reverse order
     for step in reversed(steps):
         if step.name in completed_names:
             try:
@@ -76,16 +74,13 @@ def run_installation(ctx: InstallContext) -> None:
     ui = ctx.ui
     steps = get_all_steps()
 
-    # Set up step tracking in UI
     if ui:
         ui.set_total_steps(len(steps))
 
     for step in steps:
-        # Show step header with progress
         if ui:
             ui.step(step.name.replace("_", " ").title())
 
-        # Check if step is already complete
         if step.check(ctx):
             if ui:
                 ui.info(f"Already complete, skipping")
@@ -108,14 +103,11 @@ def install(
     skip_python: bool = typer.Option(False, "--skip-python", help="Skip Python support installation"),
 ) -> None:
     """Install Claude CodePro."""
-    # Create UI
     console = Console(non_interactive=non_interactive)
 
-    # Show banner
     console.banner()
     console.info(f"Build: {__build__}")
 
-    # Create context
     ctx = InstallContext(
         project_dir=Path.cwd(),
         install_python=not skip_python,

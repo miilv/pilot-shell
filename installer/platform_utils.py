@@ -72,7 +72,6 @@ def get_shell_config_files() -> list[Path]:
     home = Path.home()
     configs = []
 
-    # Bash
     bashrc = home / ".bashrc"
     bash_profile = home / ".bash_profile"
     if bashrc.exists():
@@ -80,17 +79,14 @@ def get_shell_config_files() -> list[Path]:
     if bash_profile.exists():
         configs.append(bash_profile)
 
-    # Zsh
     zshrc = home / ".zshrc"
     if zshrc.exists():
         configs.append(zshrc)
 
-    # Fish
     fish_config = home / ".config" / "fish" / "config.fish"
     if fish_config.exists():
         configs.append(fish_config)
 
-    # If no configs found, return common defaults
     if not configs:
         configs = [bashrc, zshrc, fish_config]
 
@@ -102,7 +98,6 @@ def get_platform_suffix() -> str:
     system = platform.system().lower()
     machine = platform.machine().lower()
 
-    # Normalize machine names
     if machine in ("amd64", "x86_64"):
         machine = "x86_64"
     elif machine in ("arm64", "aarch64"):
@@ -122,16 +117,13 @@ def add_to_path(path: Path) -> None:
 
         content = config_file.read_text()
 
-        # Skip if already present
         if str(path) in content:
             continue
 
-        # Use fish syntax for fish config
         if "fish" in config_file.name:
             line_to_add = fish_line
         else:
             line_to_add = export_line
 
-        # Append to config
         with open(config_file, "a") as f:
             f.write(f"\n{line_to_add}\n")

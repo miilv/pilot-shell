@@ -22,7 +22,6 @@ def check_disk_space(path: Path, min_mb: int = 500) -> bool:
         free_mb = (stat.f_bavail * stat.f_frsize) / (1024 * 1024)
         return free_mb >= min_mb
     except (OSError, AttributeError):
-        # statvfs not available on all platforms
         return True
 
 
@@ -31,7 +30,6 @@ def check_permissions(path: Path) -> bool:
     try:
         if path.exists():
             return os.access(path, os.W_OK)
-        # Check parent directory
         parent = path.parent
         while not parent.exists():
             parent = parent.parent
@@ -74,42 +72,35 @@ class PreflightStep(BaseStep):
         ui = ctx.ui
         results: list[tuple[str, bool, str]] = []
 
-        # Check disk space
         if ui:
             ui.status("Checking disk space...")
         disk_ok = check_disk_space(ctx.project_dir, min_mb=500)
         results.append(("Disk Space (500MB)", disk_ok, "Insufficient disk space"))
 
-        # Check permissions
         if ui:
             ui.status("Checking write permissions...")
         perm_ok = check_permissions(ctx.project_dir)
         results.append(("Write Permissions", perm_ok, f"Cannot write to {ctx.project_dir}"))
 
-        # Check dependencies
         if ui:
             ui.status("Checking dependencies...")
         deps_ok, missing = check_dependencies()
         results.append(("Required Tools", deps_ok, f"Missing: {', '.join(missing)}"))
 
-        # Check Python version
         if ui:
             ui.status("Checking Python version...")
         python_ok = check_python_version("3.8")
         results.append(("Python 3.8+", python_ok, f"Found Python {sys.version_info.major}.{sys.version_info.minor}"))
 
-        # Check network (warning only if not in local mode)
         if not ctx.local_mode:
             if ui:
                 ui.status("Checking network connectivity...")
             from installer.downloads import verify_network
 
             network_ok = verify_network()
-            # Network is optional - just warn
             if not network_ok and ui:
                 ui.warning("Network connectivity check failed - may have issues downloading")
 
-        # Display results
         if ui:
             ui.print()
             for check_name, passed, error_msg in results:
@@ -119,7 +110,6 @@ class PreflightStep(BaseStep):
                     ui.error(f"{check_name}: {error_msg}")
             ui.print()
 
-        # Check for critical failures
         critical_failures = [(name, msg) for name, passed, msg in results if not passed]
         if critical_failures:
             failure_msgs = [f"{name}: {msg}" for name, msg in critical_failures]

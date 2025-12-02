@@ -39,7 +39,6 @@ def merge_mcp_config(config_file: Path, new_config: dict[str, Any]) -> None:
         except json.JSONDecodeError:
             existing = {}
 
-    # Merge mcpServers
     if "mcpServers" not in existing:
         existing["mcpServers"] = {}
 
@@ -52,7 +51,6 @@ def merge_mcp_config(config_file: Path, new_config: dict[str, Any]) -> None:
 
 def remove_python_settings(settings: dict[str, Any]) -> None:
     """Remove Python-specific hooks and permissions from settings."""
-    # Remove Python hooks
     if "hooks" in settings and "PostToolUse" in settings["hooks"]:
         for hook_group in settings["hooks"]["PostToolUse"]:
             if "hooks" in hook_group:
@@ -60,7 +58,6 @@ def remove_python_settings(settings: dict[str, Any]) -> None:
                     h for h in hook_group["hooks"] if "file_checker_python.py" not in h.get("command", "")
                 ]
 
-    # Remove Python permissions
     if "permissions" in settings and "allow" in settings["permissions"]:
         settings["permissions"]["allow"] = [p for p in settings["permissions"]["allow"] if p not in PYTHON_PERMISSIONS]
 
@@ -80,7 +77,6 @@ class ConfigFilesStep(BaseStep):
         ui = ctx.ui
         claude_dir = ctx.project_dir / ".claude"
 
-        # Generate settings.local.json from template
         template_file = claude_dir / "settings.local.template.json"
         settings_file = claude_dir / "settings.local.json"
 
@@ -94,7 +90,6 @@ class ConfigFilesStep(BaseStep):
             try:
                 settings = json.loads(settings_content)
 
-                # Remove Python settings if not installing Python
                 if not ctx.install_python:
                     remove_python_settings(settings)
 
@@ -108,13 +103,11 @@ class ConfigFilesStep(BaseStep):
             if ui:
                 ui.warning("settings.local.template.json not found")
 
-        # Create .nvmrc
         nvmrc_file = ctx.project_dir / ".nvmrc"
         nvmrc_file.write_text("22\n")
         if ui:
             ui.success("Created .nvmrc for Node.js 22")
 
-        # Install .cipher directory if not exists
         cipher_dir = ctx.project_dir / ".cipher"
         if not cipher_dir.exists():
             if ui:
@@ -129,7 +122,6 @@ class ConfigFilesStep(BaseStep):
             if ui:
                 ui.success(f"Installed .cipher directory ({count} files)")
 
-        # Install .qlty directory if not exists
         qlty_dir = ctx.project_dir / ".qlty"
         if not qlty_dir.exists():
             if ui:
@@ -144,7 +136,6 @@ class ConfigFilesStep(BaseStep):
             if ui:
                 ui.success(f"Installed .qlty directory ({count} files)")
 
-        # Install and merge MCP configs
         config = DownloadConfig(
             repo_url="https://github.com/maxritter/claude-codepro",
             repo_branch="main",
@@ -152,7 +143,6 @@ class ConfigFilesStep(BaseStep):
             local_repo_dir=ctx.local_repo_dir,
         )
 
-        # Install .mcp.json
         mcp_file = ctx.project_dir / ".mcp.json"
         if ui:
             ui.status("Installing MCP configuration...")
@@ -168,7 +158,6 @@ class ConfigFilesStep(BaseStep):
                     if ui:
                         ui.warning(f"Failed to parse .mcp.json: {e}")
 
-        # Install .mcp-funnel.json
         funnel_file = ctx.project_dir / ".mcp-funnel.json"
         if ui:
             ui.status("Installing MCP Funnel configuration...")

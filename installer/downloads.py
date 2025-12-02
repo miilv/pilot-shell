@@ -54,7 +54,6 @@ def download_file(
                 return False
         return False
 
-    # Network download using httpx
     file_url = f"{config.repo_url}/raw/{config.repo_branch}/{repo_path}"
     try:
         with httpx.Client(follow_redirects=True, timeout=30.0) as client:
@@ -90,7 +89,6 @@ def get_repo_files(dir_path: str, config: DownloadConfig) -> list[str]:
             return files
         return []
 
-    # GitHub API tree fetch
     try:
         repo_path = config.repo_url.replace("https://github.com/", "")
         tree_url = f"https://api.github.com/repos/{repo_path}/git/trees/{config.repo_branch}?recursive=true"
@@ -129,7 +127,6 @@ def download_directory(
     total = len(files)
 
     for i, file_path in enumerate(files):
-        # Check exclude patterns
         if any(pattern.replace("*", "") in file_path for pattern in exclude_patterns):
             continue
 

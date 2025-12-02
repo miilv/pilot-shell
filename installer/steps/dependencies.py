@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from installer.platform_utils import command_exists
 from installer.steps.base import BaseStep
@@ -19,7 +19,6 @@ def install_nodejs() -> bool:
         return True
 
     try:
-        # Install NVM if not present
         nvm_dir = Path.home() / ".nvm"
         if not nvm_dir.exists():
             subprocess.run(
@@ -28,7 +27,6 @@ def install_nodejs() -> bool:
                 capture_output=True,
             )
 
-        # Install Node.js via NVM
         subprocess.run(
             ["bash", "-c", "source ~/.nvm/nvm.sh && nvm install 22 && nvm use 22"],
             check=True,
@@ -99,8 +97,24 @@ def install_qlty(project_dir: Path) -> bool:
         return False
 
 
+def is_npm_package_installed(package: str) -> bool:
+    """Check if an npm package is globally installed."""
+    try:
+        result = subprocess.run(
+            ["npm", "list", "-g", package, "--depth=0"],
+            capture_output=True,
+            text=True,
+        )
+        return result.returncode == 0 and package in result.stdout
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return False
+
+
 def install_cipher() -> bool:
     """Install Cipher memory tool."""
+    if is_npm_package_installed("@byterover/cipher"):
+        return True
+
     try:
         subprocess.run(
             ["npm", "install", "-g", "@byterover/cipher"],
@@ -114,7 +128,7 @@ def install_cipher() -> bool:
 
 def install_newman() -> bool:
     """Install Newman (Postman CLI)."""
-    if command_exists("newman"):
+    if command_exists("newman") or is_npm_package_installed("newman"):
         return True
 
     try:
@@ -130,7 +144,7 @@ def install_newman() -> bool:
 
 def install_dotenvx() -> bool:
     """Install dotenvx (environment variable management)."""
-    if command_exists("dotenvx"):
+    if command_exists("dotenvx") or is_npm_package_installed("@dotenvx/dotenvx"):
         return True
 
     try:
@@ -172,11 +186,9 @@ class DependenciesStep(BaseStep):
         ui = ctx.ui
         installed: list[str] = []
 
-        # Install Node.js
         if _install_with_spinner(ui, "Node.js", install_nodejs):
             installed.append("nodejs")
 
-        # Install Python tools if enabled
         if ctx.install_python:
             if _install_with_spinner(ui, "uv", install_uv):
                 installed.append("uv")
@@ -184,23 +196,18 @@ class DependenciesStep(BaseStep):
             if _install_with_spinner(ui, "Python tools", install_python_tools):
                 installed.append("python_tools")
 
-        # Install Claude Code
         if _install_with_spinner(ui, "Claude Code", install_claude_code):
             installed.append("claude_code")
 
-        # Install qlty
         if _install_with_spinner(ui, "qlty", install_qlty, ctx.project_dir):
             installed.append("qlty")
 
-        # Install Cipher
         if _install_with_spinner(ui, "Cipher", install_cipher):
             installed.append("cipher")
 
-        # Install Newman
         if _install_with_spinner(ui, "Newman", install_newman):
             installed.append("newman")
 
-        # Install dotenvx
         if _install_with_spinner(ui, "dotenvx", install_dotenvx):
             installed.append("dotenvx")
 

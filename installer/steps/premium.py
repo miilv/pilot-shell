@@ -161,7 +161,6 @@ def remove_premium_hooks_from_settings(settings_file: Path) -> bool:
         if "hooks" not in settings:
             return True
 
-        # Remove premium hooks from all hook types
         for hook_type in ["PreToolUse", "PostToolUse", "Stop"]:
             if hook_type in settings["hooks"]:
                 settings["hooks"][hook_type] = [
@@ -169,11 +168,9 @@ def remove_premium_hooks_from_settings(settings_file: Path) -> bool:
                     for hook_group in settings["hooks"][hook_type]
                     if not any("ccp-premium" in h.get("command", "") for h in hook_group.get("hooks", []))
                 ]
-                # Remove empty hook arrays
                 if not settings["hooks"][hook_type]:
                     del settings["hooks"][hook_type]
 
-        # Remove hooks key if empty
         if not settings["hooks"]:
             del settings["hooks"]
 
@@ -188,31 +185,40 @@ class PremiumStep(BaseStep):
 
     name = "premium"
 
+    def _get_premium_key(self, ctx: InstallContext) -> str | None:
+        """Get premium key from context, environment, or prompt."""
+        import os
+
+        if ctx.premium_key:
+            return ctx.premium_key
+
+        env_key = os.environ.get("CCP_LICENSE_KEY", "").strip()
+        if env_key:
+            return env_key
+
+        if not ctx.non_interactive and ctx.ui:
+            ctx.ui.print()
+            ctx.ui.box(
+                "Premium features include:\n"
+                "  • AI Rules Supervisor - Gemini-powered session analysis\n"
+                "  • TDD Enforcer - Blocks edits without failing tests\n"
+                "  • Context Monitor - Auto-saves learnings at 100% context",
+                title="💎 Premium Features",
+                style="magenta",
+            )
+            ctx.ui.print()
+            ctx.ui.print("  Get a license at: [bold cyan]www.claude-code.pro[/bold cyan]")
+            ctx.ui.print()
+
+            if ctx.ui.confirm("Do you have a premium license key?", default=False):
+                key = ctx.ui.input("Enter your license key")
+                if key and key.strip():
+                    return key.strip()
+
+        return None
+
     def check(self, ctx: InstallContext) -> bool:
         """Check if premium setup is needed."""
-        settings_file = ctx.project_dir / ".claude" / "settings.local.json"
-
-        # If no premium key, check if we need to clean up premium hooks
-        if not ctx.premium_key:
-            # Check if settings file has premium hooks that need removal
-            if settings_file.exists():
-                try:
-                    settings = json.loads(settings_file.read_text())
-                    hooks = settings.get("hooks", {})
-                    for hook_type in ["PreToolUse", "PostToolUse", "Stop"]:
-                        for hook_group in hooks.get(hook_type, []):
-                            for hook in hook_group.get("hooks", []):
-                                if "ccp-premium" in hook.get("command", ""):
-                                    return False  # Need to run cleanup
-                except (json.JSONDecodeError, OSError):
-                    pass
-            return True  # No cleanup needed
-
-        # Check if premium binary already exists
-        bin_dir = ctx.project_dir / ".claude" / "bin"
-        if (bin_dir / "ccp-premium").exists():
-            return True
-
         return False
 
     def run(self, ctx: InstallContext) -> None:
@@ -220,18 +226,20 @@ class PremiumStep(BaseStep):
         ui = ctx.ui
         settings_file = ctx.project_dir / ".claude" / "settings.local.json"
 
-        # If no premium key, remove premium hooks and return
-        if not ctx.premium_key:
+        premium_key = self._get_premium_key(ctx)
+
+        if not premium_key:
             if ui:
                 ui.status("Skipping premium features (no license key)")
             remove_premium_hooks_from_settings(settings_file)
             return
 
+        ctx.premium_key = premium_key
+
         if ui:
             ui.section("Premium Features")
             ui.status("Validating license key...")
 
-        # Validate license
         valid, message = validate_license_key(ctx.premium_key)
         if not valid:
             if ui:
@@ -242,12 +250,10 @@ class PremiumStep(BaseStep):
         if ui:
             ui.success(message)
 
-        # Save license to .env
         save_env_var(ctx.project_dir, "CCP_LICENSE_KEY", ctx.premium_key)
         if ui:
             ui.success("Saved license key to .env")
 
-        # Download premium binary
         if ctx.local_mode:
             if ui:
                 ui.status("Copying premium binary from local dist...")
@@ -258,7 +264,7 @@ class PremiumStep(BaseStep):
         bin_dir = ctx.project_dir / ".claude" / "bin"
         success, result = download_premium_binary(
             bin_dir,
-            "latest",  # Use latest release
+            "latest",
             ctx.local_mode,
             ctx.local_repo_dir,
         )
@@ -273,7 +279,6 @@ class PremiumStep(BaseStep):
         if ui:
             ui.success(f"Installed premium binary to {result}")
 
-        # Prompt for Gemini API key (if interactive)
         if not ctx.non_interactive and ui:
             ui.print()
             ui.section("Rules Supervisor (Gemini API)")
@@ -301,5 +306,3 @@ class PremiumStep(BaseStep):
         premium_binary = bin_dir / "ccp-premium"
         if premium_binary.exists():
             premium_binary.unlink()
-
-        # Note: We don't remove .env entries as that could be disruptive

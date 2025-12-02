@@ -29,7 +29,6 @@ def get_alias_line(shell_type: str) -> str:
     - Uses dotenvx to load environment variables before running claude
     """
     if shell_type == "fish":
-        # Fish shell uses 'and' instead of '&&' and different syntax
         return (
             f"{CCP_ALIAS_MARKER}\n"
             "alias ccp='"
@@ -44,7 +43,6 @@ def get_alias_line(shell_type: str) -> str:
             "end'"
         )
     else:
-        # Bash/Zsh syntax
         return (
             f"{CCP_ALIAS_MARKER}\n"
             "alias ccp='"
@@ -99,11 +97,9 @@ class ShellConfigStep(BaseStep):
                     ui.status(f"Alias already exists in {config_file.name}")
                 continue
 
-            # Determine shell type
             shell_type = "fish" if "fish" in config_file.name else "bash"
             alias_line = get_alias_line(shell_type)
 
-            # Append alias to config
             try:
                 with open(config_file, "a") as f:
                     f.write(f"\n{alias_line}\n")
@@ -132,7 +128,6 @@ class ShellConfigStep(BaseStep):
 
             try:
                 content = config_file.read_text()
-                # Remove alias block
                 lines = content.split("\n")
                 new_lines = []
                 skip_next = False

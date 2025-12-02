@@ -225,31 +225,31 @@ class GitSetupStep(BaseStep):
             if not gitignore.exists():
                 gitignore.write_text(
                     """# Environment
-.env
-.env.local
-.env.*.local
+                        .env
+                        .env.local
+                        .env.*.local
 
-# Dependencies
-node_modules/
-__pycache__/
-*.pyc
-.venv/
-venv/
+                        # Dependencies
+                        node_modules/
+                        __pycache__/
+                        *.pyc
+                        .venv/
+                        venv/
 
-# IDE
-.idea/
-*.swp
-*.swo
+                        # IDE
+                        .idea/
+                        *.swp
+                        *.swo
 
-# Build
-dist/
-build/
-*.egg-info/
+                        # Build
+                        dist/
+                        build/
+                        *.egg-info/
 
-# Data
-data/
-*.db
-"""
+                        # Data
+                        data/
+                        *.db
+                    """
                 )
                 if ui:
                     ui.success("Created .gitignore")

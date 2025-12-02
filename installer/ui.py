@@ -5,6 +5,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import Any, Iterator
 
+from InquirerPy import inquirer
 from rich.console import Console as RichConsole
 from rich.panel import Panel
 from rich.progress import (
@@ -21,7 +22,6 @@ from rich.table import Table
 from rich.text import Text
 from rich.theme import Theme
 
-# Custom theme for Claude CodePro installer
 CCP_THEME = Theme(
     {
         "info": "cyan",
@@ -67,7 +67,6 @@ class Console:
 
     def banner(self) -> None:
         """Print the Claude CodePro banner with feature highlights."""
-        # ASCII art logo
         logo = """
 [bold cyan]   _____ _                 _        _____          _      _____
   / ____| |               | |      / ____|        | |    |  __ \\
@@ -78,7 +77,6 @@ class Console:
 """
         self._console.print(logo)
 
-        # Tagline
         tagline = Text()
         tagline.append("  ✨ ", style="yellow")
         tagline.append("Professional Development Environment for Claude Code", style="bold white")
@@ -86,7 +84,6 @@ class Console:
         self._console.print(tagline)
         self._console.print()
 
-        # Feature highlights in a styled panel
         features = Text()
         features.append("  📋 ", style="yellow")
         features.append("Spec-Driven Workflow", style="bold green")
@@ -116,7 +113,6 @@ class Console:
         )
         self._console.print(panel)
 
-        # Premium callout
         premium_text = Text()
         premium_text.append("  💎 ", style="magenta")
         premium_text.append("Unlock premium features with a license key from ", style="dim white")
@@ -255,11 +251,9 @@ class Console:
             row_styles=["", "dim"],
         )
 
-        # Add columns from first row keys
         for key in data[0].keys():
             table.add_column(key.replace("_", " ").title())
 
-        # Add rows
         for row in data:
             table.add_row(*[str(v) for v in row.values()])
 
@@ -283,8 +277,6 @@ class Console:
         if self._non_interactive:
             return default
 
-        from InquirerPy import inquirer
-
         self._console.print()
         confirm_fn = getattr(inquirer, "confirm")
         result = confirm_fn(
@@ -302,8 +294,6 @@ class Console:
         """Prompt for single selection from choices with styled menu."""
         if self._non_interactive:
             return choices[0] if choices else ""
-
-        from InquirerPy import inquirer
 
         self._console.print()
         select_fn = getattr(inquirer, "select")
@@ -323,8 +313,6 @@ class Console:
         """Prompt for text input with styled prompt."""
         if self._non_interactive:
             return default
-
-        from InquirerPy import inquirer
 
         self._console.print()
         text_fn = getattr(inquirer, "text")
