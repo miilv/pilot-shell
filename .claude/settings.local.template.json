@@ -67,7 +67,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{PROJECT_DIR}}/.claude/bin/ccp-premium tdd-enforcer"
+            "command": "python3 {{PROJECT_DIR}}/.claude/hooks/tdd_enforcer.py"
           }
         ]
       }
@@ -91,7 +91,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{PROJECT_DIR}}/.claude/bin/ccp-premium context-monitor"
+            "command": "python3 {{PROJECT_DIR}}/.claude/hooks/context_monitor.py"
           }
         ]
       }
@@ -102,7 +102,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{PROJECT_DIR}}/.claude/bin/ccp-premium rules-supervisor-hook"
+            "command": "python3 {{PROJECT_DIR}}/.claude/hooks/rules_supervisor.py"
           }
         ]
       }

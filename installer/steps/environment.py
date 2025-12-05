@@ -135,6 +135,21 @@ class EnvironmentStep(BaseStep):
             if ui:
                 ui.success("EXA_API_KEY already set, skipping")
 
+        gemini_api_key = ""
+        if not key_is_set("GEMINI_API_KEY", env_file):
+            if ui:
+                ui.print()
+                ui.rule("4. Gemini API Key - Rules Supervisor Analysis")
+                ui.print()
+                ui.print("  [bold]Used for:[/bold] AI-powered session analysis to verify compliance with project rules")
+                ui.print("  [bold]Create at:[/bold] [cyan]https://aistudio.google.com/apikey[/cyan]")
+                ui.print()
+
+                gemini_api_key = ui.input("GEMINI_API_KEY", default="")
+        else:
+            if ui:
+                ui.success("GEMINI_API_KEY already set, skipping")
+
         add_env_key("MILVUS_TOKEN", milvus_token, env_file)
         add_env_key("MILVUS_ADDRESS", milvus_address, env_file)
         add_env_key("VECTOR_STORE_URL", milvus_address, env_file)
@@ -142,6 +157,7 @@ class EnvironmentStep(BaseStep):
         add_env_key("VECTOR_STORE_PASSWORD", vector_store_password, env_file)
         add_env_key("OPENAI_API_KEY", openai_api_key, env_file)
         add_env_key("EXA_API_KEY", exa_api_key, env_file)
+        add_env_key("GEMINI_API_KEY", gemini_api_key, env_file)
         add_env_key("USE_ASK_CIPHER", "true", env_file)
         add_env_key("VECTOR_STORE_TYPE", "milvus", env_file)
         add_env_key("FASTMCP_LOG_LEVEL", "ERROR", env_file)

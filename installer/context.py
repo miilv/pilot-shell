@@ -16,7 +16,6 @@ class InstallContext:
 
     project_dir: Path
     install_python: bool = True
-    premium_key: str | None = None
     non_interactive: bool = False
     skip_env: bool = False
     local_mode: bool = False

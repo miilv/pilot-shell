@@ -130,12 +130,12 @@ class Console:
         features.append("  🛠️ ", style="yellow")
         features.append("Quality Automation", style="bold green")
         features.append(" — Post-edit hooks, linting, type checking\n", style="white")
+        features.append("  🪝 ", style="yellow")
+        features.append("Intelligent Hooks", style="bold green")
+        features.append(" — TDD Enforcer, Context Monitor, Rules Supervisor\n", style="white")
         features.append("  🏗️ ", style="yellow")
         features.append("Dev Container", style="bold green")
-        features.append(" — Isolated environment with pre-configured tools\n", style="white")
-        features.append("  💎 ", style="yellow")
-        features.append("Premium Features", style="bold magenta")
-        features.append(" — AI Rules Supervisor, TDD Enforcer, Context Monitor", style="white")
+        features.append(" — Isolated environment with pre-configured tools", style="white")
 
         panel = Panel(
             features,
@@ -145,12 +145,6 @@ class Console:
             title_align="left",
         )
         self._console.print(panel)
-
-        premium_text = Text()
-        premium_text.append("  💎 ", style="magenta")
-        premium_text.append("Unlock premium features with a license key from ", style="dim white")
-        premium_text.append("www.claude-code.pro", style="bold cyan underline")
-        self._console.print(premium_text)
         self._console.print()
 
     def set_total_steps(self, total: int) -> None:

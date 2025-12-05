@@ -232,14 +232,9 @@ settings.local.json
 !.claude/rules/custom/python-rules.md
 CLAUDE.local.md
 
-# Premium build artifacts (source is encrypted with git-crypt)
-premium/dist/
-premium/build/
+# Build artifacts
 .claude/bin/
 docs/plans
-
-# Git-crypt key (NEVER commit this!)
-.keys/
 
 # Kiro
 .kiro/

@@ -23,7 +23,6 @@ class TestInstallContext:
 
         ctx = InstallContext(project_dir=Path("/tmp/test"))
         assert ctx.install_python is True
-        assert ctx.premium_key is None
         assert ctx.non_interactive is False
         assert ctx.local_mode is False
         assert ctx.local_repo_dir is None

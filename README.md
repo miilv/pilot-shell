@@ -11,9 +11,8 @@ Start shipping systematically with Spec-Driven Development, Skills, TDD, Semanti
 ![Opus 4.5](https://img.shields.io/badge/Opus_4.5-Compatible-purple.svg)
 ![Spec-Driven](https://img.shields.io/badge/Spec-Driven-orange.svg)
 ![TDD](https://img.shields.io/badge/TDD-Test--Driven--Development-green.svg)
-[![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen.svg)](http://makeapullrequest.com)
 
-#### [⭐ Star this repo](https://github.com/maxritter/claude-codepro) • [💎 Premium Features (Coming Soon!)](https://www.claude-code.pro)
+#### [⭐ Star this repo](https://github.com/maxritter/claude-codepro)
 
 </div>
 
@@ -72,15 +71,17 @@ curl -fsSL https://raw.githubusercontent.com/maxritter/claude-codepro/v3.0.13/in
 - **Exa** - AI-powered web search, code context retrieval, and URL content extraction
 - **MCP Funnel** - Allows to plug-in more MCP servers as needed without wasting context
 
-### 🛠️ Testing and Quality via Automated Tool Installation
+### 🛠️ Intelligent Hooks for Quality, Standards and Context
 
-- **Post-Edit Hooks** - Automated formatting and code checking after every edit
-- **Qlty** - Automated code quality hooks for all programming languages
-- **uv, ruff, mypy, basedpyright** - Python linter, formatter, and type checker (optional)
-- **Global Tools** - Python tools, qlty, Claude Code, dotenvx installed globally
+- **Qlty Quality** - Post-edit hook for automated formatting and code checking for all languages
+- **Python Quality** - Post-edit hook for uv, ruff, mypy, basedpyright linting and type checking (optional)
+- **Rules Supervisor** - Stop hook that analyzes `/implement` sessions using Gemini AI
+- **TDD Enforcer** - Pre-edit hook that warns when modifying code without failing tests first
+- **Context Monitor** - Post-tool hook that warns at 85%/95% context usage
 
 ### 🏗️ One-Command Installation
 
+- **Global Tools** - Python tools, qlty, Claude Code, dotenvx installed globally
 - **Dev Container Required** - Isolated Linux environment with pre-configured tools and extensions
 - **Automated Setup Script** - Installs and configures everything in one command
 - **Shell Integration** - Auto-configures bash and zsh with `ccp` alias
@@ -120,32 +121,6 @@ Add custom rules by creating `.md` files in `.claude/rules/custom/` - they'll be
 
 ---
 
-## 💎 Premium Features (Coming Soon!)
-
-Take your Claude Code workflow to the next level with these powerful premium features:
-
-### 🔍 AI Rules Supervisor
-
-AI-powered session analysis using Gemini 3.0 Pro that checks your entire coding session against project rules. When violations are found, Claude Code is automatically instructed to fix them - ensuring full compliance before you finish.
-
-### 🧪 Automated TDD Enforcer
-
-Automatically enforces Test-Driven Development by blocking code edits when no failing tests exist. Ensures you always write tests first, with a smart override mechanism for edge cases.
-
-### 📊 Intelligent Context Monitor
-
-Automatic context management that kicks in when you reach 100% context usage. Claude CodePro automatically stores learnings in cross-session memory and updates the plan file, so you can seamlessly continue after `/clear` without losing progress.
-
-➡️ **[Coming soon at www.claude-code.pro](https://www.claude-code.pro)**
-
----
-
-## 🤝 Contributing
-
-Contributions welcome: custom skills, MCP integrations, workflow improvements, bug reports, etc.
-
----
-
 ## 🙏 Acknowledgments
 
 - **[qltysh/qlty](https://github.com/qltysh/qlty)** - Code quality automation
@@ -161,10 +136,3 @@ Contributions welcome: custom skills, MCP integrations, workflow improvements, b
 - **[DetachHead/basedpyright](https://github.com/DetachHead/basedpyright)** - Enhanced Python type checker
 - **[python/mypy](https://github.com/python/mypy)** - Static type checker for Python
 - **[dotenvx/dotenvx](https://github.com/dotenvx/dotenvx)** - Automatic .env loading for Claude Code
-
----
-
-Made with ❤️ by [Max Ritter](https://www.maxritter.net) and [Manuel Vogel](https://manuel-vogel.de)
-
-[🌐 claude-code.pro](https://www.claude-code.pro)
-

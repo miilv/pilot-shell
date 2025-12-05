@@ -1,3 +1,0 @@
-# Encrypt premium folder with git-crypt
-premium/** filter=git-crypt diff=git-crypt
-premium/**/* filter=git-crypt diff=git-crypt

@@ -18,7 +18,6 @@ from installer.steps.dependencies import DependenciesStep
 from installer.steps.environment import EnvironmentStep
 from installer.steps.finalize import FinalizeStep
 from installer.steps.git_setup import GitSetupStep
-from installer.steps.premium import PremiumStep
 from installer.steps.shell_config import ShellConfigStep
 from installer.ui import Console
 
@@ -38,7 +37,6 @@ def get_all_steps() -> list[BaseStep]:
         ConfigFilesStep(),
         DependenciesStep(),
         EnvironmentStep(),
-        PremiumStep(),
         ShellConfigStep(),
         FinalizeStep(),
     ]
