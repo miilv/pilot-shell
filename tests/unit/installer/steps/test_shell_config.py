@@ -19,8 +19,8 @@ class TestShellConfigStep:
         step = ShellConfigStep()
         assert step.name == "shell_config"
 
-    def test_shell_config_check_returns_bool(self):
-        """ShellConfigStep.check returns boolean."""
+    def test_shell_config_check_always_returns_false(self):
+        """ShellConfigStep.check always returns False to ensure alias updates."""
         from installer.context import InstallContext
         from installer.steps.shell_config import ShellConfigStep
         from installer.ui import Console
@@ -31,8 +31,29 @@ class TestShellConfigStep:
                 project_dir=Path(tmpdir),
                 ui=Console(non_interactive=True),
             )
-            result = step.check(ctx)
-            assert isinstance(result, bool)
+            # Must always return False so run() is called on every install
+            assert step.check(ctx) is False
+
+    @patch("installer.steps.shell_config.get_shell_config_files")
+    def test_shell_config_check_returns_false_even_with_existing_alias(self, mock_get_files):
+        """ShellConfigStep.check returns False even when alias exists."""
+        from installer.context import InstallContext
+        from installer.steps.shell_config import ShellConfigStep
+        from installer.ui import Console
+
+        step = ShellConfigStep()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Create shell config with OLD alias
+            bashrc = Path(tmpdir) / ".bashrc"
+            bashrc.write_text("# Claude CodePro alias\nalias ccp='old version'\n")
+            mock_get_files.return_value = [bashrc]
+
+            ctx = InstallContext(
+                project_dir=Path(tmpdir),
+                ui=Console(non_interactive=True),
+            )
+            # Must return False so the alias gets updated
+            assert step.check(ctx) is False
 
     @patch("installer.steps.shell_config.get_shell_config_files")
     def test_shell_config_run_adds_alias(self, mock_get_files):

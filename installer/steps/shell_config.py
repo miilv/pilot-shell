@@ -221,11 +221,7 @@ class ShellConfigStep(BaseStep):
     name = "shell_config"
 
     def check(self, ctx: InstallContext) -> bool:
-        """Check if alias already exists in shell configs."""
-        config_files = get_shell_config_files()
-        for config_file in config_files:
-            if alias_exists_in_file(config_file):
-                return True
+        """Always return False to ensure alias is updated on every install."""
         return False
 
     def run(self, ctx: InstallContext) -> None:
