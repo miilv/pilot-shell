@@ -40,14 +40,14 @@ class TestDependenciesStep:
     @patch("installer.steps.dependencies.install_local_milvus")
     @patch("installer.steps.dependencies.install_claude_mem")
     @patch("installer.steps.dependencies.install_typescript_lsp")
-    @patch("installer.steps.dependencies.run_lsp_fix")
+    @patch("installer.steps.dependencies.run_tweakcc")
     @patch("installer.steps.dependencies.install_claude_code")
     @patch("installer.steps.dependencies.install_nodejs")
     def test_dependencies_run_installs_core(
         self,
         mock_nodejs,
         mock_claude,
-        mock_lsp_fix,
+        mock_tweakcc,
         mock_typescript_lsp,
         mock_claude_mem,
         mock_milvus,
@@ -63,7 +63,7 @@ class TestDependenciesStep:
         # Setup mocks
         mock_nodejs.return_value = True
         mock_claude.return_value = True
-        mock_lsp_fix.return_value = True
+        mock_tweakcc.return_value = True
         mock_typescript_lsp.return_value = True
         mock_claude_mem.return_value = True
         mock_milvus.return_value = True
@@ -84,7 +84,7 @@ class TestDependenciesStep:
             mock_nodejs.assert_called_once()
             mock_typescript_lsp.assert_called_once()
             mock_claude.assert_called_once()
-            mock_lsp_fix.assert_called_once()
+            mock_tweakcc.assert_called_once()
 
     @patch("installer.steps.dependencies.install_dotenvx")
     @patch("installer.steps.dependencies.run_qlty_check")
@@ -93,7 +93,7 @@ class TestDependenciesStep:
     @patch("installer.steps.dependencies.install_claude_mem")
     @patch("installer.steps.dependencies.install_pyright_lsp")
     @patch("installer.steps.dependencies.install_typescript_lsp")
-    @patch("installer.steps.dependencies.run_lsp_fix")
+    @patch("installer.steps.dependencies.run_tweakcc")
     @patch("installer.steps.dependencies.install_claude_code")
     @patch("installer.steps.dependencies.install_python_tools")
     @patch("installer.steps.dependencies.install_uv")
@@ -104,7 +104,7 @@ class TestDependenciesStep:
         mock_uv,
         mock_python_tools,
         mock_claude,
-        mock_lsp_fix,
+        mock_tweakcc,
         mock_typescript_lsp,
         mock_pyright_lsp,
         mock_claude_mem,
@@ -123,7 +123,7 @@ class TestDependenciesStep:
         mock_uv.return_value = True
         mock_python_tools.return_value = True
         mock_claude.return_value = True
-        mock_lsp_fix.return_value = True
+        mock_tweakcc.return_value = True
         mock_typescript_lsp.return_value = True
         mock_pyright_lsp.return_value = True
         mock_claude_mem.return_value = True
@@ -269,62 +269,43 @@ class TestPyrightLspInstall:
         assert "claude plugin install pyright-lsp" in second_call[2]
 
 
-class TestLspFix:
-    """Test LSP fix script execution."""
+class TestTweakcc:
+    """Test tweakcc customizations."""
 
-    def test_run_lsp_fix_exists(self):
-        """run_lsp_fix function exists."""
-        from installer.steps.dependencies import run_lsp_fix
+    def test_run_tweakcc_exists(self):
+        """run_tweakcc function exists."""
+        from installer.steps.dependencies import run_tweakcc
 
-        assert callable(run_lsp_fix)
+        assert callable(run_tweakcc)
 
     @patch("subprocess.run")
-    def test_run_lsp_fix_runs_script_from_project_dir(self, mock_run):
-        """run_lsp_fix runs the script from the project directory."""
-        from installer.steps.dependencies import run_lsp_fix
+    def test_run_tweakcc_runs_npx_tweakcc(self, mock_run):
+        """run_tweakcc runs npx tweakcc --apply."""
+        from installer.steps.dependencies import run_tweakcc
 
         mock_run.return_value = MagicMock(returncode=0)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             project_dir = Path(tmpdir)
-            script_dir = project_dir / ".claude" / "scripts"
-            script_dir.mkdir(parents=True)
-            script_path = script_dir / "lsp-fix.sh"
-            script_path.write_text("#!/bin/bash\necho 'test'")
-
-            result = run_lsp_fix(project_dir)
+            result = run_tweakcc(project_dir)
 
             assert result is True
             mock_run.assert_called_once()
             call_args = mock_run.call_args[0][0]
-            assert call_args[0] == "bash"
-            assert "lsp-fix.sh" in call_args[1]
+            assert call_args == ["npx", "-y", "tweakcc", "--apply"]
+            assert mock_run.call_args[1]["cwd"] == project_dir
 
     @patch("subprocess.run")
-    def test_run_lsp_fix_treats_exit_code_2_as_success(self, mock_run):
-        """run_lsp_fix treats exit code 2 (already patched) as success."""
-        from installer.steps.dependencies import run_lsp_fix
+    def test_run_tweakcc_returns_false_on_failure(self, mock_run):
+        """run_tweakcc returns False on non-zero exit code."""
+        from installer.steps.dependencies import run_tweakcc
 
-        mock_run.return_value = MagicMock(returncode=2)
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            project_dir = Path(tmpdir)
-            script_dir = project_dir / ".claude" / "scripts"
-            script_dir.mkdir(parents=True)
-            script_path = script_dir / "lsp-fix.sh"
-            script_path.write_text("#!/bin/bash\necho 'test'")
-
-            result = run_lsp_fix(project_dir)
-
-            assert result is True
-
-    def test_run_lsp_fix_returns_false_if_script_missing(self):
-        """run_lsp_fix returns False if script doesn't exist."""
-        from installer.steps.dependencies import run_lsp_fix
+        mock_run.return_value = MagicMock(returncode=1)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             project_dir = Path(tmpdir)
-            result = run_lsp_fix(project_dir)
+            result = run_tweakcc(project_dir)
+
             assert result is False
 
 

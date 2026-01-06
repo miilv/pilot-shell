@@ -173,26 +173,15 @@ def install_dotenvx() -> bool:
     return _run_bash_with_retry("curl -sfS https://dotenvx.sh | sh")
 
 
-def run_lsp_fix(project_dir: Path) -> bool:
-    """Run the LSP fix script to patch Claude Code.
-
-    The script is expected to be at project_dir/.claude/scripts/lsp-fix.sh,
-    having been installed by ClaudeFilesStep which runs before DependenciesStep.
-
-    Exit codes: 0 = patched, 1 = error, 2 = already patched (success)
-    """
-    lsp_fix_script = project_dir / ".claude" / "scripts" / "lsp-fix.sh"
-
-    if not lsp_fix_script.exists():
-        return False
-
-    lsp_fix_script.chmod(0o755)
+def run_tweakcc(project_dir: Path) -> bool:
+    """Run tweakcc to apply Claude Code customizations (LSP, themes, toolsets, etc.)."""
     try:
         result = subprocess.run(
-            ["bash", str(lsp_fix_script)],
+            ["npx", "-y", "tweakcc", "--apply"],
             capture_output=True,
+            cwd=project_dir,
         )
-        return result.returncode in (0, 2)
+        return result.returncode == 0
     except subprocess.SubprocessError:
         return False
 
@@ -341,14 +330,14 @@ class DependenciesStep(BaseStep):
             installed.append("claude_code")
 
             if ui:
-                with ui.spinner("Applying LSP fix..."):
-                    lsp_fix_result = run_lsp_fix(ctx.project_dir)
-                if lsp_fix_result:
-                    ui.success("LSP fix applied")
+                with ui.spinner("Applying tweakcc customizations..."):
+                    tweakcc_result = run_tweakcc(ctx.project_dir)
+                if tweakcc_result:
+                    ui.success("tweakcc customizations applied")
                 else:
-                    ui.warning("Could not apply LSP fix - LSP plugins may not work")
+                    ui.warning("Could not apply tweakcc - LSP plugins may not work")
             else:
-                run_lsp_fix(ctx.project_dir)
+                run_tweakcc(ctx.project_dir)
 
         if _install_with_spinner(ui, "TypeScript LSP", install_typescript_lsp):
             installed.append("typescript_lsp")

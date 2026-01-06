@@ -81,11 +81,10 @@ curl -fsSL https://raw.githubusercontent.com/maxritter/claude-codepro/v3.3.4/ins
 
 ### 🏗️ One-Command Installation
 
-- **Global Tools** - Python tools, qlty, Claude Code, dotenvx installed globally
 - **LSP Servers** - Python and TypeScript CC Language Servers for extended code intelligence
 - **Dev Container Required** - Isolated Linux environment with pre-configured tools and extensions
 - **Automated Setup Script** - Installs and configures everything in one command
-- **Shell Integration** - Auto-configures bash and zsh with `ccp` alias
+- **Shell Integration** - Auto-configures bash, fish and zsh with `ccp` alias
 - **IDE Compatible** - Works with VS Code, Cursor, Windsurf or Antigravity
 
 ---
@@ -96,22 +95,32 @@ curl -fsSL https://raw.githubusercontent.com/maxritter/claude-codepro/v3.3.4/ins
 
 1. Open Claude Code in the IDE Terminal, Extension or an external Terminal with the `ccp` command
 
-2. In CC, run `/config` to set `Auto-connect to IDE=true` and set `Auto-compact=false` for best experience
+2. In CC, run `/config` to set `Auto-connect to IDE=true` and set `Auto-compact=false`
    <img src="docs/img/ide-setup-config.png" alt="Setup config Screenshot" width="600">
 
 3. In CC, run `/ide` to connect to VS Code diagnostics and make sure all MCP servers for `/mcp` are online
    <img src="docs/img/ide-setup-mcp.png" alt="Setup mcp Screenshot" width="600">
 
-4. In CC, run `/plugins` → Marketplaces → thedotmack → Click "Update marketplace" & "Enable auto-update" → Restart with `ccp` → Open http://localhost:37777/ to see Web UI
-   <img src="docs/img/ide-setup-plugin.png" alt="Setup plugin Screenshot" width="600">
-
-5. In CC, run `/context` to verify context looks similar to this screenshot with rules loaded
+4. In CC, run `/context` to verify context looks similar to this screenshot with rules loaded
    <img src="docs/img/ide-setup-context.png" alt="Setup context Screenshot" width="600">
+
+### ⚠️ Important: Context Management
+
+**Never use `/compact`** - Claude CodePro is designed to use the full 200k context window:
+
+- **Auto-compact must be disabled** in `/config` (see step 2 above)
+- **Ignore the compact warning** in the bottom right of Claude Code - it appears too early
+- **Use the full context** during `/implement` sessions until context is actually full
+- **When context is full**, run `/clear` to start a fresh session
+- **Claude Mem auto-injects** relevant context from your previous session when you continue with `/implement`
+
+This approach ensures maximum context utilization and seamless session continuity via persistent memory.
 
 ### 👣 First Steps
 
 - Start with `/plan` - Provide your input and it will ask clarifying questions to create a spec
 - Use `/implement` to execute the spec with automatic TDD, best practices and context management
+- When context fills up, run `/clear` then continue with `/implement` mentioning your plan file
 - After spec completion, run `/verify` to run end-to-end review, all tests, and quality checks
 
 ### 🎯 Customizing Rules
@@ -141,6 +150,7 @@ paths: src/**/*.py
 - **[thedotmack/claude-mem](https://github.com/thedotmack/claude-mem)** - CC Persistent Memory system
 - **[zilliztech/claude-context](https://github.com/zilliztech/claude-context)** - CC Semantic code search
 - **[sirmalloc/ccstatusline](https://github.com/sirmalloc/ccstatusline)** - CC Status line integration
+- **[Piebald-AI/tweakcc](https://github.com/Piebald-AI/tweakcc)** - CC Customizations and tweaks for LSP
 - **[tavily-ai/tavily-mcp](https://github.com/tavily-ai/tavily-mcp)** - Web search and mapping capabilities
 - **[ref-tools/ref-tools-mcp](https://github.com/ref-tools/ref-tools-mcp)** - Library code context retrieval
 - **[astral-sh/uv](https://github.com/astral-sh/uv)** - Fast Python package manager
