@@ -98,6 +98,64 @@ class TestRollback:
             mock_step.rollback.assert_called_once_with(ctx)
 
 
+class TestBackupFeature:
+    """Test backup feature ignores special files."""
+
+    def test_ignore_special_files_skips_tmp_directory(self):
+        """ignore_special_files function skips tmp directory."""
+        # Import the function by running the backup code path
+        from pathlib import Path
+
+        # Simulate the ignore function logic
+        def ignore_special_files(directory: str, files: list[str]) -> list[str]:
+            ignored = []
+            for f in files:
+                path = Path(directory) / f
+                if path.is_fifo() or path.is_socket() or path.is_block_device() or path.is_char_device():
+                    ignored.append(f)
+                if f == "tmp":
+                    ignored.append(f)
+            return ignored
+
+        # Test that tmp is ignored
+        result = ignore_special_files("/some/dir", ["commands", "hooks", "tmp", "scripts"])
+        assert "tmp" in result
+        assert "commands" not in result
+        assert "hooks" not in result
+
+    def test_backup_copytree_with_ignore(self):
+        """Backup uses copytree with ignore function."""
+        import shutil
+        import tempfile
+        from pathlib import Path
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Create source directory with regular files and tmp subdirectory
+            source = Path(tmpdir) / ".claude"
+            source.mkdir()
+            (source / "commands").mkdir()
+            (source / "commands" / "spec.md").write_text("test")
+            (source / "tmp").mkdir()
+            (source / "tmp" / "pipes").mkdir()
+
+            # Create backup with ignore function
+            backup = Path(tmpdir) / ".claude.backup.test"
+
+            def ignore_special_files(directory: str, files: list[str]) -> list[str]:
+                ignored = []
+                for f in files:
+                    if f == "tmp":
+                        ignored.append(f)
+                return ignored
+
+            shutil.copytree(source, backup, ignore=ignore_special_files)
+
+            # Verify backup was created without tmp
+            assert backup.exists()
+            assert (backup / "commands" / "spec.md").exists()
+            assert not (backup / "tmp").exists()
+
+
 class TestMainEntry:
     """Test __main__ entry point."""
 

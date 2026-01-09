@@ -131,7 +131,20 @@ def install(
             timestamp = datetime.now().strftime("%Y%m%d.%H%M%S")
             backup_dir = Path.cwd() / f".claude.backup.{timestamp}"
             console.status(f"Creating backup at {backup_dir}...")
-            shutil.copytree(claude_dir, backup_dir)
+
+            def ignore_special_files(directory: str, files: list[str]) -> list[str]:
+                """Ignore pipes, sockets, and other special files."""
+                ignored = []
+                for f in files:
+                    path = Path(directory) / f
+                    if path.is_fifo() or path.is_socket() or path.is_block_device() or path.is_char_device():
+                        ignored.append(f)
+                    # Also skip tmp directory which contains runtime files
+                    if f == "tmp":
+                        ignored.append(f)
+                return ignored
+
+            shutil.copytree(claude_dir, backup_dir, ignore=ignore_special_files)
             console.success(f"Backup created: {backup_dir}")
 
     install_python = not skip_python
