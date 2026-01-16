@@ -177,34 +177,6 @@ Claude CodePro uses [Claude Code's modular rules](https://code.claude.com/docs/e
 
 ---
 
-## 💼 Professional Services
-
-I'm **Max Ritter**, a senior IT freelancer based near **Munich, Germany**, specializing in:
-
-- **AWS Cloud** - Cloud Infrastructure, Architecture & Development on AWS
-- **Data Engineering** - Data Pipelines, ETL, Analytics Infrastructure
-- **Artificial Intelligence** - LLM Integration, AI-Assisted Development, Agents
-- **DevOps** - CI/CD, Infrastructure as Code, Automation
-
-### Paid Services Available
-
-| Service | Description |
-|---------|-------------|
-| **Custom Development** | Claude CodePro doesn't work in your setup? Containerized environment issues? Specific software restrictions? I can customize it for your needs. |
-| **Enterprise Integration** | Need Claude CodePro integrated into your company's existing toolchain and workflows? |
-| **Consulting** | General DevOps, Data Engineering, or AI consulting for your projects |
-
-### Contact & Connect
-
-| | |
-|---|---|
-| **Email** | [mail@maxritter.net](mailto:mail@maxritter.net) |
-| **LinkedIn** | [linkedin.com/in/rittermax](https://www.linkedin.com/in/rittermax/) |
-| **Blog** | [blog.maxritter.net](http://blog.maxritter.net/) |
-| **Website** | [maxritter.net](https://maxritter.net) |
-
----
-
 ## 🙏 Acknowledgments
 
 - **[thedotmack/claude-mem](https://github.com/thedotmack/claude-mem)** - CC Persistent Memory system
@@ -212,12 +184,10 @@ I'm **Max Ritter**, a senior IT freelancer based near **Munich, Germany**, speci
 - **[scarletkc/vexor](https://github.com/scarletkc/vexor)** - CC Semantic code search capabilities
 - **[philschmid/mcp-cli](https://github.com/philschmid/mcp-cli)** - CC MCP Servers lazy loading
 - **[vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser)** - Headless browser automation CLI
-- **[ManuelKugelmann/BitBot](https://github.com/ManuelKugelmann/BitBot)** - CC Wrapper control inspirations
 - **[upstash/context7](https://github.com/upstash/context7)** - Library code context retrieval
 - **[firecrawl/firecrawl](https://github.com/firecrawl/firecrawl)** - Web search and scraping tool
 - **[astral-sh/uv](https://github.com/astral-sh/uv)** - Fast Python package manager
 - **[astral-sh/ruff](https://github.com/astral-sh/ruff)** - Fast Python linter and formatter
 - **[qltysh/qlty](https://github.com/qltysh/qlty)** - Code quality automation
 - **[DetachHead/basedpyright](https://github.com/DetachHead/basedpyright)** - Enhanced Python type checker
-- **[dotenvx/dotenvx](https://github.com/dotenvx/dotenvx)** - Automatic .env loading for Claude Code
 

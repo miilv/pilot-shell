@@ -34,7 +34,6 @@ class TestDependenciesStep:
             # Dependencies always need to be checked
             assert step.check(ctx) is False
 
-    @patch("installer.steps.dependencies.install_dotenvx")
     @patch("installer.steps.dependencies.run_qlty_check")
     @patch("installer.steps.dependencies.install_qlty")
     @patch("installer.steps.dependencies.install_vexor")
@@ -53,7 +52,6 @@ class TestDependenciesStep:
         mock_vexor,
         mock_qlty,
         mock_qlty_check,
-        mock_dotenvx,
     ):
         """DependenciesStep installs core dependencies."""
         from installer.context import InstallContext
@@ -68,7 +66,6 @@ class TestDependenciesStep:
         mock_context7.return_value = True
         mock_vexor.return_value = True
         mock_qlty.return_value = (True, False)
-        mock_dotenvx.return_value = True
 
         step = DependenciesStep()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -85,7 +82,6 @@ class TestDependenciesStep:
             mock_typescript_lsp.assert_called_once()
             mock_claude.assert_called_once()
 
-    @patch("installer.steps.dependencies.install_dotenvx")
     @patch("installer.steps.dependencies.run_qlty_check")
     @patch("installer.steps.dependencies.install_qlty")
     @patch("installer.steps.dependencies.install_vexor")
@@ -110,7 +106,6 @@ class TestDependenciesStep:
         mock_vexor,
         mock_qlty,
         mock_qlty_check,
-        mock_dotenvx,
     ):
         """DependenciesStep installs Python tools when enabled."""
         from installer.context import InstallContext
@@ -128,7 +123,6 @@ class TestDependenciesStep:
         mock_context7.return_value = True
         mock_vexor.return_value = True
         mock_qlty.return_value = (True, False)
-        mock_dotenvx.return_value = True
 
         step = DependenciesStep()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -172,12 +166,6 @@ class TestDependencyInstallFunctions:
         from installer.steps.dependencies import install_python_tools
 
         assert callable(install_python_tools)
-
-    def test_install_dotenvx_exists(self):
-        """install_dotenvx function exists."""
-        from installer.steps.dependencies import install_dotenvx
-
-        assert callable(install_dotenvx)
 
 
 class TestClaudeCodeInstall:
@@ -391,38 +379,6 @@ class TestFirecrawlMcpConfig:
                 assert config["verbose"] is True
                 assert "mcpServers" in config
                 assert "firecrawl" in config["mcpServers"]
-
-
-class TestDotenvxInstall:
-    """Test dotenvx installation."""
-
-    @patch("installer.steps.dependencies.command_exists")
-    @patch("subprocess.run")
-    def test_install_dotenvx_calls_native_installer(self, mock_run, mock_cmd_exists):
-        """install_dotenvx calls native shell installer."""
-        from installer.steps.dependencies import install_dotenvx
-
-        mock_cmd_exists.return_value = False
-        mock_run.return_value = MagicMock(returncode=0)
-
-        result = install_dotenvx()
-
-        # Should call curl shell installer
-        mock_run.assert_called()
-        call_args = mock_run.call_args[0][0]
-        assert "bash" in call_args
-        assert "dotenvx.sh" in call_args[2]  # The curl command is the 3rd arg
-
-    @patch("installer.steps.dependencies.command_exists")
-    def test_install_dotenvx_skips_if_exists(self, mock_cmd_exists):
-        """install_dotenvx skips if already installed."""
-        from installer.steps.dependencies import install_dotenvx
-
-        mock_cmd_exists.return_value = True
-
-        result = install_dotenvx()
-
-        assert result is True
 
 
 class TestTypescriptLspInstall:

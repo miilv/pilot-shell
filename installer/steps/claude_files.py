@@ -114,7 +114,6 @@ class ClaudeFilesStep(BaseStep):
             "rules": [],
             "hooks": [],
             "skills": [],
-            "scripts": [],
             "other": [],
         }
 
@@ -173,7 +172,7 @@ class ClaudeFilesStep(BaseStep):
             elif "/skills/" in file_path:
                 categories["skills"].append(file_path)
             elif "/scripts/" in file_path:
-                categories["scripts"].append(file_path)
+                continue
             else:
                 categories["other"].append(file_path)
 
@@ -183,7 +182,6 @@ class ClaudeFilesStep(BaseStep):
             "rules": "custom rules",
             "hooks": "hooks",
             "skills": "skills",
-            "scripts": "scripts",
             "other": "config files",
         }
 
@@ -195,7 +193,6 @@ class ClaudeFilesStep(BaseStep):
             dirs_to_clear = [
                 ("commands", categories["commands"], ctx.project_dir / ".claude" / "commands"),
                 ("hooks", categories["hooks"], ctx.project_dir / ".claude" / "hooks"),
-                ("scripts", categories["scripts"], ctx.project_dir / ".claude" / "scripts"),
                 ("skills", categories["skills"], ctx.project_dir / ".claude" / "skills"),
                 ("standard rules", categories["rules_standard"], ctx.project_dir / ".claude" / "rules" / "standard"),
             ]

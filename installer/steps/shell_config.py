@@ -23,55 +23,38 @@ def get_alias_line(shell_type: str) -> str:
     """Get the alias line for the given shell type.
 
     Creates an alias that:
-    1. If current dir is CCP project (.claude/rules/ exists) → use it
+    1. If current dir is CCP project (.claude/bin/ccp exists) → use it
     2. If in devcontainer (/workspaces exists) → find CCP project there
     3. Otherwise → show error
 
-    The alias:
-    - Uses nvm to set Node.js 22
-    - Clears screen
-    - Runs Claude via wrapper.py for /spec command support
-    - Falls back to direct claude if wrapper not found
-
-    Note: Rules are now natively loaded by Claude Code from .claude/rules/*.md
+    The alias runs the ccp binary from the project's .claude/bin/ directory.
     """
-    claude_cmd = (
-        "if [ -f .claude/scripts/wrapper.py ]; then "
-        "dotenvx run -- python3 .claude/scripts/wrapper.py; "
-        "else dotenvx run -- claude; fi"
-    )
-    claude_cmd_fish = (
-        "if test -f .claude/scripts/wrapper.py; "
-        "dotenvx run -- python3 .claude/scripts/wrapper.py; "
-        "else; dotenvx run -- claude; end"
-    )
-
     if shell_type == "fish":
         return (
             f"{CCP_ALIAS_MARKER}\n"
             "alias ccp='"
-            "if test -d .claude/rules; "
-            f"nvm use 22; and clear; and {claude_cmd_fish}; "
+            "if test -f .claude/bin/ccp; "
+            ".claude/bin/ccp; "
             "else if test -d /workspaces; "
-            'set ccp_dir ""; for d in /workspaces/*/; test -d "$d.claude/rules"; and set ccp_dir "$d"; and break; end; '
-            f'if test -n "$ccp_dir"; cd "$ccp_dir"; and nvm use 22; and clear; and {claude_cmd_fish}; '
+            'set ccp_dir ""; for d in /workspaces/*/; test -f "$d.claude/bin/ccp"; and set ccp_dir "$d"; and break; end; '
+            'if test -n "$ccp_dir"; cd "$ccp_dir"; and .claude/bin/ccp; '
             'else; echo "Error: No CCP project found in /workspaces"; end; '
             "else; "
-            'echo "Error: Not a Claude CodePro project. Please cd to a CCP-enabled project first."; '
+            'echo "Error: Not a Claude CodePro project. Run the installer first or cd to a CCP-enabled project."; '
             "end'"
         )
     else:
         return (
             f"{CCP_ALIAS_MARKER}\n"
             "alias ccp='"
-            "if [ -d .claude/rules ]; then "
-            f"nvm use 22 && clear && {claude_cmd}; "
+            "if [ -f .claude/bin/ccp ]; then "
+            ".claude/bin/ccp; "
             "elif [ -d /workspaces ]; then "
-            'ccp_dir=""; for d in /workspaces/*/; do [ -d "$d.claude/rules" ] && ccp_dir="$d" && break; done; '
-            f'if [ -n "$ccp_dir" ]; then cd "$ccp_dir" && nvm use 22 && clear && {claude_cmd}; '
+            'ccp_dir=""; for d in /workspaces/*/; do [ -f "$d.claude/bin/ccp" ] && ccp_dir="$d" && break; done; '
+            'if [ -n "$ccp_dir" ]; then cd "$ccp_dir" && .claude/bin/ccp; '
             'else echo "Error: No CCP project found in /workspaces"; fi; '
             "else "
-            'echo "Error: Not a Claude CodePro project. Please cd to a CCP-enabled project first."; '
+            'echo "Error: Not a Claude CodePro project. Run the installer first or cd to a CCP-enabled project."; '
             "fi'"
         )
 
@@ -257,6 +240,7 @@ class ShellConfigStep(BaseStep):
 
     def check(self, ctx: InstallContext) -> bool:
         """Always return False to ensure alias is updated on every install."""
+        _ = ctx
         return False
 
     def run(self, ctx: InstallContext) -> None:
@@ -294,8 +278,6 @@ class ShellConfigStep(BaseStep):
             alias_existed = alias_exists_in_file(config_file)
             if alias_existed:
                 remove_old_alias(config_file)
-                if ui:
-                    ui.info(f"Updating alias in {config_file.name}")
 
             shell_type = "fish" if "fish" in config_file.name else "bash"
             alias_line = get_alias_line(shell_type)
