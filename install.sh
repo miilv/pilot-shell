@@ -59,6 +59,14 @@ install_brew_packages() {
     echo ""
     echo "  Installing required packages via Homebrew..."
     echo ""
+
+    # Tap bun repository (required for bun formula)
+    if ! brew tap | grep -q "oven-sh/bun"; then
+        echo "  [..] Adding bun tap..."
+        brew tap oven-sh/bun
+        echo "  [OK] bun tap added"
+    fi
+
     for pkg in $BREW_PACKAGES; do
         if brew list "$pkg" >/dev/null 2>&1; then
             echo "  [OK] $pkg already installed"
