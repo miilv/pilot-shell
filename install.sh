@@ -28,42 +28,25 @@ download_file() {
     fi
 }
 
-check_homebrew() {
-    command -v brew >/dev/null 2>&1
+check_uv() {
+    command -v uv >/dev/null 2>&1
 }
 
-install_homebrew() {
-    echo "  [..] Installing Homebrew..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-    if [ -d "/opt/homebrew/bin" ]; then
-        eval "$(/opt/homebrew/bin/brew shellenv)" # macOS ARM
-    elif [ -d "/usr/local/bin" ] && [ -f "/usr/local/bin/brew" ]; then
-        eval "$(/usr/local/bin/brew shellenv)" # macOS Intel
-    elif [ -d "/home/linuxbrew/.linuxbrew/bin" ]; then
-        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" # Linux
+install_uv() {
+    echo "  [..] Installing uv..."
+    if command -v curl >/dev/null 2>&1; then
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+    elif command -v wget >/dev/null 2>&1; then
+        wget -qO- https://astral.sh/uv/install.sh | sh
     fi
 
-    if ! check_homebrew; then
-        echo ""
-        echo "  [!!] Homebrew installation failed or brew not in PATH."
-        echo "      Please install Homebrew manually or use Dev Container instead."
+    export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+
+    if ! check_uv; then
+        echo "  [!!] Failed to install uv"
         exit 1
     fi
-    echo "  [OK] Homebrew installed"
-}
-
-check_python() {
-    command -v python3 >/dev/null 2>&1
-}
-
-install_python() {
-    echo "  [..] Installing Python via Homebrew..."
-    if ! brew install python@3.12; then
-        echo "  [!!] Failed to install Python"
-        exit 1
-    fi
-    echo "  [OK] Python installed"
+    echo "  [OK] uv installed"
 }
 
 confirm_local_install() {
@@ -164,6 +147,8 @@ download_installer() {
         download_file "$file_path" "$dest_file"
     done
 
+    download_file "pyproject.toml" "$installer_dir/pyproject.toml"
+
     echo "  [OK] Installer downloaded"
 }
 
@@ -225,32 +210,35 @@ download_ccp_binary() {
     echo "  [OK] CCP binary downloaded"
 }
 
-install_installer_deps() {
-    echo "  [..] Installing installer dependencies..."
-    # Install minimal dependencies needed to run the Python installer
-    # Use --quiet and --disable-pip-version-check to reduce noise
-    python3 -m pip install --quiet --disable-pip-version-check \
-        "rich>=14.0.0" \
-        "httpx>=0.28.1" \
-        "typer>=0.21.1" \
-        "platformdirs>=4.3.6" \
-        "InquirerPy>=0.3.4" 2>/dev/null || {
+install_dependencies() {
+    local installer_dir=".claude/installer"
+
+    echo "  [..] Installing dependencies..."
+
+    cd "$installer_dir"
+    uv venv .venv --quiet
+    uv pip install --quiet -e . || {
         echo "  [!!] Failed to install dependencies"
-        echo "      Please ensure pip is available: python3 -m pip --version"
         exit 1
     }
+    cd - >/dev/null
+
     echo "  [OK] Dependencies installed"
 }
 
-run_python_installer() {
+run_installer() {
     local installer_dir=".claude/installer"
 
     echo ""
+    export PYTHONPATH="$installer_dir:${PYTHONPATH:-}"
+
+    cd "$installer_dir"
     if [ "$LOCAL_INSTALL" = true ]; then
-        python3 -m installer install --local-system "$@"
+        uv run python -m installer install --local-system "$@"
     else
-        python3 -m installer install "$@"
+        uv run python -m installer install "$@"
     fi
+    cd - >/dev/null
 }
 
 if ! is_in_container; then
@@ -269,7 +257,7 @@ if ! is_in_container; then
     echo "  Choose installation method:"
     echo ""
     echo "    1) Dev Container - Isolated environment, consistent tooling"
-    echo "    2) Local - Install directly on your system via Homebrew (macOS/Linux)"
+    echo "    2) Local - Install directly on your system (macOS/Linux)"
     echo ""
 
     choice=""
@@ -290,20 +278,7 @@ if ! is_in_container; then
         echo ""
         echo "  Local Installation selected"
         echo ""
-
         confirm_local_install
-
-        if check_homebrew; then
-            echo "  [OK] Homebrew already installed"
-        else
-            install_homebrew
-        fi
-
-        if check_python; then
-            echo "  [OK] Python already installed"
-        else
-            install_python
-        fi
         ;;
     *)
         setup_devcontainer
@@ -315,12 +290,16 @@ echo ""
 echo "Downloading Claude CodePro (v${VERSION})..."
 echo ""
 
+if check_uv; then
+    echo "  [OK] uv already installed"
+else
+    install_uv
+fi
+
 download_ccp_binary
 
 download_installer
 
-install_installer_deps
+install_dependencies
 
-export PYTHONPATH=".claude/installer:${PYTHONPATH:-}"
-
-run_python_installer "$@"
+run_installer "$@"

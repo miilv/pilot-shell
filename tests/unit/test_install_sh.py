@@ -6,12 +6,12 @@ from pathlib import Path
 
 
 def test_install_sh_runs_python_installer():
-    """Verify install.sh runs the Python installer module."""
+    """Verify install.sh runs the Python installer module via uv."""
     install_sh = Path(__file__).parent.parent.parent / "install.sh"
     content = install_sh.read_text()
 
-    # The script must run the Python installer module
-    assert "python3 -m installer" in content, "install.sh must run Python installer module"
+    # The script must run the Python installer module via uv
+    assert "uv run python -m installer" in content, "install.sh must run Python installer via uv"
 
     # Check that it passes the install command
     assert "install" in content, "install.sh must pass 'install' command"
@@ -48,25 +48,15 @@ def test_install_sh_downloads_ccp_binary():
     assert ".claude/bin/ccp" in content, "Must install to .claude/bin/ccp"
 
 
-def test_install_sh_ensures_python_for_local_mode():
-    """Verify install.sh ensures Python is available for local mode."""
+def test_install_sh_ensures_uv_available():
+    """Verify install.sh ensures uv is available."""
     install_sh = Path(__file__).parent.parent.parent / "install.sh"
     content = install_sh.read_text()
 
-    # Must check for Python
-    assert "check_python" in content, "install.sh must have check_python function"
-    assert "install_python" in content, "install.sh must have install_python function"
-    assert "python3" in content, "Must reference python3"
-
-
-def test_install_sh_ensures_homebrew_for_local_mode():
-    """Verify install.sh ensures Homebrew is available for local mode."""
-    install_sh = Path(__file__).parent.parent.parent / "install.sh"
-    content = install_sh.read_text()
-
-    # Must check for Homebrew
-    assert "check_homebrew" in content, "install.sh must have check_homebrew function"
-    assert "install_homebrew" in content, "install.sh must have install_homebrew function"
+    # Must check for uv and install if needed
+    assert "check_uv" in content, "install.sh must have check_uv function"
+    assert "install_uv" in content, "install.sh must have install_uv function"
+    assert "astral.sh/uv/install.sh" in content, "Must use official uv installer"
 
 
 def test_install_sh_is_executable_bash_script():
@@ -94,3 +84,12 @@ def test_install_sh_sets_pythonpath():
 
     assert "PYTHONPATH" in content, "Must set PYTHONPATH for installer module"
     assert ".claude/installer" in content, "Must reference installer directory"
+
+
+def test_install_sh_installs_dependencies():
+    """Verify install.sh installs Python dependencies via uv."""
+    install_sh = Path(__file__).parent.parent.parent / "install.sh"
+    content = install_sh.read_text()
+
+    assert "install_dependencies" in content, "Must have install_dependencies function"
+    assert "uv pip install" in content, "Must use uv pip install for dependencies"

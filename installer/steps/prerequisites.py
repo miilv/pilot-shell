@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 from typing import TYPE_CHECKING
 
@@ -21,6 +22,32 @@ HOMEBREW_PACKAGES = [
     "bun",
     "uv",
 ]
+
+
+def _install_homebrew() -> bool:
+    """Install Homebrew."""
+    try:
+        result = subprocess.run(
+            ["/bin/bash", "-c", "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"],
+            shell=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            return False
+
+        brew_paths = [
+            "/opt/homebrew/bin",
+            "/usr/local/bin",
+            "/home/linuxbrew/.linuxbrew/bin",
+        ]
+        for brew_path in brew_paths:
+            if os.path.exists(os.path.join(brew_path, "brew")):
+                os.environ["PATH"] = f"{brew_path}:{os.environ.get('PATH', '')}"
+                break
+
+        return is_homebrew_available()
+    except (subprocess.SubprocessError, OSError):
+        return False
 
 
 def _add_bun_tap() -> bool:
@@ -75,7 +102,7 @@ class PrerequisitesStep(BaseStep):
         Returns True (skip) if:
         - Running in a dev container
         - Not a local installation
-        - All packages are already installed
+        - Homebrew is available AND all packages are already installed
         """
         if is_in_devcontainer():
             return True
@@ -94,8 +121,23 @@ class PrerequisitesStep(BaseStep):
         return True
 
     def run(self, ctx: InstallContext) -> None:
-        """Install missing prerequisite packages via Homebrew."""
+        """Install Homebrew (if needed) and missing prerequisite packages."""
         ui = ctx.ui
+
+        if not is_homebrew_available():
+            if ui:
+                ui.info("Homebrew not found, installing...")
+                with ui.spinner("Installing Homebrew..."):
+                    success = _install_homebrew()
+                if success:
+                    ui.success("Homebrew installed")
+                else:
+                    ui.error("Failed to install Homebrew")
+                    ui.info("Please install Homebrew manually: https://brew.sh")
+                    return
+            else:
+                if not _install_homebrew():
+                    return
 
         _add_bun_tap()
 
