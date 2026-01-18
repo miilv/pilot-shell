@@ -14,6 +14,10 @@ Start shipping systematically with Endless Mode, Spec-Driven Development, Skills
 
 #### ⭐ [Star this repository](https://github.com/maxritter/claude-codepro) · 🌐 [Visit the website](https://claude-code.pro) · 💼 [Follow for updates](https://www.linkedin.com/in/rittermax/) · ✉️ [Get in touch](mailto:mail@maxritter.net)
 
+<br>
+
+<img src="docs/img/demo.gif" alt="Claude CodePro Demo" width="800">
+
 </div>
 
 ---
