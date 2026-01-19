@@ -99,4 +99,5 @@
         "path": "/bin/zsh"
     },
     "git.ignoreLimitWarning": true,
+    "git.rebaseWhenSync": true
 }
