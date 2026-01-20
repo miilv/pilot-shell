@@ -35,7 +35,7 @@ class TestProcessSettings:
             }
         }
 
-        result = process_settings(json.dumps(settings), enable_python=True, enable_typescript=True)
+        result = process_settings(json.dumps(settings), enable_python=True, enable_typescript=True, enable_golang=True)
         parsed = json.loads(result)
 
         hooks = parsed["hooks"]["PostToolUse"][0]["hooks"]
@@ -66,7 +66,7 @@ class TestProcessSettings:
             }
         }
 
-        result = process_settings(json.dumps(settings), enable_python=False, enable_typescript=True)
+        result = process_settings(json.dumps(settings), enable_python=False, enable_typescript=True, enable_golang=True)
         parsed = json.loads(result)
 
         hooks = parsed["hooks"]["PostToolUse"][0]["hooks"]
@@ -81,7 +81,7 @@ class TestProcessSettings:
 
         settings = {"model": "opus", "env": {"key": "value"}}
 
-        result = process_settings(json.dumps(settings), enable_python=False, enable_typescript=False)
+        result = process_settings(json.dumps(settings), enable_python=False, enable_typescript=False, enable_golang=True)
         parsed = json.loads(result)
 
         assert parsed["model"] == "opus"
@@ -107,7 +107,7 @@ class TestProcessSettings:
             },
         }
 
-        result = process_settings(json.dumps(settings), enable_python=False, enable_typescript=True)
+        result = process_settings(json.dumps(settings), enable_python=False, enable_typescript=True, enable_golang=True)
         parsed = json.loads(result)
 
         assert parsed["model"] == "opus"
@@ -130,7 +130,7 @@ class TestProcessSettings:
 
         for settings in malformed_cases:
             # Should not raise an exception
-            result = process_settings(json.dumps(settings), enable_python=False, enable_typescript=False)
+            result = process_settings(json.dumps(settings), enable_python=False, enable_typescript=False, enable_golang=True)
             # Should return valid JSON
             parsed = json.loads(result)
             assert parsed is not None
@@ -158,7 +158,7 @@ class TestProcessSettings:
             }
         }
 
-        result = process_settings(json.dumps(settings), enable_python=True, enable_typescript=False)
+        result = process_settings(json.dumps(settings), enable_python=True, enable_typescript=False, enable_golang=True)
         parsed = json.loads(result)
 
         hooks = parsed["hooks"]["PostToolUse"][0]["hooks"]
@@ -192,7 +192,7 @@ class TestProcessSettings:
             }
         }
 
-        result = process_settings(json.dumps(settings), enable_python=False, enable_typescript=False)
+        result = process_settings(json.dumps(settings), enable_python=False, enable_typescript=False, enable_golang=True)
         parsed = json.loads(result)
 
         hooks = parsed["hooks"]["PostToolUse"][0]["hooks"]
@@ -201,6 +201,67 @@ class TestProcessSettings:
         assert not any("file_checker_ts.py" in cmd for cmd in commands)
         assert any("file_checker_qlty.py" in cmd for cmd in commands)
         assert len(hooks) == 1
+
+    def test_process_settings_removes_golang_hook_when_disabled(self):
+        """process_settings removes Go hook when enable_golang=False."""
+        from installer.steps.claude_files import process_settings
+
+        go_hook = "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_go.py"
+        settings = {
+            "hooks": {
+                "PostToolUse": [
+                    {
+                        "matcher": "Write|Edit|MultiEdit",
+                        "hooks": [
+                            {
+                                "type": "command",
+                                "command": "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_qlty.py",
+                            },
+                            {"type": "command", "command": go_hook},
+                        ],
+                    }
+                ]
+            }
+        }
+
+        result = process_settings(json.dumps(settings), enable_python=True, enable_typescript=True, enable_golang=False)
+        parsed = json.loads(result)
+
+        hooks = parsed["hooks"]["PostToolUse"][0]["hooks"]
+        commands = [h["command"] for h in hooks]
+        assert not any("file_checker_go.py" in cmd for cmd in commands)
+        assert any("file_checker_qlty.py" in cmd for cmd in commands)
+        assert len(hooks) == 1
+
+    def test_process_settings_preserves_golang_hook_when_enabled(self):
+        """process_settings keeps Go hook when enable_golang=True."""
+        from installer.steps.claude_files import process_settings
+
+        go_hook = "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_go.py"
+        settings = {
+            "hooks": {
+                "PostToolUse": [
+                    {
+                        "matcher": "Write|Edit|MultiEdit",
+                        "hooks": [
+                            {
+                                "type": "command",
+                                "command": "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_qlty.py",
+                            },
+                            {"type": "command", "command": go_hook},
+                        ],
+                    }
+                ]
+            }
+        }
+
+        result = process_settings(json.dumps(settings), enable_python=True, enable_typescript=True, enable_golang=True)
+        parsed = json.loads(result)
+
+        hooks = parsed["hooks"]["PostToolUse"][0]["hooks"]
+        commands = [h["command"] for h in hooks]
+        assert any("file_checker_go.py" in cmd for cmd in commands)
+        assert len(hooks) == 2
 
 
 class TestClaudeFilesStep:
@@ -480,6 +541,52 @@ class TestClaudeFilesStep:
             # Other files should be copied
             assert (dest_dir / ".claude" / "hooks" / "other_hook.sh").exists()
             # Python rules should be copied (now in standard/)
+            assert (dest_dir / ".claude" / "rules" / "standard" / "python-rules.md").exists()
+
+    def test_claude_files_skips_golang_when_disabled(self):
+        """ClaudeFilesStep skips Go files when enable_golang=False."""
+        from installer.context import InstallContext
+        from installer.steps.claude_files import ClaudeFilesStep
+        from installer.ui import Console
+
+        step = ClaudeFilesStep()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Create source with Go files
+            source_claude = Path(tmpdir) / "source" / ".claude"
+            source_hooks = source_claude / "hooks"
+            source_rules_standard = source_claude / "rules" / "standard"
+            source_hooks.mkdir(parents=True)
+            source_rules_standard.mkdir(parents=True)
+            (source_hooks / "file_checker_go.py").write_text("# golang hook")
+            (source_hooks / "other_hook.sh").write_text("# other hook")
+            (source_rules_standard / "golang-rules.md").write_text("# golang rules")
+            (source_rules_standard / "python-rules.md").write_text("# python rules")
+            # Add settings file (required by the step)
+            (source_claude / "settings.local.json").write_text('{"hooks": {}}')
+
+            dest_dir = Path(tmpdir) / "dest"
+            dest_dir.mkdir()
+            (dest_dir / ".claude").mkdir()
+            (dest_dir / ".claude" / "hooks").mkdir()
+            (dest_dir / ".claude" / "rules" / "standard").mkdir(parents=True)
+
+            ctx = InstallContext(
+                project_dir=dest_dir,
+                enable_golang=False,
+                ui=Console(non_interactive=True),
+                local_mode=True,
+                local_repo_dir=Path(tmpdir) / "source",
+            )
+
+            step.run(ctx)
+
+            # Go hook should NOT be copied
+            assert not (dest_dir / ".claude" / "hooks" / "file_checker_go.py").exists()
+            # Go rules should NOT be copied
+            assert not (dest_dir / ".claude" / "rules" / "standard" / "golang-rules.md").exists()
+            # Other files should be copied
+            assert (dest_dir / ".claude" / "hooks" / "other_hook.sh").exists()
+            # Python rules should be copied
             assert (dest_dir / ".claude" / "rules" / "standard" / "python-rules.md").exists()
 
 

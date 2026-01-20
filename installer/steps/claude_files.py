@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 SETTINGS_FILE = "settings.local.json"
 PYTHON_CHECKER_HOOK = "python3 .claude/hooks/file_checker_python.py"
 TYPESCRIPT_CHECKER_HOOK = "python3 .claude/hooks/file_checker_ts.py"
+GOLANG_CHECKER_HOOK = "python3 .claude/hooks/file_checker_go.py"
 HOOKS_PATH_PATTERN = ".claude/hooks/"
 SOURCE_REPO_PATH = "/workspaces/claude-codepro/.claude/hooks/"
 
@@ -36,13 +37,14 @@ def patch_hook_paths(content: str, project_dir: Path) -> str:
     return content
 
 
-def process_settings(settings_content: str, enable_python: bool, enable_typescript: bool) -> str:
-    """Process settings JSON, optionally removing Python/TypeScript-specific hooks.
+def process_settings(settings_content: str, enable_python: bool, enable_typescript: bool, enable_golang: bool) -> str:
+    """Process settings JSON, optionally removing Python/TypeScript/Go-specific hooks.
 
     Args:
         settings_content: Raw JSON content of the settings file
         enable_python: Whether Python support is enabled
         enable_typescript: Whether TypeScript support is enabled
+        enable_golang: Whether Go support is enabled
 
     Returns:
         Processed JSON string with hooks removed based on enable flags
@@ -54,6 +56,8 @@ def process_settings(settings_content: str, enable_python: bool, enable_typescri
         files_to_remove.append("file_checker_python.py")
     if not enable_typescript:
         files_to_remove.append("file_checker_ts.py")
+    if not enable_golang:
+        files_to_remove.append("file_checker_go.py")
 
     if files_to_remove:
         try:
@@ -153,6 +157,12 @@ class ClaudeFilesStep(BaseStep):
                 if "typescript-rules.md" in file_path:
                     continue
 
+            if not ctx.enable_golang:
+                if "file_checker_go.py" in file_path:
+                    continue
+                if "golang-rules.md" in file_path:
+                    continue
+
             if not ctx.enable_agent_browser:
                 if "agent-browser.md" in file_path:
                     continue
@@ -232,6 +242,7 @@ class ClaudeFilesStep(BaseStep):
                                 config,
                                 ctx.enable_python,
                                 ctx.enable_typescript,
+                                ctx.enable_golang,
                                 ctx.project_dir,
                             )
                             if success:
@@ -256,7 +267,7 @@ class ClaudeFilesStep(BaseStep):
                     dest_file = ctx.project_dir / file_path
                     if Path(file_path).name == SETTINGS_FILE:
                         success = self._install_settings(
-                            file_path, dest_file, config, ctx.enable_python, ctx.enable_typescript, ctx.project_dir
+                            file_path, dest_file, config, ctx.enable_python, ctx.enable_typescript, ctx.enable_golang, ctx.project_dir
                         )
                         if success:
                             file_count += 1
@@ -308,6 +319,7 @@ class ClaudeFilesStep(BaseStep):
         config: DownloadConfig,
         install_python: bool,
         install_typescript: bool,
+        install_golang: bool,
         project_dir: Path,
     ) -> bool:
         """Download and process settings file.
@@ -318,6 +330,7 @@ class ClaudeFilesStep(BaseStep):
             config: Download configuration
             install_python: Whether Python support is being installed
             install_typescript: Whether TypeScript support is being installed
+            install_golang: Whether Go support is being installed
             project_dir: Project directory for absolute hook paths
 
         Returns:
@@ -332,7 +345,7 @@ class ClaudeFilesStep(BaseStep):
 
             try:
                 settings_content = temp_file.read_text()
-                processed_content = process_settings(settings_content, install_python, install_typescript)
+                processed_content = process_settings(settings_content, install_python, install_typescript, install_golang)
                 processed_content = patch_hook_paths(processed_content, project_dir)
                 dest_path.parent.mkdir(parents=True, exist_ok=True)
                 dest_path.write_text(processed_content)

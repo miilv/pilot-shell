@@ -54,6 +54,9 @@ class FinalizeStep(BaseStep):
         if ctx.enable_typescript:
             installed_items.append("TypeScript quality hooks")
 
+        if ctx.enable_golang:
+            installed_items.append("Go quality hooks")
+
         ui.success_box("Installation Complete!", installed_items)
 
         steps: list[tuple[str, str]] = []

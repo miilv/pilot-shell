@@ -316,6 +316,7 @@ def install(
     local_repo_dir: Optional[Path] = typer.Option(None, "--local-repo-dir", help="Local repository directory"),
     skip_python: bool = typer.Option(False, "--skip-python", help="Skip Python support installation"),
     skip_typescript: bool = typer.Option(False, "--skip-typescript", help="Skip TypeScript support installation"),
+    skip_golang: bool = typer.Option(False, "--skip-golang", help="Skip Go support installation"),
     local_system: bool = typer.Option(False, "--local-system", help="Local installation (not in container)"),
 ) -> None:
     """Install Claude CodePro."""
@@ -490,6 +491,17 @@ def install(
             console.print("  This includes: TypeScript quality hooks (eslint, tsc, prettier)")
             enable_typescript = console.confirm("Install TypeScript support?", default=True)
 
+    enable_golang = not skip_golang
+    if not skip_golang and not skip_prompts:
+        if "enable_golang" in saved_config:
+            enable_golang = saved_config["enable_golang"]
+            console.print(f"  [dim]Using saved preference: Go support = {enable_golang}[/dim]")
+        else:
+            console.print()
+            console.print("  [bold]Do you want to install Go features?[/bold]")
+            console.print("  This includes: Go quality hooks (gofmt, go vet, golangci-lint)")
+            enable_golang = console.confirm("Install Go support?", default=True)
+
     enable_agent_browser = True
     if not skip_prompts:
         if "enable_agent_browser" in saved_config:
@@ -553,6 +565,7 @@ def install(
     if not skip_prompts:
         saved_config["enable_python"] = enable_python
         saved_config["enable_typescript"] = enable_typescript
+        saved_config["enable_golang"] = enable_golang
         saved_config["enable_agent_browser"] = enable_agent_browser
         saved_config["enable_openai_embeddings"] = enable_openai_embeddings
         saved_config["enable_firecrawl"] = enable_firecrawl
@@ -562,6 +575,7 @@ def install(
         project_dir=project_dir,
         enable_python=enable_python,
         enable_typescript=enable_typescript,
+        enable_golang=enable_golang,
         enable_agent_browser=enable_agent_browser,
         non_interactive=non_interactive,
         skip_env=skip_env,
