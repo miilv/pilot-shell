@@ -77,7 +77,6 @@ show_macos_gatekeeper_help() {
         return
     fi
 
-    # Check if ccp binary exists and can run
     local ccp_path="$PWD/.claude/bin/ccp"
     if [ -f "$ccp_path" ]; then
         if ! "$ccp_path" --version >/dev/null 2>&1; then
@@ -134,9 +133,7 @@ setup_devcontainer() {
         PROJECT_NAME="$(basename "$(pwd)")"
         PROJECT_SLUG="$(echo "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]' | tr ' _' '-')"
         if [ -f ".devcontainer/devcontainer.json" ]; then
-            # Replace quoted "claude-codepro" (for name and runArgs) - but not URLs
             sed -i.bak 's/"claude-codepro"/"'"${PROJECT_SLUG}"'"/g' ".devcontainer/devcontainer.json"
-            # Replace in workspace path
             sed -i.bak 's|/workspaces/claude-codepro|/workspaces/'"${PROJECT_SLUG}"'|g' ".devcontainer/devcontainer.json"
             rm -f ".devcontainer/devcontainer.json.bak"
         fi
@@ -202,33 +199,21 @@ download_installer() {
     echo "  [OK] Installer downloaded"
 }
 
-install_dependencies() {
-    echo "  [..] Installing dependencies..."
-
-    if [ ! -d ".venv" ]; then
-        uv venv .venv --quiet
-    fi
-
-    uv pip install --quiet rich httpx typer platformdirs || {
-        echo "  [!!] Failed to install dependencies"
-        exit 1
-    }
-
-    echo "  [OK] Dependencies installed"
-}
-
 run_installer() {
     local installer_dir=".claude/installer"
     local saved_mode
     saved_mode=$(get_saved_install_mode)
 
     echo ""
+
     export PYTHONPATH="$installer_dir:${PYTHONPATH:-}"
 
     if ! is_in_container && [ "$saved_mode" = "local" ]; then
-        uv run python -m installer install --local-system "$@"
+        uv run --python 3.12 --no-project --with rich --with httpx --with typer --with platformdirs \
+            python -m installer install --local-system "$@"
     else
-        uv run python -m installer install "$@"
+        uv run --python 3.12 --no-project --with rich --with httpx --with typer --with platformdirs \
+            python -m installer install "$@"
     fi
 }
 
@@ -300,11 +285,8 @@ fi
 
 download_installer
 
-install_dependencies
-
 run_installer "$@"
 
-# Show macOS Gatekeeper help for local installs
 saved_mode=$(get_saved_install_mode)
 if [ "$saved_mode" = "local" ] || is_in_container; then
     show_macos_gatekeeper_help

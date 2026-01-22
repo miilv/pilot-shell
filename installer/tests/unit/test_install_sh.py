@@ -6,12 +6,13 @@ from pathlib import Path
 
 
 def test_install_sh_runs_python_installer():
-    """Verify install.sh runs the Python installer module via uv."""
+    """Verify install.sh runs the Python installer module via uv with Python 3.12."""
     install_sh = Path(__file__).parent.parent.parent.parent / "install.sh"
     content = install_sh.read_text()
 
-    # The script must run the Python installer module via uv
-    assert "uv run python -m installer" in content, "install.sh must run Python installer via uv"
+    # The script must run the Python installer module via uv with Python 3.12
+    assert "uv run --python 3.12" in content, "install.sh must run with Python 3.12"
+    assert "python -m installer" in content, "install.sh must run Python installer"
 
     # Check that it passes the install command
     assert "install" in content, "install.sh must pass 'install' command"
@@ -76,22 +77,26 @@ def test_install_sh_has_devcontainer_support():
     assert ".devcontainer" in content, "Must reference .devcontainer directory"
 
 
-def test_install_sh_sets_pythonpath():
-    """Verify install.sh sets PYTHONPATH for the installer."""
+def test_install_sh_uses_with_flags():
+    """Verify install.sh uses --with flags for inline deps (no venv created)."""
     install_sh = Path(__file__).parent.parent.parent.parent / "install.sh"
     content = install_sh.read_text()
 
+    assert "--with rich" in content, "Must use --with for rich"
+    assert "--with httpx" in content, "Must use --with for httpx"
+    assert "--with typer" in content, "Must use --with for typer"
+    assert "--with platformdirs" in content, "Must use --with for platformdirs"
     assert "PYTHONPATH" in content, "Must set PYTHONPATH for installer module"
-    assert ".claude/installer" in content, "Must reference installer directory"
 
 
-def test_install_sh_installs_dependencies():
-    """Verify install.sh installs Python dependencies via uv."""
+def test_install_sh_uses_python_312():
+    """Verify install.sh uses Python 3.12 via uv run."""
     install_sh = Path(__file__).parent.parent.parent.parent / "install.sh"
     content = install_sh.read_text()
 
-    assert "install_dependencies" in content, "Must have install_dependencies function"
-    assert "uv pip install" in content, "Must use uv pip install for dependencies"
+    # uv run --python 3.12 auto-downloads Python 3.12 if needed
+    assert "--python 3.12" in content, "Must use --python 3.12 flag"
+    assert "--no-project" in content, "Must use --no-project to avoid modifying user's venv"
 
 
 def test_install_sh_has_get_saved_install_mode():
