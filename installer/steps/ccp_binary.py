@@ -5,6 +5,7 @@ from __future__ import annotations
 import platform
 import stat
 import subprocess
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -23,8 +24,8 @@ except ImportError:
 GITHUB_REPO = "maxritter/claude-codepro"
 
 
-def _get_platform_binary_name() -> str | None:
-    """Get the CCP binary name for the current platform."""
+def _get_platform_suffix() -> str | None:
+    """Get the platform suffix for release artifacts (e.g., 'linux-x86_64')."""
     system = platform.system().lower()
     machine = platform.machine().lower()
 
@@ -42,7 +43,30 @@ def _get_platform_binary_name() -> str | None:
     else:
         return None
 
-    return f"ccp-{os_name}-{arch}"
+    return f"{os_name}-{arch}"
+
+
+def _get_local_so_name() -> str:
+    """Get the local .so filename with Python ABI tag."""
+    impl = sys.implementation.name
+    version = f"{sys.version_info.major}{sys.version_info.minor}"
+
+    system = platform.system().lower()
+    machine = platform.machine().lower()
+
+    if system == "linux":
+        if machine in ("x86_64", "amd64"):
+            platform_tag = "x86_64-linux-gnu"
+        elif machine in ("arm64", "aarch64"):
+            platform_tag = "aarch64-linux-gnu"
+        else:
+            platform_tag = f"{machine}-linux-gnu"
+    elif system == "darwin":
+        platform_tag = "darwin"
+    else:
+        platform_tag = system
+
+    return f"cli.{impl}-{version}-{platform_tag}.so"
 
 
 def _get_installed_version(ccp_path: Path, ui: Any = None) -> str | None:
@@ -73,14 +97,8 @@ def _get_installed_version(ccp_path: Path, ui: Any = None) -> str | None:
         return _run_version()
 
 
-def _download_binary(version: str, dest_path: Path) -> bool:
-    """Download the CCP binary for the current platform."""
-    binary_name = _get_platform_binary_name()
-    if not binary_name:
-        return False
-
-    url = f"https://github.com/{GITHUB_REPO}/releases/download/v{version}/{binary_name}"
-
+def _download_file(url: str, dest_path: Path, executable: bool = True) -> bool:
+    """Download a file from URL to destination path."""
     try:
         with httpx.Client(timeout=60.0, follow_redirects=True) as client:
             response = client.get(url)
@@ -92,7 +110,8 @@ def _download_binary(version: str, dest_path: Path) -> bool:
                 dest_path.unlink()
             dest_path.write_bytes(response.content)
 
-            dest_path.chmod(dest_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+            if executable:
+                dest_path.chmod(dest_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
             if platform.system() == "Darwin":
                 try:
@@ -103,6 +122,32 @@ def _download_binary(version: str, dest_path: Path) -> bool:
             return True
     except (httpx.HTTPError, httpx.TimeoutException, OSError):
         return False
+
+
+def _download_ccp_artifacts(version: str, bin_dir: Path) -> bool:
+    """Download the CCP .so module and wrapper for the current platform."""
+    platform_suffix = _get_platform_suffix()
+    if not platform_suffix:
+        return False
+
+    base_url = f"https://github.com/{GITHUB_REPO}/releases/download/v{version}"
+
+    so_url = f"{base_url}/cli-{platform_suffix}.so"
+    local_so_name = _get_local_so_name()
+    so_path = bin_dir / local_so_name
+
+    if not _download_file(so_url, so_path, executable=True):
+        return False
+
+    wrapper_url = f"{base_url}/ccp-wrapper"
+    wrapper_path = bin_dir / "ccp"
+
+    if not _download_file(wrapper_url, wrapper_path, executable=True):
+        if so_path.exists():
+            so_path.unlink()
+        return False
+
+    return True
 
 
 class CcpBinaryStep(BaseStep):
@@ -143,7 +188,8 @@ class CcpBinaryStep(BaseStep):
     def run(self, ctx: InstallContext) -> None:
         """Download or update the CCP binary."""
         ui = ctx.ui
-        ccp_path = ctx.project_dir / ".claude" / "bin" / "ccp"
+        bin_dir = ctx.project_dir / ".claude" / "bin"
+        ccp_path = bin_dir / "ccp"
 
         target_version = INSTALLER_VERSION or ctx.config.get("target_version")
         if not target_version:
@@ -164,13 +210,13 @@ class CcpBinaryStep(BaseStep):
         action = "Updating" if ccp_path.exists() else "Downloading"
         if ui:
             with ui.spinner(f"{action} CCP binary to v{target_version}..."):
-                success = _download_binary(target_version, ccp_path)
+                success = _download_ccp_artifacts(target_version, bin_dir)
             if success:
                 ui.success(f"CCP binary updated to v{target_version}")
             else:
                 ui.warning("Could not update CCP binary - will update on next install")
         else:
-            _download_binary(target_version, ccp_path)
+            _download_ccp_artifacts(target_version, bin_dir)
 
     def rollback(self, ctx: InstallContext) -> None:
         """No rollback for binary updates - old binary in memory still works."""

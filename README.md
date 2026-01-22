@@ -104,10 +104,10 @@ You'll be asked to choose between **Dev Container** or **Local Installation**.
 
 ### ✅ Quality Automation
 
-- **Auditor Agent** - Background AI that monitors rule compliance and surfaces violations in real-time
 - **TDD Enforcer** - Pre-edit hook that warns when modifying code without failing tests first
 - **Quality Hooks** - Specific hooks for Python, TypeScript and Go, all other languages via qlty
-- **Status Line** - Live display of context usage, memory status, auditor state, and license info
+- **Context Monitor** - Tracks context usage and triggers automatic session handoffs
+- **Status Line** - Live display of context usage, memory status, usage limits, and license info
 
 ### 🛠️ One-Command Installer
 
@@ -187,7 +187,7 @@ Claude CodePro uses [Claude Code's modular rules](https://code.claude.com/docs/e
 
 - **Standard Rules** in `.claude/rules/standard/` - Best-Practices updated on install, don't modify those
 - **Custom Rules** in `.claude/rules/custom/` - Your project-specific rules, never touched by updates
-- **Auditor Agent** - Background agent that monitors your session and alerts you when rules are violated
+- **Quality Hooks** - Pre-edit and post-edit hooks that enforce standards automatically
 
 
 ---

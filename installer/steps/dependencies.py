@@ -154,17 +154,46 @@ def install_python_tools() -> bool:
         return False
 
 
-def _remove_native_claude_binaries() -> None:
-    """Remove native Claude Code binaries to avoid conflicts with npm install."""
-    native_bin = Path.home() / ".local" / "bin" / "claude"
-    native_data = Path.home() / ".local" / "share" / "claude"
+def _remove_npm_claude_binaries() -> None:
+    """Remove npm-installed Claude Code to avoid conflicts with native install."""
+    import shutil
 
-    if native_bin.exists():
-        native_bin.unlink()
-    if native_data.exists():
-        import shutil
+    nvm_source = _get_nvm_source_cmd()
+    try:
+        subprocess.run(
+            ["bash", "-c", f"{nvm_source}npm uninstall -g @anthropic-ai/claude-code"],
+            capture_output=True,
+            timeout=30,
+        )
+    except Exception:
+        pass
 
-        shutil.rmtree(native_data, ignore_errors=True)
+    npm_locations = [
+        Path.home() / ".nvm" / "versions" / "node",
+        Path("/usr/local/share/nvm/versions/node"),
+        Path("/usr/local/lib/node_modules"),
+        Path("/usr/lib/node_modules"),
+    ]
+
+    for base_path in npm_locations:
+        if not base_path.exists():
+            continue
+
+        if "nvm" in str(base_path) and "versions" in str(base_path):
+            for node_version in base_path.glob("v*"):
+                claude_pkg = node_version / "lib" / "node_modules" / "@anthropic-ai" / "claude-code"
+                claude_bin = node_version / "bin" / "claude"
+                if claude_pkg.exists():
+                    shutil.rmtree(claude_pkg, ignore_errors=True)
+                if claude_bin.exists() or claude_bin.is_symlink():
+                    try:
+                        claude_bin.unlink()
+                    except Exception:
+                        pass
+        else:
+            claude_pkg = base_path / "@anthropic-ai" / "claude-code"
+            if claude_pkg.exists():
+                shutil.rmtree(claude_pkg, ignore_errors=True)
 
 
 def _patch_claude_config(config_updates: dict) -> bool:
@@ -193,7 +222,7 @@ def _configure_claude_defaults() -> bool:
     """Configure Claude Code with recommended defaults after installation."""
     return _patch_claude_config(
         {
-            "installMethod": "npm-global",
+            "installMethod": "native",
             "theme": "dark-ansi",
             "verbose": True,
             "autoCompactEnabled": False,
@@ -252,17 +281,47 @@ def _get_forced_claude_version(project_dir: Path) -> str | None:
     return None
 
 
+def _get_installed_claude_version() -> str | None:
+    """Get the currently installed Claude Code version via native installer."""
+    claude_bin = Path.home() / ".local" / "bin" / "claude"
+    if not claude_bin.exists():
+        return None
+
+    try:
+        result = subprocess.run(
+            [str(claude_bin), "--version"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if result.returncode == 0:
+            version_str = result.stdout.strip()
+            for part in version_str.split():
+                if part[0].isdigit():
+                    return part
+            return version_str
+    except Exception:
+        pass
+    return None
+
+
 def install_claude_code(project_dir: Path) -> tuple[bool, str]:
-    """Install/upgrade Claude Code CLI via npm and configure defaults.
+    """Install/upgrade Claude Code CLI via native installer and configure defaults.
 
     Returns (success, version_installed).
     """
-    _remove_native_claude_binaries()
+    _remove_npm_claude_binaries()
 
     forced_version = _get_forced_claude_version(project_dir)
     version = forced_version if forced_version else "latest"
 
-    if not _run_bash_with_retry(f"npm install -g @anthropic-ai/claude-code@{version}"):
+    if version != "latest":
+        installed_version = _get_installed_claude_version()
+        if installed_version == version:
+            _configure_claude_defaults()
+            return True, version
+
+    if not _run_bash_with_retry(f"curl -fsSL https://claude.ai/install.sh | bash -s {version}"):
         return False, version
 
     _configure_claude_defaults()
@@ -557,6 +616,107 @@ def install_claude_mem() -> bool:
     return True
 
 
+def _is_claude_mem_deps_installed() -> bool:
+    """Check if claude-mem bun dependencies are already installed."""
+    import json
+
+    plugin_dir = Path.home() / ".claude" / "plugins" / "marketplaces" / "thedotmack"
+    node_modules = plugin_dir / "node_modules"
+    marker_file = plugin_dir / ".install-version"
+
+    if not node_modules.exists():
+        return False
+
+    if not marker_file.exists():
+        return False
+
+    try:
+        pkg_path = plugin_dir / "package.json"
+        if not pkg_path.exists():
+            return False
+
+        pkg = json.loads(pkg_path.read_text())
+        marker = json.loads(marker_file.read_text())
+
+        return pkg.get("version") == marker.get("version")
+    except (json.JSONDecodeError, OSError):
+        return False
+
+
+def preinstall_claude_mem_deps(ui: Any = None) -> bool:
+    """Pre-install bun dependencies for claude-mem to speed up first start.
+
+    This runs `bun install` in the plugin directory and creates the version
+    marker file, so the smart-install.js hook skips installation on first start.
+    """
+    import datetime
+    import json
+
+    plugin_dir = Path.home() / ".claude" / "plugins" / "marketplaces" / "thedotmack"
+
+    if not plugin_dir.exists():
+        return False
+
+    if _is_claude_mem_deps_installed():
+        return True
+
+    if not command_exists("bun"):
+        return False
+
+    if ui:
+        ui.print("  [dim]Pre-installing claude-mem dependencies...[/dim]")
+
+    try:
+        process = subprocess.Popen(
+            ["bun", "install"],
+            cwd=plugin_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+
+        if process.stdout:
+            for line in process.stdout:
+                line = line.rstrip()
+                if line and ui:
+                    if any(kw in line.lower() for kw in ["install", "package", "done", "+"]):
+                        ui.print(f"  {line}")
+
+        process.wait()
+
+        if process.returncode != 0:
+            return False
+
+        pkg_path = plugin_dir / "package.json"
+        marker_path = plugin_dir / ".install-version"
+
+        if pkg_path.exists():
+            pkg = json.loads(pkg_path.read_text())
+
+            bun_version = None
+            try:
+                result = subprocess.run(
+                    ["bun", "--version"],
+                    capture_output=True,
+                    text=True,
+                )
+                if result.returncode == 0:
+                    bun_version = result.stdout.strip()
+            except Exception:
+                pass
+
+            marker_data = {
+                "version": pkg.get("version"),
+                "bun": bun_version,
+                "installedAt": datetime.datetime.now().isoformat(),
+            }
+            marker_path.write_text(json.dumps(marker_data))
+
+        return True
+    except Exception:
+        return False
+
+
 def install_context7() -> bool:
     """Install context7 plugin via claude plugin."""
     if _is_plugin_installed("context7", "claude-plugins-official"):
@@ -655,6 +815,110 @@ def _install_with_spinner(ui: Any, name: str, install_fn: Any, *args: Any) -> bo
         return install_fn(*args) if args else install_fn()
 
 
+def _install_claude_mem_with_deps(ui: Any) -> bool:
+    """Install claude-mem plugin and pre-install bun dependencies."""
+    if not _install_with_spinner(ui, "claude-mem plugin", install_claude_mem):
+        return False
+
+    if ui:
+        ui.status("Pre-installing claude-mem dependencies...")
+    if preinstall_claude_mem_deps(ui):
+        if ui:
+            ui.success("claude-mem dependencies ready")
+    else:
+        if ui:
+            ui.warning("Could not pre-install claude-mem deps - will install on first start")
+
+    return True
+
+
+def _install_claude_code_with_ui(ui: Any, project_dir: Path) -> bool:
+    """Install Claude Code with UI feedback."""
+    if ui:
+        ui.status("Installing Claude Code via native installer (this may take 1-2 minutes)...")
+        success, version = install_claude_code(project_dir)
+        if success:
+            if version != "latest":
+                ui.success(f"Claude Code installed (pinned to v{version})")
+            else:
+                ui.success("Claude Code installed (latest)")
+            ui.success("Claude Code config defaults applied")
+        else:
+            ui.warning("Could not install Claude Code - please install manually")
+        return success
+    else:
+        success, _ = install_claude_code(project_dir)
+        return success
+
+
+def _install_agent_browser_with_ui(ui: Any) -> bool:
+    """Install agent-browser with UI feedback."""
+    if ui:
+        ui.status("Installing agent-browser...")
+    if install_agent_browser(ui):
+        if ui:
+            ui.success("agent-browser installed")
+        return True
+    else:
+        if ui:
+            ui.warning("Could not install agent-browser - please install manually")
+        return False
+
+
+def _install_vexor_with_ui(ui: Any, use_local: bool) -> bool:
+    """Install Vexor with UI feedback."""
+    if use_local:
+        if ui:
+            ui.status("Installing Vexor with local embeddings...")
+        if install_vexor(use_local=True, ui=ui):
+            if ui:
+                ui.success("Vexor installed with local embeddings")
+            return True
+        else:
+            if ui:
+                ui.warning("Could not install Vexor local - please install manually")
+            return False
+    else:
+        return _install_with_spinner(ui, "Vexor semantic search", install_vexor)
+
+
+def _install_qlty_with_ui(ui: Any, project_dir: Path) -> bool:
+    """Install qlty with UI feedback."""
+    qlty_result = install_qlty(project_dir)
+    if qlty_result[0]:
+        if ui:
+            ui.success("qlty installed")
+            ui.status("Downloading qlty prerequisites (linters)...")
+        run_qlty_check(project_dir, ui)
+        if ui:
+            ui.success("qlty prerequisites ready")
+        return True
+    else:
+        if ui:
+            ui.warning("Could not install qlty - please install manually")
+        return False
+
+
+def _configure_firecrawl_if_enabled(ui: Any, project_dir: Path, enabled: bool) -> None:
+    """Configure firecrawl MCP if enabled and API key available."""
+    if not enabled:
+        return
+
+    api_key = os.environ.get("FIRECRAWL_API_KEY")
+    if not api_key:
+        env_file = project_dir / ".env"
+        if env_file.exists():
+            for line in env_file.read_text().split("\n"):
+                if line.startswith("FIRECRAWL_API_KEY="):
+                    api_key = line.split("=", 1)[1].strip()
+                    break
+
+    if api_key:
+        _configure_firecrawl_mcp(api_key)
+        if ui:
+            ui.success("Firecrawl MCP configured")
+
+
 class DependenciesStep(BaseStep):
     """Step that installs all required dependencies."""
 
@@ -679,22 +943,8 @@ class DependenciesStep(BaseStep):
             if _install_with_spinner(ui, "Python tools", install_python_tools):
                 installed.append("python_tools")
 
-        if ui:
-            with ui.spinner("Installing Claude Code..."):
-                success, version = install_claude_code(ctx.project_dir)
-            if success:
-                installed.append("claude_code")
-                if version != "latest":
-                    ui.success(f"Claude Code installed (pinned to v{version})")
-                else:
-                    ui.success("Claude Code installed (latest)")
-                ui.success("Claude Code config defaults applied")
-            else:
-                ui.warning("Could not install Claude Code - please install manually")
-        else:
-            success, _ = install_claude_code(ctx.project_dir)
-            if success:
-                installed.append("claude_code")
+        if _install_claude_code_with_ui(ui, ctx.project_dir):
+            installed.append("claude_code")
 
         if ctx.enable_typescript:
             if _install_with_spinner(ui, "TypeScript LSP", install_typescript_lsp):
@@ -704,7 +954,7 @@ class DependenciesStep(BaseStep):
             if _install_with_spinner(ui, "Pyright LSP", install_pyright_lsp):
                 installed.append("pyright_lsp")
 
-        if _install_with_spinner(ui, "claude-mem plugin", install_claude_mem):
+        if _install_claude_mem_with_deps(ui):
             installed.append("claude_mem")
 
         if _install_with_spinner(ui, "Context7 plugin", install_context7):
@@ -714,57 +964,16 @@ class DependenciesStep(BaseStep):
             installed.append("mcp_cli")
 
         if ctx.enable_agent_browser:
-            if ui:
-                ui.status("Installing agent-browser...")
-            if install_agent_browser(ui):
+            if _install_agent_browser_with_ui(ui):
                 installed.append("agent_browser")
-                if ui:
-                    ui.success("agent-browser installed")
-            else:
-                if ui:
-                    ui.warning("Could not install agent-browser - please install manually")
 
-        if not ctx.enable_openai_embeddings:
-            if ui:
-                ui.status("Installing Vexor with local embeddings...")
-            if install_vexor(use_local=True, ui=ui):
-                installed.append("vexor")
-                if ui:
-                    ui.success("Vexor installed with local embeddings")
-            else:
-                if ui:
-                    ui.warning("Could not install Vexor local - please install manually")
-        else:
-            if _install_with_spinner(ui, "Vexor semantic search", install_vexor):
-                installed.append("vexor")
+        if _install_vexor_with_ui(ui, use_local=not ctx.enable_openai_embeddings):
+            installed.append("vexor")
 
-        qlty_result = install_qlty(ctx.project_dir)
-        if qlty_result[0]:
+        if _install_qlty_with_ui(ui, ctx.project_dir):
             installed.append("qlty")
-            if ui:
-                ui.success("qlty installed")
-                ui.status("Downloading qlty prerequisites (linters)...")
-            run_qlty_check(ctx.project_dir, ui)
-            if ui:
-                ui.success("qlty prerequisites ready")
-        else:
-            if ui:
-                ui.warning("Could not install qlty - please install manually")
 
-        if ctx.enable_firecrawl:
-            api_key = os.environ.get("FIRECRAWL_API_KEY")
-            if not api_key:
-                env_file = ctx.project_dir / ".env"
-                if env_file.exists():
-                    for line in env_file.read_text().split("\n"):
-                        if line.startswith("FIRECRAWL_API_KEY="):
-                            api_key = line.split("=", 1)[1].strip()
-                            break
-
-            if api_key:
-                _configure_firecrawl_mcp(api_key)
-                if ui:
-                    ui.success("Firecrawl MCP configured")
+        _configure_firecrawl_if_enabled(ui, ctx.project_dir, ctx.enable_firecrawl)
 
         ctx.config["installed_dependencies"] = installed
 

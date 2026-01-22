@@ -85,34 +85,57 @@ def alias_exists_in_file(config_file: Path) -> bool:
 
 
 def remove_old_alias(config_file: Path) -> bool:
-    """Remove old ccp alias from config file to allow clean update."""
+    """Remove old ccp alias/function from config file to allow clean update."""
     if not config_file.exists():
         return False
 
     content = config_file.read_text()
-    if CCP_ALIAS_MARKER not in content and "alias ccp" not in content:
+    if CCP_ALIAS_MARKER not in content and "ccp()" not in content and "alias ccp" not in content:
         return False
 
     lines = content.split("\n")
     new_lines = []
-    skip_next = False
+    inside_ccp_function = False
+    brace_count = 0
 
     for line in lines:
+        stripped = line.strip()
+
         if CCP_ALIAS_MARKER in line:
-            skip_next = True
             continue
-        if skip_next and ("alias ccp" in line or line.strip().startswith("if [")):
-            if line.rstrip().endswith("'"):
-                skip_next = False
+
+        if stripped.startswith("alias ccp="):
             continue
-        skip_next = False
-        new_lines.append(line)
+
+        if stripped.startswith("ccp()") or stripped == "ccp () {":
+            inside_ccp_function = True
+            brace_count = 0
+
+        if inside_ccp_function:
+            brace_count += line.count("{") - line.count("}")
+            if brace_count <= 0 and "{" in content[content.find("ccp()") :]:
+                inside_ccp_function = False
+            continue
+
+        if stripped.startswith("function ccp"):
+            inside_ccp_function = True
+            continue
+
+        if inside_ccp_function and stripped == "end":
+            inside_ccp_function = False
+            continue
+
+        if not inside_ccp_function:
+            new_lines.append(line)
 
     final_lines = []
+    prev_blank = False
     for line in new_lines:
-        if line.strip().startswith("alias ccp="):
+        is_blank = line.strip() == ""
+        if is_blank and prev_blank:
             continue
         final_lines.append(line)
+        prev_blank = is_blank
 
     config_file.write_text("\n".join(final_lines))
     return True

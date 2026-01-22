@@ -48,21 +48,21 @@ Use descriptive queries - they drive result relevance:
 
 ### Example: Learning a New Library
 
-When asked to use `claude-agent-sdk` for the first time:
+When asked to use `pytest` for the first time:
 
 ```
 # 1. Resolve the library
-resolve-library-id(query="programmatic queries with Claude Agent SDK", libraryName="claude-agent-sdk")
-→ /anthropics/claude-agent-sdk-python
+resolve-library-id(query="how to create and use fixtures in pytest", libraryName="pytest")
+→ /pytest-dev/pytest
 
 # 2. Query for overview
-query-docs(libraryId="/anthropics/claude-agent-sdk-python", query="complete overview features capabilities installation")
+query-docs(libraryId="/pytest-dev/pytest", query="complete overview features capabilities installation")
 
 # 3. Query for specific use case
-query-docs(libraryId="/anthropics/claude-agent-sdk-python", query="structured JSON output with schema validation")
+query-docs(libraryId="/pytest-dev/pytest", query="fixtures and dependency injection patterns")
 
-# 4. Query for authentication/setup
-query-docs(libraryId="/anthropics/claude-agent-sdk-python", query="authentication setup API keys vs Claude Max")
+# 4. Query for advanced usage
+query-docs(libraryId="/pytest-dev/pytest", query="parametrize decorator and test variants")
 ```
 
 ### Troubleshooting

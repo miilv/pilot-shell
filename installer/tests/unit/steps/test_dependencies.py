@@ -175,11 +175,11 @@ class TestClaudeCodeInstall:
     @patch("installer.steps.dependencies._configure_firecrawl_mcp")
     @patch("installer.steps.dependencies._configure_claude_defaults")
     @patch("subprocess.run")
-    @patch("installer.steps.dependencies._remove_native_claude_binaries")
-    def test_install_claude_code_removes_native_binaries(
+    @patch("installer.steps.dependencies._remove_npm_claude_binaries")
+    def test_install_claude_code_removes_npm_binaries(
         self, mock_remove, mock_run, mock_config, mock_firecrawl, mock_version
     ):
-        """install_claude_code removes native binaries before npm install."""
+        """install_claude_code removes npm binaries before native install."""
         from installer.steps.dependencies import install_claude_code
 
         mock_run.return_value = MagicMock(returncode=0)
@@ -193,11 +193,11 @@ class TestClaudeCodeInstall:
     @patch("installer.steps.dependencies._configure_firecrawl_mcp")
     @patch("installer.steps.dependencies._configure_claude_defaults")
     @patch("subprocess.run")
-    @patch("installer.steps.dependencies._remove_native_claude_binaries")
-    def test_install_claude_code_always_runs_npm_install(
+    @patch("installer.steps.dependencies._remove_npm_claude_binaries")
+    def test_install_claude_code_uses_native_installer(
         self, mock_remove, mock_run, mock_config, mock_firecrawl, mock_version
     ):
-        """install_claude_code always runs npm install (upgrades if exists)."""
+        """install_claude_code uses native installer from claude.ai."""
         from installer.steps.dependencies import install_claude_code
 
         mock_run.return_value = MagicMock(returncode=0)
@@ -207,19 +207,19 @@ class TestClaudeCodeInstall:
 
         assert success is True
         assert version == "latest"
-        # Verify npm install was called
-        npm_calls = [c for c in mock_run.call_args_list if "npm install" in str(c)]
-        assert len(npm_calls) >= 1
+        # Verify native installer was called
+        curl_calls = [c for c in mock_run.call_args_list if "claude.ai/install.sh" in str(c)]
+        assert len(curl_calls) >= 1
 
     @patch("installer.steps.dependencies._get_forced_claude_version", return_value=None)
     @patch("installer.steps.dependencies._configure_firecrawl_mcp")
     @patch("installer.steps.dependencies._configure_claude_defaults")
     @patch("subprocess.run")
-    @patch("installer.steps.dependencies._remove_native_claude_binaries")
+    @patch("installer.steps.dependencies._remove_npm_claude_binaries")
     def test_install_claude_code_configures_defaults(
         self, mock_remove, mock_run, mock_config, mock_firecrawl, mock_version
     ):
-        """install_claude_code configures Claude defaults after npm install."""
+        """install_claude_code configures Claude defaults after native install."""
         from installer.steps.dependencies import install_claude_code
 
         mock_run.return_value = MagicMock(returncode=0)
@@ -233,7 +233,7 @@ class TestClaudeCodeInstall:
     @patch("installer.steps.dependencies._configure_firecrawl_mcp")
     @patch("installer.steps.dependencies._configure_claude_defaults")
     @patch("subprocess.run")
-    @patch("installer.steps.dependencies._remove_native_claude_binaries")
+    @patch("installer.steps.dependencies._remove_npm_claude_binaries")
     def test_install_claude_code_does_not_configure_firecrawl(
         self, mock_remove, mock_run, mock_config, mock_firecrawl, mock_version
     ):
@@ -493,6 +493,223 @@ class TestClaudeMemInstall:
         result = install_claude_mem()
 
         assert result is True
+
+
+class TestClaudeMemDepsPreinstall:
+    """Test claude-mem bun dependencies pre-installation."""
+
+    def test_preinstall_claude_mem_deps_exists(self):
+        """preinstall_claude_mem_deps function exists."""
+        from installer.steps.dependencies import preinstall_claude_mem_deps
+
+        assert callable(preinstall_claude_mem_deps)
+
+    def test_is_claude_mem_deps_installed_exists(self):
+        """_is_claude_mem_deps_installed function exists."""
+        from installer.steps.dependencies import _is_claude_mem_deps_installed
+
+        assert callable(_is_claude_mem_deps_installed)
+
+    def test_is_claude_mem_deps_installed_returns_false_when_no_node_modules(self):
+        """_is_claude_mem_deps_installed returns False when node_modules missing."""
+        from installer.steps.dependencies import _is_claude_mem_deps_installed
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with patch.object(Path, "home", return_value=Path(tmpdir)):
+                # Create plugin dir but no node_modules
+                plugin_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "thedotmack"
+                plugin_dir.mkdir(parents=True)
+
+                result = _is_claude_mem_deps_installed()
+
+                assert result is False
+
+    def test_is_claude_mem_deps_installed_returns_false_when_no_marker(self):
+        """_is_claude_mem_deps_installed returns False when marker file missing."""
+        from installer.steps.dependencies import _is_claude_mem_deps_installed
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with patch.object(Path, "home", return_value=Path(tmpdir)):
+                # Create plugin dir with node_modules but no marker
+                plugin_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "thedotmack"
+                plugin_dir.mkdir(parents=True)
+                (plugin_dir / "node_modules").mkdir()
+
+                result = _is_claude_mem_deps_installed()
+
+                assert result is False
+
+    def test_is_claude_mem_deps_installed_returns_true_when_versions_match(self):
+        """_is_claude_mem_deps_installed returns True when versions match."""
+        import json
+
+        from installer.steps.dependencies import _is_claude_mem_deps_installed
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with patch.object(Path, "home", return_value=Path(tmpdir)):
+                plugin_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "thedotmack"
+                plugin_dir.mkdir(parents=True)
+                (plugin_dir / "node_modules").mkdir()
+
+                # Create package.json and marker with matching versions
+                (plugin_dir / "package.json").write_text(json.dumps({"version": "1.0.0"}))
+                (plugin_dir / ".install-version").write_text(json.dumps({"version": "1.0.0"}))
+
+                result = _is_claude_mem_deps_installed()
+
+                assert result is True
+
+    def test_is_claude_mem_deps_installed_returns_false_when_versions_mismatch(self):
+        """_is_claude_mem_deps_installed returns False when versions don't match."""
+        import json
+
+        from installer.steps.dependencies import _is_claude_mem_deps_installed
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with patch.object(Path, "home", return_value=Path(tmpdir)):
+                plugin_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "thedotmack"
+                plugin_dir.mkdir(parents=True)
+                (plugin_dir / "node_modules").mkdir()
+
+                # Create package.json and marker with different versions
+                (plugin_dir / "package.json").write_text(json.dumps({"version": "1.1.0"}))
+                (plugin_dir / ".install-version").write_text(json.dumps({"version": "1.0.0"}))
+
+                result = _is_claude_mem_deps_installed()
+
+                assert result is False
+
+    def test_preinstall_claude_mem_deps_returns_false_when_plugin_dir_missing(self):
+        """preinstall_claude_mem_deps returns False when plugin dir doesn't exist."""
+        from installer.steps.dependencies import preinstall_claude_mem_deps
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with patch.object(Path, "home", return_value=Path(tmpdir)):
+                result = preinstall_claude_mem_deps()
+
+                assert result is False
+
+    def test_preinstall_claude_mem_deps_returns_true_when_already_installed(self):
+        """preinstall_claude_mem_deps returns True when deps already installed."""
+        import json
+
+        from installer.steps.dependencies import preinstall_claude_mem_deps
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with patch.object(Path, "home", return_value=Path(tmpdir)):
+                plugin_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "thedotmack"
+                plugin_dir.mkdir(parents=True)
+                (plugin_dir / "node_modules").mkdir()
+                (plugin_dir / "package.json").write_text(json.dumps({"version": "1.0.0"}))
+                (plugin_dir / ".install-version").write_text(json.dumps({"version": "1.0.0"}))
+
+                result = preinstall_claude_mem_deps()
+
+                assert result is True
+
+    @patch("installer.steps.dependencies.command_exists")
+    def test_preinstall_claude_mem_deps_returns_false_when_bun_missing(self, mock_cmd):
+        """preinstall_claude_mem_deps returns False when bun not installed."""
+        from installer.steps.dependencies import preinstall_claude_mem_deps
+
+        mock_cmd.return_value = False
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with patch.object(Path, "home", return_value=Path(tmpdir)):
+                plugin_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "thedotmack"
+                plugin_dir.mkdir(parents=True)
+                (plugin_dir / "package.json").write_text('{"version": "1.0.0"}')
+
+                result = preinstall_claude_mem_deps()
+
+                assert result is False
+
+    @patch("subprocess.Popen")
+    @patch("subprocess.run")
+    @patch("installer.steps.dependencies.command_exists")
+    def test_preinstall_claude_mem_deps_runs_bun_install(self, mock_cmd, mock_run, mock_popen):
+        """preinstall_claude_mem_deps runs bun install and creates marker."""
+        import json
+
+        from installer.steps.dependencies import preinstall_claude_mem_deps
+
+        mock_cmd.return_value = True
+        mock_process = MagicMock()
+        mock_process.stdout = iter([])
+        mock_process.wait.return_value = None
+        mock_process.returncode = 0
+        mock_popen.return_value = mock_process
+        mock_run.return_value = MagicMock(returncode=0, stdout="1.1.14")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with patch.object(Path, "home", return_value=Path(tmpdir)):
+                plugin_dir = Path(tmpdir) / ".claude" / "plugins" / "marketplaces" / "thedotmack"
+                plugin_dir.mkdir(parents=True)
+                (plugin_dir / "package.json").write_text(json.dumps({"version": "1.0.9"}))
+
+                result = preinstall_claude_mem_deps()
+
+                assert result is True
+                mock_popen.assert_called_once()
+                call_args = mock_popen.call_args
+                assert call_args[0][0] == ["bun", "install"]
+                assert call_args[1]["cwd"] == plugin_dir
+
+                # Check marker file was created
+                marker_path = plugin_dir / ".install-version"
+                assert marker_path.exists()
+                marker = json.loads(marker_path.read_text())
+                assert marker["version"] == "1.0.9"
+
+    @patch("installer.steps.dependencies.preinstall_claude_mem_deps")
+    @patch("installer.steps.dependencies.run_qlty_check")
+    @patch("installer.steps.dependencies.install_qlty")
+    @patch("installer.steps.dependencies.install_vexor")
+    @patch("installer.steps.dependencies.install_context7")
+    @patch("installer.steps.dependencies.install_claude_mem")
+    @patch("installer.steps.dependencies.install_typescript_lsp")
+    @patch("installer.steps.dependencies.install_claude_code")
+    @patch("installer.steps.dependencies.install_nodejs")
+    def test_dependencies_step_calls_preinstall_after_claude_mem(
+        self,
+        mock_nodejs,
+        mock_claude,
+        mock_typescript_lsp,
+        mock_claude_mem,
+        mock_context7,
+        mock_vexor,
+        mock_qlty,
+        mock_qlty_check,
+        mock_preinstall,
+    ):
+        """DependenciesStep calls preinstall_claude_mem_deps after claude_mem succeeds."""
+        from installer.context import InstallContext
+        from installer.steps.dependencies import DependenciesStep
+        from installer.ui import Console
+
+        # Setup mocks
+        mock_nodejs.return_value = True
+        mock_claude.return_value = (True, "latest")
+        mock_typescript_lsp.return_value = True
+        mock_claude_mem.return_value = True
+        mock_context7.return_value = True
+        mock_vexor.return_value = True
+        mock_qlty.return_value = (True, False)
+        mock_preinstall.return_value = True
+
+        step = DependenciesStep()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ctx = InstallContext(
+                project_dir=Path(tmpdir),
+                enable_python=False,
+                ui=Console(non_interactive=True),
+            )
+
+            step.run(ctx)
+
+            # Verify preinstall was called after claude_mem
+            mock_claude_mem.assert_called_once()
+            mock_preinstall.assert_called_once()
 
 
 class TestContext7Install:

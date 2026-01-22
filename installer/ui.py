@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import getpass
-import os
 import sys
 from contextlib import contextmanager
 from typing import Any, Iterator, TextIO
@@ -132,9 +131,6 @@ class Console:
         features.append("  🛠️ ", style="yellow")
         features.append("Quality Hooks", style="bold green")
         features.append(" — TDD enforcer, linting, type checking, context monitor\n", style="white")
-        features.append("  🔍 ", style="yellow")
-        features.append("Auditor Agent", style="bold green")
-        features.append(" — Background rule compliance monitoring with feedback\n", style="white")
         features.append("  🔌 ", style="yellow")
         features.append("Enhanced Capabilities", style="bold green")
         features.append(" — Vexor, Context7, Firecrawl, mcp-cli, LSP servers", style="white")

@@ -17,7 +17,7 @@ class TestProcessSettings:
         from installer.steps.claude_files import process_settings
 
         # Use absolute path like real source file
-        python_hook = "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_python.py"
+        python_hook = "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_python.py"
         settings = {
             "hooks": {
                 "PostToolUse": [
@@ -26,7 +26,7 @@ class TestProcessSettings:
                         "hooks": [
                             {
                                 "type": "command",
-                                "command": "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_qlty.py",
+                                "command": "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_qlty.py",
                             },
                             {"type": "command", "command": python_hook},
                         ],
@@ -48,7 +48,7 @@ class TestProcessSettings:
         from installer.steps.claude_files import process_settings
 
         # Use absolute path like real source file
-        python_hook = "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_python.py"
+        python_hook = "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_python.py"
         settings = {
             "hooks": {
                 "PostToolUse": [
@@ -57,7 +57,7 @@ class TestProcessSettings:
                         "hooks": [
                             {
                                 "type": "command",
-                                "command": "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_qlty.py",
+                                "command": "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_qlty.py",
                             },
                             {"type": "command", "command": python_hook},
                         ],
@@ -92,7 +92,7 @@ class TestProcessSettings:
         from installer.steps.claude_files import process_settings
 
         # Use absolute path like real source file
-        python_hook = "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_python.py"
+        python_hook = "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_python.py"
         settings = {
             "model": "opus",
             "env": {"DISABLE_TELEMETRY": "true"},
@@ -140,7 +140,7 @@ class TestProcessSettings:
         from installer.steps.claude_files import process_settings
 
         # Use absolute path like real source file
-        ts_hook = "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_ts.py"
+        ts_hook = "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_ts.py"
         settings = {
             "hooks": {
                 "PostToolUse": [
@@ -149,7 +149,7 @@ class TestProcessSettings:
                         "hooks": [
                             {
                                 "type": "command",
-                                "command": "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_qlty.py",
+                                "command": "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_qlty.py",
                             },
                             {"type": "command", "command": ts_hook},
                         ],
@@ -172,8 +172,8 @@ class TestProcessSettings:
         from installer.steps.claude_files import process_settings
 
         # Use absolute paths like real source file
-        python_hook = "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_python.py"
-        ts_hook = "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_ts.py"
+        python_hook = "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_python.py"
+        ts_hook = "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_ts.py"
         settings = {
             "hooks": {
                 "PostToolUse": [
@@ -182,7 +182,7 @@ class TestProcessSettings:
                         "hooks": [
                             {
                                 "type": "command",
-                                "command": "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_qlty.py",
+                                "command": "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_qlty.py",
                             },
                             {"type": "command", "command": python_hook},
                             {"type": "command", "command": ts_hook},
@@ -206,7 +206,7 @@ class TestProcessSettings:
         """process_settings removes Go hook when enable_golang=False."""
         from installer.steps.claude_files import process_settings
 
-        go_hook = "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_go.py"
+        go_hook = "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_go.py"
         settings = {
             "hooks": {
                 "PostToolUse": [
@@ -215,7 +215,7 @@ class TestProcessSettings:
                         "hooks": [
                             {
                                 "type": "command",
-                                "command": "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_qlty.py",
+                                "command": "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_qlty.py",
                             },
                             {"type": "command", "command": go_hook},
                         ],
@@ -237,7 +237,7 @@ class TestProcessSettings:
         """process_settings keeps Go hook when enable_golang=True."""
         from installer.steps.claude_files import process_settings
 
-        go_hook = "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_go.py"
+        go_hook = "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_go.py"
         settings = {
             "hooks": {
                 "PostToolUse": [
@@ -246,7 +246,7 @@ class TestProcessSettings:
                         "hooks": [
                             {
                                 "type": "command",
-                                "command": "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_qlty.py",
+                                "command": "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_qlty.py",
                             },
                             {"type": "command", "command": go_hook},
                         ],
@@ -374,7 +374,7 @@ class TestClaudeFilesStep:
                         {
                             "matcher": "Write|Edit|MultiEdit",
                             "hooks": [
-                                {"type": "command", "command": "python3 .claude/hooks/file_checker_qlty.py"},
+                                {"type": "command", "command": "uv run python .claude/hooks/file_checker_qlty.py"},
                                 {"type": "command", "command": PYTHON_CHECKER_HOOK},
                             ],
                         }
@@ -425,7 +425,7 @@ class TestClaudeFilesStep:
                         {
                             "matcher": "Write|Edit|MultiEdit",
                             "hooks": [
-                                {"type": "command", "command": "python3 .claude/hooks/file_checker_qlty.py"},
+                                {"type": "command", "command": "uv run python .claude/hooks/file_checker_qlty.py"},
                                 {"type": "command", "command": PYTHON_CHECKER_HOOK},
                             ],
                         }

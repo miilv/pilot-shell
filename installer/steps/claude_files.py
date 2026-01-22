@@ -14,9 +14,9 @@ if TYPE_CHECKING:
     from installer.context import InstallContext
 
 SETTINGS_FILE = "settings.local.json"
-PYTHON_CHECKER_HOOK = "python3 .claude/hooks/file_checker_python.py"
-TYPESCRIPT_CHECKER_HOOK = "python3 .claude/hooks/file_checker_ts.py"
-GOLANG_CHECKER_HOOK = "python3 .claude/hooks/file_checker_go.py"
+PYTHON_CHECKER_HOOK = "uv run python .claude/hooks/file_checker_python.py"
+TYPESCRIPT_CHECKER_HOOK = "uv run python .claude/hooks/file_checker_ts.py"
+GOLANG_CHECKER_HOOK = "uv run python .claude/hooks/file_checker_go.py"
 HOOKS_PATH_PATTERN = ".claude/hooks/"
 SOURCE_REPO_PATH = "/workspaces/claude-codepro/.claude/hooks/"
 

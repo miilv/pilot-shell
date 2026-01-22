@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-"""TDD enforcer - warns when implementation code is modified without failing tests."""
+"""TDD enforcer - warns when implementation code is modified without failing tests.
+
+This is a SOFT warning system (PostToolUse hook) - edits complete first,
+then a warning is shown to encourage TDD practices. Returns exit code 2
+for visibility alongside other quality hooks.
+"""
 
 from __future__ import annotations
 
 import json
 import sys
-import time
 from pathlib import Path
 
 YELLOW = "\033[0;33m"
-CYAN = "\033[0;36m"
 NC = "\033[0m"
-
-OVERRIDE_TIMEOUT = 60
-WARNED_CACHE_FILE = Path("/tmp/.tdd_enforcer_warned.json")
 
 EXCLUDED_EXTENSIONS = [
     ".md",
@@ -55,51 +55,6 @@ EXCLUDED_DIRS = [
     "/venv/",
     "/__pycache__/",
 ]
-
-
-def load_warned_cache() -> dict[str, float]:
-    """Load the cache of recently warned files."""
-    if not WARNED_CACHE_FILE.exists():
-        return {}
-    try:
-        with WARNED_CACHE_FILE.open() as f:
-            return json.load(f)
-    except (json.JSONDecodeError, OSError):
-        return {}
-
-
-def save_warned_cache(cache: dict[str, float]) -> None:
-    """Save the cache of recently warned files."""
-    try:
-        with WARNED_CACHE_FILE.open("w") as f:
-            json.dump(cache, f)
-    except OSError:
-        pass
-
-
-def check_override(file_path: str) -> bool:
-    """Check if this file was recently warned and should be allowed (override)."""
-    cache = load_warned_cache()
-    now = time.time()
-
-    cache = {k: v for k, v in cache.items() if now - v < OVERRIDE_TIMEOUT}
-
-    if file_path in cache:
-        del cache[file_path]
-        save_warned_cache(cache)
-        return True
-
-    return False
-
-
-def record_warning(file_path: str) -> None:
-    """Record that we warned about this file."""
-    cache = load_warned_cache()
-    now = time.time()
-
-    cache = {k: v for k, v in cache.items() if now - v < OVERRIDE_TIMEOUT}
-    cache[file_path] = now
-    save_warned_cache(cache)
 
 
 def should_skip(file_path: str) -> bool:
@@ -172,18 +127,11 @@ def has_typescript_test_file(impl_path: str) -> bool:
     return False
 
 
-def warn_and_block(file_path: str, message: str, suggestion: str) -> int:
-    """Show warning, record it, and return block code. Allow on retry."""
-    if check_override(file_path):
-        print("", file=sys.stderr)
-        print(f"{CYAN}TDD: Proceeding (override acknowledged){NC}", file=sys.stderr)
-        return 0
-
-    record_warning(file_path)
+def warn(message: str, suggestion: str) -> int:
+    """Show warning and return exit code 2 for visibility."""
     print("", file=sys.stderr)
     print(f"{YELLOW}TDD: {message}{NC}", file=sys.stderr)
     print(f"{YELLOW}    {suggestion}{NC}", file=sys.stderr)
-    print(f"{YELLOW}    (Retry to proceed anyway){NC}", file=sys.stderr)
     return 2
 
 
@@ -224,8 +172,7 @@ def run_tdd_enforcer() -> int:
         if found_failing:
             return 0
 
-        return warn_and_block(
-            file_path,
+        return warn(
             "No failing tests detected",
             "Consider writing a failing test first before implementing.",
         )
@@ -235,8 +182,7 @@ def run_tdd_enforcer() -> int:
             return 0
 
         base_name = Path(file_path).stem
-        return warn_and_block(
-            file_path,
+        return warn(
             "No test file found for this module",
             f"Consider creating {base_name}.test.ts first.",
         )

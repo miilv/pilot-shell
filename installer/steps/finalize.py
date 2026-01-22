@@ -66,6 +66,22 @@ class FinalizeStep(BaseStep):
             )
         )
 
+        if ctx.is_local_install:
+            steps.append(
+                (
+                    "Memory Observation Dashboard (Optional)",
+                    "View stored memories at http://localhost:37777",
+                )
+            )
+        else:
+            steps.append(
+                (
+                    "Memory Observation Dashboard (Optional)",
+                    "View stored memories and observations at http://localhost:37777\n"
+                    "     (Check VS Code Ports tab if 37777 is unavailable - may be 37778)",
+                )
+            )
+
         steps.extend(
             [
                 (

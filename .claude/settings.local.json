@@ -2,12 +2,13 @@
   "env": {
     "ENABLE_TOOL_SEARCH": "true",
     "ENABLE_LSP_TOOL": "true",
-    "FORCE_CLAUDE_VERSION": "2.1.6",
+    "FORCE_CLAUDE_VERSION": "2.1.15",
     "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "63999",
     "MAX_MCP_OUTPUT_TOKENS": "10000",
     "MAX_THINKING_TOKENS": "31999",
     "FORCE_AUTOUPDATE_PLUGINS": "true",
     "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "true",
+    "DISABLE_AUTOUPDATER": "true",
     "DISABLE_TELEMETRY": "true"
   },
   "permissions": {
@@ -59,36 +60,29 @@
   "model": "opus",
   "enableAllProjectMcpServers": true,
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 /workspaces/claude-codepro/.claude/hooks/tdd_enforcer.py"
-          }
-        ]
-      }
-    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_qlty.py"
+            "command": "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_qlty.py"
           },
           {
             "type": "command",
-            "command": "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_python.py"
+            "command": "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_python.py"
           },
           {
             "type": "command",
-            "command": "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_ts.py"
+            "command": "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_ts.py"
           },
           {
             "type": "command",
-            "command": "python3 /workspaces/claude-codepro/.claude/hooks/file_checker_go.py"
+            "command": "uv run python /workspaces/claude-codepro/.claude/hooks/file_checker_go.py"
+          },
+          {
+            "type": "command",
+            "command": "uv run python /workspaces/claude-codepro/.claude/hooks/tdd_enforcer.py"
           }
         ]
       },
@@ -97,11 +91,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /workspaces/claude-codepro/.claude/hooks/context_monitor.py"
-          },
-          {
-            "type": "command",
-            "command": "python3 /workspaces/claude-codepro/.claude/hooks/auditor_feedback.py"
+            "command": "uv run python /workspaces/claude-codepro/.claude/hooks/context_monitor.py"
           }
         ]
       }
