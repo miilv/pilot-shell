@@ -668,7 +668,9 @@ def _configure_claude_mem_defaults() -> bool:
                 "CLAUDE_MEM_CONTEXT_SESSION_COUNT": "10",
                 "CLAUDE_MEM_CONTEXT_FULL_COUNT": "10",
                 "CLAUDE_MEM_CONTEXT_FULL_FIELD": "facts",
-                "CLAUDE_MEM_MODEL": "sonnet",
+                "CLAUDE_MEM_RETENTION_ENABLED": "true",
+                "CLAUDE_MEM_RETENTION_MAX_COUNT": "1000",
+                "CLAUDE_MEM_MODEL": "haiku",
             }
         )
         settings_path.write_text(json.dumps(settings, indent=2) + "\n")
@@ -827,16 +829,29 @@ def _ensure_maxritter_marketplace() -> bool:
 
 
 def install_claude_mem() -> bool:
-    """Install claude-mem plugin via claude plugin marketplace."""
-    if _is_plugin_installed("claude-mem", "thedotmack"):
-        _configure_claude_mem_defaults()
-        return True
+    """Install claude-mem plugin via claude plugin marketplace.
+
+    If already installed, updates marketplace and plugin to latest version.
+    """
+    marketplace_existed = _is_marketplace_installed("thedotmack")
 
     if not _ensure_maxritter_marketplace():
         return False
 
-    if not _run_bash_with_retry("claude plugin install claude-mem"):
-        return False
+    if marketplace_existed:
+        subprocess.run(
+            ["bash", "-c", "claude plugin marketplace update thedotmack"],
+            capture_output=True,
+        )
+
+    if _is_plugin_installed("claude-mem", "thedotmack"):
+        subprocess.run(
+            ["bash", "-c", "claude plugin update claude-mem"],
+            capture_output=True,
+        )
+    else:
+        if not _run_bash_with_retry("claude plugin install claude-mem"):
+            return False
 
     _configure_claude_mem_defaults()
     return True

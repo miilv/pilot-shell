@@ -90,37 +90,38 @@ def is_test_file(file_path: str) -> bool:
     return False
 
 
-def get_corresponding_test_file(impl_path: str) -> Path | None:
-    """Get the corresponding test file for a Python implementation file."""
-    path = Path(impl_path)
+def has_related_failing_test(project_dir: str, impl_file: str) -> bool:
+    """Check if there's a failing test specifically for this module.
+
+    Looks for test files matching the implementation file name in the
+    pytest lastfailed cache. Only returns True if there's a failing test
+    that appears to be for the module being edited.
+    """
+    cache_file = Path(project_dir) / ".pytest_cache" / "v" / "cache" / "lastfailed"
 
     parts = path.parts
     stem = path.stem
 
-    test_patterns = [
-        path.parent / f"test_{stem}.py",
-        path.parent / f"{stem}_test.py",
-        path.parent / "tests" / f"test_{stem}.py",
-        path.parent / "tests" / "unit" / f"test_{stem}.py",
-    ]
+    impl_path = Path(impl_file)
+    module_name = impl_path.stem
 
-    if "steps" in parts:
-        steps_idx = parts.index("steps")
-        if steps_idx > 0:
-            base = Path(*parts[:steps_idx])
-            test_patterns.append(base / "tests" / "unit" / "steps" / f"test_{stem}.py")
+    try:
+        with cache_file.open() as f:
+            lastfailed = json.load(f)
 
-    for i, part in enumerate(parts):
-        if part in ("ccp", "installer", "src"):
-            base = Path(*parts[: i + 1])
-            test_patterns.append(base / "tests" / "unit" / f"test_{stem}.py")
-            break
+        if not lastfailed:
+            return False
 
-    for test_path in test_patterns:
-        if test_path.exists():
-            return test_path
+        for test_path in lastfailed:
+            test_file = test_path.split("::")[0]
+            test_name = Path(test_file).stem
 
-    return None
+            if test_name == f"test_{module_name}" or test_name == f"{module_name}_test":
+                return True
+
+        return False
+    except (json.JSONDecodeError, OSError):
+        return False
 
 
 def has_typescript_test_file(impl_path: str) -> bool:
@@ -178,14 +179,22 @@ def run_tdd_enforcer() -> int:
     if file_path.endswith(".py"):
         test_file = get_corresponding_test_file(file_path)
 
-        if test_file is None:
-            stem = Path(file_path).stem
-            return warn(
-                f"No test file found for {stem}.py",
-                f"Consider creating test_{stem}.py first.",
-            )
+        for _ in range(10):
+            if has_related_failing_test(str(path), file_path):
+                found_failing = True
+                break
+            if path.parent == path:
+                break
+            path = path.parent
 
-        return 0
+        if found_failing:
+            return 0
+
+        module_name = Path(file_path).stem
+        return warn(
+            f"No failing test for '{module_name}' module",
+            f"Write a failing test in test_{module_name}.py first.",
+        )
 
     if file_path.endswith((".ts", ".tsx")):
         if has_typescript_test_file(file_path):
