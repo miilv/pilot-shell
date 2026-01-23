@@ -340,7 +340,7 @@ def install(
         console.print()
         console.print("  [bold]After trial, choose a plan:[/bold]")
         console.print("    • [bold]Standard[/bold]")
-        console.print("    • [bold]Enterprise[/bold] (priority support + training)")
+        console.print("    • [bold]Enterprise[/bold] (priority support + feature requests)")
         console.print()
         console.print("  [bold cyan]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/bold cyan]")
         console.print()
