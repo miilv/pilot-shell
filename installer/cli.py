@@ -18,12 +18,7 @@ from installer.steps.bootstrap import BootstrapStep
 from installer.steps.claude_files import ClaudeFilesStep
 from installer.steps.config_files import ConfigFilesStep
 from installer.steps.dependencies import DependenciesStep
-from installer.steps.environment import (
-    EnvironmentStep,
-    create_claude_config,
-    create_claude_credentials,
-    credentials_exist,
-)
+from installer.steps.environment import EnvironmentStep
 from installer.steps.finalize import FinalizeStep
 from installer.steps.git_setup import GitSetupStep
 from installer.steps.prerequisites import PrerequisitesStep
@@ -424,41 +419,11 @@ def install(
             console.print("  This includes: Headless Chromium browser for web automation and testing")
             enable_agent_browser = console.confirm("Install agent-browser?", default=True)
 
-    enable_oauth_token = True
-    oauth_token_value = ""
-
-    if credentials_exist():
-        console.print(f"  [dim]OAuth credentials already configured[/dim]")
-    elif not skip_env and not skip_prompts:
-        if "enable_oauth_token" in saved_config:
-            enable_oauth_token = saved_config["enable_oauth_token"]
-            console.print(f"  [dim]Using saved preference: OAuth token = {enable_oauth_token}[/dim]")
-        else:
-            console.print()
-            console.print("  [bold]Do you want to configure a long lasting OAuth token?[/bold]")
-            console.print("  This enables: Usage limits (5h/7d) in the status bar")
-            enable_oauth_token = console.confirm("Configure OAuth token?", default=True)
-
-            if enable_oauth_token:
-                console.print()
-                console.print("  [bold]Steps:[/bold]")
-                console.print("    1. Run [cyan]claude setup-token[/cyan] in a separate terminal")
-                console.print("    2. Complete the browser authentication")
-                console.print("    3. Copy the token and paste it below")
-                console.print()
-                oauth_token_value = console.input("Paste token", default="")
-
-                if oauth_token_value:
-                    if create_claude_credentials(oauth_token_value):
-                        create_claude_config()
-                        console.success("Token saved to ~/.claude/.credentials.json")
-
     if not skip_prompts:
         saved_config["enable_python"] = enable_python
         saved_config["enable_typescript"] = enable_typescript
         saved_config["enable_golang"] = enable_golang
         saved_config["enable_agent_browser"] = enable_agent_browser
-        saved_config["enable_oauth_token"] = enable_oauth_token
         save_config(project_dir, saved_config)
 
     ctx = InstallContext(
@@ -467,8 +432,6 @@ def install(
         enable_typescript=enable_typescript,
         enable_golang=enable_golang,
         enable_agent_browser=enable_agent_browser,
-        enable_oauth_token=enable_oauth_token,
-        oauth_token_value=oauth_token_value,
         non_interactive=non_interactive,
         skip_env=skip_env,
         local_mode=local,
