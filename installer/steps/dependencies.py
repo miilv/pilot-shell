@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import os
-import re
 import subprocess
 import time
 from pathlib import Path
@@ -15,20 +13,6 @@ from installer.steps.base import BaseStep
 
 MAX_RETRIES = 3
 RETRY_DELAY = 2
-
-ANSI_ESCAPE_PATTERN = re.compile(
-    r"\x1b\[\??[0-9;]*[a-zA-Z]"
-    r"|\x1b\].*?\x07"
-    r"|\x1b[PX^_][^\x1b]*\x1b\\\\"
-    r"|\r"
-)
-
-
-def _strip_ansi(text: str) -> str:
-    """Strip ANSI escape codes from text."""
-    result = ANSI_ESCAPE_PATTERN.sub("", text)
-    result = "".join(c for c in result if c == "\n" or (ord(c) >= 32 and ord(c) != 127))
-    return result.strip()
 
 
 def _run_bash_with_retry(command: str, cwd: Path | None = None) -> bool:
@@ -53,7 +37,7 @@ def _is_plugin_installed(plugin_name: str, marketplace: str | None = None) -> bo
     """Check if a Claude plugin is already installed.
 
     Args:
-        plugin_name: The plugin name (e.g., "claude-mem", "typescript-lsp")
+        plugin_name: The plugin name (e.g., "claude-mem", "context7")
         marketplace: Optional marketplace name (e.g., "thedotmack", "claude-plugins-official")
 
     Returns:
@@ -267,56 +251,6 @@ def _ensure_official_marketplace() -> bool:
         return result.returncode == 0 or "already installed" in output
     except Exception:
         return False
-
-
-def migrate_old_lsp_plugins() -> None:
-    """Uninstall old LSP plugins from claude-plugins-official if present."""
-    old_plugins = ["typescript-lsp", "pyright-lsp"]
-    for plugin in old_plugins:
-        if _is_plugin_installed(plugin, "claude-plugins-official"):
-            _run_bash_with_retry(f"claude plugin uninstall {plugin}")
-
-
-def _ensure_lsp_marketplace() -> bool:
-    """Ensure LSP plugins marketplace is installed."""
-    if _is_marketplace_installed("claude-code-lsps"):
-        return True
-
-    try:
-        result = subprocess.run(
-            ["bash", "-c", "claude plugin marketplace add Piebald-AI/claude-code-lsps"],
-            capture_output=True,
-            text=True,
-        )
-        output = (result.stdout + result.stderr).lower()
-        return result.returncode == 0 or "already" in output
-    except Exception:
-        return False
-
-
-def install_typescript_lsp() -> bool:
-    """Install vtsls TypeScript language server plugin."""
-    if not _run_bash_with_retry("npm install -g @vtsls/language-server"):
-        return False
-
-    if _is_plugin_installed("vtsls", "claude-code-lsps"):
-        return True
-
-    if not _ensure_lsp_marketplace():
-        return False
-
-    return _run_bash_with_retry("claude plugin install vtsls")
-
-
-def install_pyright_lsp() -> bool:
-    """Install basedpyright Python language server plugin."""
-    if _is_plugin_installed("basedpyright", "claude-code-lsps"):
-        return True
-
-    if not _ensure_lsp_marketplace():
-        return False
-
-    return _run_bash_with_retry("claude plugin install basedpyright")
 
 
 def _configure_claude_mem_defaults() -> bool:
@@ -865,16 +799,6 @@ class DependenciesStep(BaseStep):
 
         if _install_claude_code_with_ui(ui, ctx.project_dir):
             installed.append("claude_code")
-
-        migrate_old_lsp_plugins()
-
-        if ctx.enable_typescript:
-            if _install_with_spinner(ui, "TypeScript LSP", install_typescript_lsp):
-                installed.append("typescript_lsp")
-
-        if ctx.enable_python:
-            if _install_with_spinner(ui, "Basedpyright LSP", install_pyright_lsp):
-                installed.append("basedpyright_lsp")
 
         if _install_claude_mem_with_deps(ui):
             installed.append("claude_mem")

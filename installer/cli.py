@@ -367,6 +367,12 @@ def install(
                 console.print()
                 console.print("  [bold]Subscribe after trial:[/bold] [cyan]https://license.claude-code.pro[/cyan]")
                 console.print()
+            else:
+                console.print()
+                console.error("Could not start trial. Please enter a license key.")
+                console.print("  [bold]Subscribe at:[/bold] [cyan]https://license.claude-code.pro[/cyan]")
+                console.print()
+                raise typer.Exit(1)
 
     enable_python = not skip_python
     if not skip_python and not skip_prompts:

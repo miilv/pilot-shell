@@ -52,7 +52,6 @@ const HeroSection = () => {
           <Badge variant="secondary" className="text-[10px] xs:text-xs">Quality Hooks</Badge>
           <Badge variant="secondary" className="text-[10px] xs:text-xs">Spec-Driven</Badge>
           <Badge variant="secondary" className="text-[10px] xs:text-xs">Opus 4.5</Badge>
-          <Badge variant="secondary" className="text-[10px] xs:text-xs">LSP</Badge>
           <Badge variant="secondary" className="text-[10px] xs:text-xs">Persistent Memory</Badge>
         </div>
 

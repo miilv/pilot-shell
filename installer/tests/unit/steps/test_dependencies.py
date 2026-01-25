@@ -37,14 +37,12 @@ class TestDependenciesStep:
     @patch("installer.steps.dependencies.install_vexor")
     @patch("installer.steps.dependencies.install_context7")
     @patch("installer.steps.dependencies.install_claude_mem")
-    @patch("installer.steps.dependencies.install_typescript_lsp")
     @patch("installer.steps.dependencies.install_claude_code")
     @patch("installer.steps.dependencies.install_nodejs")
     def test_dependencies_run_installs_core(
         self,
         mock_nodejs,
         mock_claude,
-        mock_typescript_lsp,
         mock_claude_mem,
         mock_context7,
         mock_vexor,
@@ -57,7 +55,6 @@ class TestDependenciesStep:
         # Setup mocks
         mock_nodejs.return_value = True
         mock_claude.return_value = (True, "latest")  # Returns (success, version)
-        mock_typescript_lsp.return_value = True
         mock_claude_mem.return_value = True
         mock_context7.return_value = True
         mock_vexor.return_value = True
@@ -74,14 +71,11 @@ class TestDependenciesStep:
 
             # Core dependencies should be installed
             mock_nodejs.assert_called_once()
-            mock_typescript_lsp.assert_called_once()
             mock_claude.assert_called_once()
 
     @patch("installer.steps.dependencies.install_vexor")
     @patch("installer.steps.dependencies.install_context7")
     @patch("installer.steps.dependencies.install_claude_mem")
-    @patch("installer.steps.dependencies.install_pyright_lsp")
-    @patch("installer.steps.dependencies.install_typescript_lsp")
     @patch("installer.steps.dependencies.install_claude_code")
     @patch("installer.steps.dependencies.install_python_tools")
     @patch("installer.steps.dependencies.install_uv")
@@ -92,8 +86,6 @@ class TestDependenciesStep:
         mock_uv,
         mock_python_tools,
         mock_claude,
-        mock_typescript_lsp,
-        mock_pyright_lsp,
         mock_claude_mem,
         mock_context7,
         mock_vexor,
@@ -108,8 +100,6 @@ class TestDependenciesStep:
         mock_uv.return_value = True
         mock_python_tools.return_value = True
         mock_claude.return_value = (True, "latest")  # Returns (success, version)
-        mock_typescript_lsp.return_value = True
-        mock_pyright_lsp.return_value = True
         mock_claude_mem.return_value = True
         mock_context7.return_value = True
         mock_vexor.return_value = True
@@ -127,7 +117,6 @@ class TestDependenciesStep:
             # Python tools should be installed
             mock_uv.assert_called_once()
             mock_python_tools.assert_called_once()
-            mock_pyright_lsp.assert_called_once()
 
 
 class TestDependencyInstallFunctions:
@@ -305,92 +294,6 @@ class TestClaudeCodeInstall:
                 config_path = Path(tmpdir) / ".claude.json"
                 config = json.loads(config_path.read_text())
                 assert config["respectGitignore"] is False
-
-
-class TestTypescriptLspInstall:
-    """Test TypeScript language server plugin installation."""
-
-    def test_install_typescript_lsp_exists(self):
-        """install_typescript_lsp function exists."""
-        from installer.steps.dependencies import install_typescript_lsp
-
-        assert callable(install_typescript_lsp)
-
-    @patch("installer.steps.dependencies._is_marketplace_installed", return_value=False)
-    @patch("installer.steps.dependencies._is_plugin_installed", return_value=False)
-    @patch("subprocess.run")
-    def test_install_typescript_lsp_calls_npm_and_plugin(self, mock_run, mock_plugin, mock_market):
-        """install_typescript_lsp installs vtsls plugin from claude-code-lsps."""
-        from installer.steps.dependencies import install_typescript_lsp
-
-        mock_run.return_value = MagicMock(returncode=0)
-
-        result = install_typescript_lsp()
-
-        assert mock_run.call_count >= 3
-        # Check npm install call for language server binary (now first)
-        first_call = mock_run.call_args_list[0][0][0]
-        assert "npm install -g @vtsls/language-server" in first_call[2]
-        # Check marketplace add call
-        second_call = mock_run.call_args_list[1][0][0]
-        assert "claude plugin marketplace add Piebald-AI/claude-code-lsps" in second_call[2]
-        # Check plugin install call
-        third_call = mock_run.call_args_list[2][0][0]
-        assert "claude plugin install vtsls" in third_call[2]
-
-
-class TestPyrightLspInstall:
-    """Test Pyright language server plugin installation."""
-
-    def test_install_pyright_lsp_exists(self):
-        """install_pyright_lsp function exists."""
-        from installer.steps.dependencies import install_pyright_lsp
-
-        assert callable(install_pyright_lsp)
-
-    @patch("installer.steps.dependencies._is_marketplace_installed", return_value=False)
-    @patch("installer.steps.dependencies._is_plugin_installed", return_value=False)
-    @patch("subprocess.run")
-    def test_install_pyright_lsp_calls_npm_and_plugin(self, mock_run, mock_plugin, mock_market):
-        """install_pyright_lsp installs basedpyright plugin from claude-code-lsps."""
-        from installer.steps.dependencies import install_pyright_lsp
-
-        mock_run.return_value = MagicMock(returncode=0)
-
-        result = install_pyright_lsp()
-
-        assert mock_run.call_count >= 2
-        # Check marketplace add call
-        first_call = mock_run.call_args_list[0][0][0]
-        assert "claude plugin marketplace add Piebald-AI/claude-code-lsps" in first_call[2]
-        # Check plugin install call
-        second_call = mock_run.call_args_list[1][0][0]
-        assert "claude plugin install basedpyright" in second_call[2]
-
-
-class TestLspMigration:
-    """Test migration from old LSP plugins."""
-
-    @patch("installer.steps.dependencies._run_bash_with_retry")
-    @patch("installer.steps.dependencies._is_plugin_installed")
-    def test_migrate_uninstalls_old_plugins(self, mock_is_installed, mock_run_bash):
-        """Uninstall old LSP plugins if present."""
-        from installer.steps.dependencies import migrate_old_lsp_plugins
-
-        mock_is_installed.side_effect = lambda name, _: name in ["typescript-lsp", "pyright-lsp"]
-        mock_run_bash.return_value = True
-        migrate_old_lsp_plugins()
-        assert mock_run_bash.call_count == 2
-
-    @patch("installer.steps.dependencies._run_bash_with_retry")
-    @patch("installer.steps.dependencies._is_plugin_installed")
-    def test_migrate_skips_if_not_installed(self, mock_is_installed, mock_run_bash):
-        """Skip uninstall if old plugins not present."""
-        from installer.steps.dependencies import migrate_old_lsp_plugins
-
-        mock_is_installed.return_value = False
-        migrate_old_lsp_plugins()
-        mock_run_bash.assert_not_called()
 
 
 class TestClaudeMemInstall:
@@ -611,14 +514,12 @@ class TestClaudeMemDepsPreinstall:
     @patch("installer.steps.dependencies.install_vexor")
     @patch("installer.steps.dependencies.install_context7")
     @patch("installer.steps.dependencies.install_claude_mem")
-    @patch("installer.steps.dependencies.install_typescript_lsp")
     @patch("installer.steps.dependencies.install_claude_code")
     @patch("installer.steps.dependencies.install_nodejs")
     def test_dependencies_step_calls_preinstall_after_claude_mem(
         self,
         mock_nodejs,
         mock_claude,
-        mock_typescript_lsp,
         mock_claude_mem,
         mock_context7,
         mock_vexor,
@@ -632,7 +533,6 @@ class TestClaudeMemDepsPreinstall:
         # Setup mocks
         mock_nodejs.return_value = True
         mock_claude.return_value = (True, "latest")
-        mock_typescript_lsp.return_value = True
         mock_claude_mem.return_value = True
         mock_context7.return_value = True
         mock_vexor.return_value = True
