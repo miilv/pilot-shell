@@ -193,15 +193,15 @@ Claude CodePro extends Claude Code with a modular system of rules, commands, and
 
 **Managed by CCP** (updated on install):
 
-- `.claude/rules/standard/` - Best practices and workflows
 - `.claude/commands/` - `spec`, `sync`, `plan`, `implement`, `verify`
-- `.claude/skills/standards-*/` - Coding standards for languages and frameworks
+- `.claude/rules/standard/` - Best practices and workflows
+- `.claude/plugin/skills/` - Coding standards for languages and frameworks
 
 **Yours to customize** (never touched by updates):
 
-- `.claude/rules/custom/` - Project-specific rules
 - `.claude/commands/` - Any command besides the standard ones
-- `.claude/skills/` - Any skill not prefixed with `standards-`
+- `.claude/rules/custom/` - Project-specific rules
+- `.claude/skills/` - Any skill beside the standards from CCP plugin
 
 **When to use what:**
 

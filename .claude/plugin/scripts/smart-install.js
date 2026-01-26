@@ -2,22 +2,266 @@
 /**
  * Smart Install Script for claude-mem
  *
- * Handles dependency installation when needed and registers hooks.
- * Uses npm for package installation (no runtime dependencies required).
+ * Ensures Bun runtime and uv (Python package manager) are installed
+ * (auto-installs if missing), handles dependency installation when needed,
+ * and registers the MCP server in Claude Code configuration.
  */
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
-import { spawnSync } from 'child_process';
+import { execSync, spawnSync } from 'child_process';
 import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { homedir } from 'os';
 
-// Determine the Claude config directory (supports CLAUDE_CONFIG_DIR env var)
-const CLAUDE_CONFIG_DIR = process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude');
-const ROOT = join(CLAUDE_CONFIG_DIR, 'plugins', 'marketplaces', 'customable');
-const PLUGIN_ROOT = ROOT;
+// Determine plugin root: CLAUDE_PLUGIN_ROOT (set by Claude Code) or derive from script location
+function getPluginRoot() {
+  if (process.env.CLAUDE_PLUGIN_ROOT) {
+    return process.env.CLAUDE_PLUGIN_ROOT;
+  }
+  // Fallback: derive from this script's location (scripts/smart-install.js -> parent dir)
+  const __filename = fileURLToPath(import.meta.url);
+  return dirname(dirname(__filename));
+}
+
+const ROOT = getPluginRoot();
 const MARKER = join(ROOT, '.install-version');
-const SETTINGS_PATH = join(CLAUDE_CONFIG_DIR, 'settings.json');
-const HOOKS_PATH = join(CLAUDE_CONFIG_DIR, 'hooks.json');
 const IS_WINDOWS = process.platform === 'win32';
+
+// Minimum Bun version required for SQLite .changes property and multi-statement SQL
+const MIN_BUN_VERSION = '1.1.14';
+
+// Common installation paths (handles fresh installs before PATH reload)
+const BUN_COMMON_PATHS = IS_WINDOWS
+  ? [join(homedir(), '.bun', 'bin', 'bun.exe')]
+  : [join(homedir(), '.bun', 'bin', 'bun'), '/usr/local/bin/bun', '/opt/homebrew/bin/bun'];
+
+const UV_COMMON_PATHS = IS_WINDOWS
+  ? [join(homedir(), '.local', 'bin', 'uv.exe'), join(homedir(), '.cargo', 'bin', 'uv.exe')]
+  : [join(homedir(), '.local', 'bin', 'uv'), join(homedir(), '.cargo', 'bin', 'uv'), '/usr/local/bin/uv', '/opt/homebrew/bin/uv'];
+
+/**
+ * Compare two semver version strings
+ * Returns: negative if a < b, 0 if equal, positive if a > b
+ */
+function compareVersions(a, b) {
+  const aParts = a.split('.').map(Number);
+  const bParts = b.split('.').map(Number);
+  for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+    const aVal = aParts[i] || 0;
+    const bVal = bParts[i] || 0;
+    if (aVal !== bVal) return aVal - bVal;
+  }
+  return 0;
+}
+
+/**
+ * Check if installed Bun version meets minimum requirement
+ */
+function isBunVersionSufficient() {
+  const version = getBunVersion();
+  if (!version) return false;
+  return compareVersions(version, MIN_BUN_VERSION) >= 0;
+}
+
+/**
+ * Get the Bun executable path (from PATH or common install locations)
+ */
+function getBunPath() {
+  // Try PATH first
+  try {
+    const result = spawnSync('bun', ['--version'], {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+      shell: IS_WINDOWS,
+      windowsHide: true  // Prevent Windows Terminal popup
+    });
+    if (result.status === 0) return 'bun';
+  } catch {
+    // Not in PATH
+  }
+
+  // Check common installation paths
+  return BUN_COMMON_PATHS.find(existsSync) || null;
+}
+
+/**
+ * Check if Bun is installed and accessible
+ */
+function isBunInstalled() {
+  return getBunPath() !== null;
+}
+
+/**
+ * Get Bun version if installed
+ */
+function getBunVersion() {
+  const bunPath = getBunPath();
+  if (!bunPath) return null;
+
+  try {
+    const result = spawnSync(bunPath, ['--version'], {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+      shell: IS_WINDOWS,
+      windowsHide: true  // Prevent Windows Terminal popup
+    });
+    return result.status === 0 ? result.stdout.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get the uv executable path (from PATH or common install locations)
+ */
+function getUvPath() {
+  // Try PATH first
+  try {
+    const result = spawnSync('uv', ['--version'], {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+      shell: IS_WINDOWS,
+      windowsHide: true  // Prevent Windows Terminal popup
+    });
+    if (result.status === 0) return 'uv';
+  } catch {
+    // Not in PATH
+  }
+
+  // Check common installation paths
+  return UV_COMMON_PATHS.find(existsSync) || null;
+}
+
+/**
+ * Check if uv is installed and accessible
+ */
+function isUvInstalled() {
+  return getUvPath() !== null;
+}
+
+/**
+ * Get uv version if installed
+ */
+function getUvVersion() {
+  const uvPath = getUvPath();
+  if (!uvPath) return null;
+
+  try {
+    const result = spawnSync(uvPath, ['--version'], {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+      shell: IS_WINDOWS,
+      windowsHide: true  // Prevent Windows Terminal popup
+    });
+    return result.status === 0 ? result.stdout.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Install or upgrade Bun automatically based on platform
+ */
+function installBun(isUpgrade = false) {
+  const currentVersion = getBunVersion();
+  if (isUpgrade) {
+    console.error(`🔧 Bun ${currentVersion} is below minimum ${MIN_BUN_VERSION}. Upgrading...`);
+  } else {
+    console.error('🔧 Bun not found. Installing Bun runtime...');
+  }
+
+  try {
+    if (IS_WINDOWS) {
+      console.error('   Installing via PowerShell...');
+      execSync('powershell -c "irm bun.sh/install.ps1 | iex"', {
+        stdio: 'inherit',
+        shell: true,
+        windowsHide: true  // Prevent Windows Terminal popup
+      });
+    } else {
+      console.error('   Installing via curl...');
+      execSync('curl -fsSL https://bun.sh/install | bash', {
+        stdio: 'inherit',
+        shell: true,
+        windowsHide: true  // Prevent Windows Terminal popup
+      });
+    }
+
+    if (!isBunInstalled()) {
+      throw new Error(
+        'Bun installation completed but binary not found. ' +
+        'Please restart your terminal and try again.'
+      );
+    }
+
+    const version = getBunVersion();
+    if (!isBunVersionSufficient()) {
+      throw new Error(
+        `Bun ${version} installed but version ${MIN_BUN_VERSION}+ is required. ` +
+        'Please upgrade Bun manually: bun upgrade'
+      );
+    }
+    console.error(`✅ Bun ${version} installed successfully`);
+  } catch (error) {
+    console.error('❌ Failed to install Bun');
+    console.error('   Please install manually:');
+    if (IS_WINDOWS) {
+      console.error('   - winget install Oven-sh.Bun');
+      console.error('   - Or: powershell -c "irm bun.sh/install.ps1 | iex"');
+    } else {
+      console.error('   - curl -fsSL https://bun.sh/install | bash');
+      console.error('   - Or: brew install oven-sh/bun/bun');
+    }
+    console.error('   Then restart your terminal and try again.');
+    throw error;
+  }
+}
+
+/**
+ * Install uv automatically based on platform
+ */
+function installUv() {
+  console.error('🐍 Installing uv for Python/Chroma support...');
+
+  try {
+    if (IS_WINDOWS) {
+      console.error('   Installing via PowerShell...');
+      execSync('powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"', {
+        stdio: 'inherit',
+        shell: true,
+        windowsHide: true  // Prevent Windows Terminal popup
+      });
+    } else {
+      console.error('   Installing via curl...');
+      execSync('curl -LsSf https://astral.sh/uv/install.sh | sh', {
+        stdio: 'inherit',
+        shell: true,
+        windowsHide: true  // Prevent Windows Terminal popup
+      });
+    }
+
+    if (!isUvInstalled()) {
+      throw new Error(
+        'uv installation completed but binary not found. ' +
+        'Please restart your terminal and try again.'
+      );
+    }
+
+    const version = getUvVersion();
+    console.error(`✅ uv ${version} installed successfully`);
+  } catch (error) {
+    console.error('❌ Failed to install uv');
+    console.error('   Please install manually:');
+    if (IS_WINDOWS) {
+      console.error('   - winget install astral-sh.uv');
+      console.error('   - Or: powershell -c "irm https://astral.sh/uv/install.ps1 | iex"');
+    } else {
+      console.error('   - curl -LsSf https://astral.sh/uv/install.sh | sh');
+      console.error('   - Or: brew install uv (macOS)');
+    }
+    console.error('   Then restart your terminal and try again.');
+    throw error;
+  }
+}
 
 /**
  * Check if dependencies need to be installed
@@ -27,122 +271,114 @@ function needsInstall() {
   try {
     const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf-8'));
     const marker = JSON.parse(readFileSync(MARKER, 'utf-8'));
-    return pkg.version !== marker.version;
+    return pkg.version !== marker.version || getBunVersion() !== marker.bun;
   } catch {
     return true;
   }
 }
 
 /**
- * Install dependencies using npm
+ * Install dependencies using Bun
  */
 function installDeps() {
-  console.error('📦 Installing dependencies...');
-
-  const result = spawnSync('npm', ['install', '--prefer-offline'], {
-    cwd: ROOT,
-    stdio: 'inherit',
-    shell: IS_WINDOWS
-  });
-
-  if (result.status !== 0) {
-    throw new Error(`npm install failed with exit code ${result.status}`);
+  const bunPath = getBunPath();
+  if (!bunPath) {
+    throw new Error('Bun executable not found');
   }
+
+  console.error('📦 Installing dependencies with Bun...');
+
+  // Quote path for Windows paths with spaces
+  const bunCmd = IS_WINDOWS && bunPath.includes(' ') ? `"${bunPath}"` : bunPath;
+
+  execSync(`${bunCmd} install`, { cwd: ROOT, stdio: 'inherit', shell: IS_WINDOWS, windowsHide: true });
 
   // Write version marker
   const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf-8'));
   writeFileSync(MARKER, JSON.stringify({
     version: pkg.version,
+    bun: getBunVersion(),
+    uv: getUvVersion(),
     installedAt: new Date().toISOString()
   }));
 }
 
 /**
- * Register plugin hooks in hooks.json
- *
- * Note: We write to hooks.json (not settings.json) because Claude Code
- * reads hooks from hooks.json. This ensures our correctly expanded paths
- * take precedence over any incorrect paths that Claude Code's plugin
- * system might generate (fixing issue #231 where ${CLAUDE_PLUGIN_ROOT}
- * was incorrectly expanded to include /plugin/ subdirectory).
+ * Find the Claude Code config directory for this instance
+ * Supports: ~/.claude, ~/.config/claude-work, ~/.config/claude-lab, etc.
  */
-function registerHooks() {
-  const pluginHooksPath = join(PLUGIN_ROOT, 'hooks', 'hooks.json');
-
-  if (!existsSync(pluginHooksPath)) {
-    console.error('⚠️  Plugin hooks.json not found, skipping hook registration');
-    return;
+function getClaudeConfigDir() {
+  // CLAUDE_PLUGIN_ROOT contains the path to the plugin, which includes the config dir
+  // e.g., /home/user/.config/claude-lab/plugins/cache/customable/claude-mem/1.2.1
+  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT;
+  if (pluginRoot) {
+    // Extract the base config dir from the plugin path
+    const parts = pluginRoot.split('/plugins/');
+    if (parts.length >= 2) {
+      return parts[0];  // e.g., /home/user/.config/claude-lab
+    }
   }
+  // Fallback to default ~/.claude
+  return join(homedir(), '.claude');
+}
+
+/**
+ * Register the MCP server in Claude Code's configuration
+ */
+function registerMcpServer() {
+  const configDir = getClaudeConfigDir();
+  const claudeJsonPath = join(configDir, '.claude.json');
+  const mcpServerPath = join(ROOT, 'scripts', 'mcp-server.cjs');
+  const mcpName = 'plugin_claude-mem_mcp-search';
 
   try {
-    const pluginHooksJson = JSON.parse(readFileSync(pluginHooksPath, 'utf-8'));
-    const pluginHooks = pluginHooksJson.hooks;
-
-    if (!pluginHooks) {
-      console.error('⚠️  No hooks found in plugin hooks.json');
-      return;
+    let config = {};
+    if (existsSync(claudeJsonPath)) {
+      config = JSON.parse(readFileSync(claudeJsonPath, 'utf-8'));
     }
 
-    // Replace ${CLAUDE_PLUGIN_ROOT} with actual path
-    // This is the key fix for #231 - we ensure the path is correct
-    // (without /plugin/ subdirectory that Claude Code might incorrectly add)
-    const hooksString = JSON.stringify(pluginHooks)
-      .replace(/\$\{CLAUDE_PLUGIN_ROOT\}/g, PLUGIN_ROOT.replace(/\\/g, '\\\\'));
-    const resolvedHooks = JSON.parse(hooksString);
-
-    // Read existing hooks.json or create new object
-    let hooksConfig = {};
-    if (existsSync(HOOKS_PATH)) {
-      try {
-        const content = readFileSync(HOOKS_PATH, 'utf-8').trim();
-        if (content) {
-          hooksConfig = JSON.parse(content);
-        }
-      } catch (parseError) {
-        console.error('⚠️  Could not parse existing hooks.json, creating backup');
-        const backupPath = HOOKS_PATH + '.backup-' + Date.now();
-        writeFileSync(backupPath, readFileSync(HOOKS_PATH));
-      }
+    // Initialize mcpServers if not present
+    if (!config.mcpServers) {
+      config.mcpServers = {};
     }
 
-    // Merge our hooks with existing hooks
-    // Our plugin hooks will override any incorrectly expanded paths
-    const existingHooks = hooksConfig.hooks || {};
-    const mergedHooks = { ...existingHooks };
-
-    // Merge each hook type, appending our hooks to existing ones
-    for (const [hookType, hookArray] of Object.entries(resolvedHooks)) {
-      if (Array.isArray(hookArray)) {
-        // Replace existing hooks for this type with ours
-        // (ensures correct paths take precedence)
-        mergedHooks[hookType] = hookArray;
-      }
+    // Check if our MCP is already registered with correct path
+    const existingMcp = config.mcpServers[mcpName];
+    if (existingMcp && existingMcp.args && existingMcp.args[0] === mcpServerPath) {
+      return; // Already registered correctly
     }
 
-    // Check if hooks need updating
-    const existingHooksStr = JSON.stringify(hooksConfig.hooks || {});
-    const newHooksStr = JSON.stringify(mergedHooks);
+    // Register/update the MCP server
+    config.mcpServers[mcpName] = {
+      type: 'stdio',
+      command: 'node',
+      args: [mcpServerPath]
+    };
 
-    if (existingHooksStr === newHooksStr) {
-      return;
-    }
-
-    hooksConfig.hooks = mergedHooks;
-    mkdirSync(dirname(HOOKS_PATH), { recursive: true });
-    writeFileSync(HOOKS_PATH, JSON.stringify(hooksConfig, null, 2));
-    console.error('✅ Hooks registered in hooks.json');
+    // Ensure directory exists
+    mkdirSync(dirname(claudeJsonPath), { recursive: true });
+    writeFileSync(claudeJsonPath, JSON.stringify(config, null, 2));
+    console.error(`✅ MCP server registered in ${claudeJsonPath}`);
   } catch (error) {
-    console.error('⚠️  Failed to register hooks:', error.message);
+    console.error(`⚠️ Could not register MCP server: ${error.message}`);
+    // Non-fatal - plugin will still work, just without MCP
   }
 }
 
 // Main execution
 try {
+  if (!isBunInstalled()) {
+    installBun();
+  } else if (!isBunVersionSufficient()) {
+    installBun(true);  // Upgrade existing installation
+  }
+  if (!isUvInstalled()) installUv();
   if (needsInstall()) {
     installDeps();
     console.error('✅ Dependencies installed');
   }
-  registerHooks();
+  // Always ensure MCP is registered
+  registerMcpServer();
 } catch (e) {
   console.error('❌ Installation failed:', e.message);
   process.exit(1);
