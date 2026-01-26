@@ -92,27 +92,27 @@ const Footer = () => {
         </div>
 
         <div className="mt-12 pt-8 border-t border-border">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Claude CodePro. Source code AGPL-3.0. Created by{" "}
-              <a
-                href="https://maxritter.net/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                Max Ritter
-              </a>
-            </p>
+          <p className="text-sm text-muted-foreground text-center">
+            © {new Date().getFullYear()}{" "}
             <a
-              href="https://github.com/maxritter/claude-codepro"
+              href="https://claude-code.pro/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-primary hover:underline font-mono"
+              className="text-primary hover:underline"
             >
-              github.com/maxritter/claude-codepro
+              Claude CodePro
             </a>
-          </div>
+            . Created with 💛 by{" "}
+            <a
+              href="https://maxritter.net/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              Max Ritter
+            </a>
+            {" "}from Munich 🥨
+          </p>
         </div>
       </div>
     </footer>
