@@ -163,6 +163,8 @@ class ClaudeFilesStep(BaseStep):
                 continue
             if file_path.endswith(".lock") or file_path.endswith("-lock.yaml"):
                 continue
+            if ".install-version" in file_path:
+                continue
 
             if "/rules/custom/" in file_path:
                 continue
