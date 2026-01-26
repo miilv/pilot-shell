@@ -37,6 +37,8 @@ When you see the context warning (80% or 90%), take action:
 
 ### At 90% - Mandatory Continuation Protocol
 
+**⚠️ CRITICAL: Execute ALL steps below in a SINGLE turn. DO NOT stop, wait for user response, or output summary and then pause. Write file → Trigger clear → Done.**
+
 **Step 1: VERIFY Before Writing (CRITICAL)**
 
 Before writing the continuation file, you MUST run verification commands:
@@ -102,21 +104,15 @@ Write the summary to `/tmp/claude-continuation.md` using the Write tool. Include
 
 **CRITICAL: If you were in the middle of fixing something, say EXACTLY what and where. The next agent cannot read your mind.**
 
-**Step 4: Output Session End Summary (For User Visibility)**
+**Step 4: Output Summary AND Trigger Clear (SAME TURN)**
 
-After writing the file, output the summary to the user:
+Output brief summary then IMMEDIATELY trigger clear in the same response:
 
 ```
----
-## 🔄 SESSION END - Continuation Summary
-
-[Same content as above]
-
----
-Triggering session restart...
+🔄 Session handoff - [brief task description]. Triggering restart...
 ```
 
-**Step 5: Trigger Session Clear**
+Then execute the send-clear command (do NOT wait for user response):
 
 **Use the correct command based on Step 2:**
 

@@ -936,6 +936,8 @@ $CLAUDE_PROJECT_ROOT/.claude/bin/ccp check-context --json
 
 If response shows `"status": "CLEAR_NEEDED"` (context >= 90%):
 
+**⚠️ CRITICAL: Execute ALL steps below in a SINGLE turn. DO NOT stop or wait for user response between steps.**
+
 **Step 1: Write continuation file (GUARANTEED BACKUP)**
 
 Write to `/tmp/claude-continuation.md`:
@@ -982,6 +984,7 @@ If `send-clear` fails:
 # CRITICAL RULES SUMMARY
 
 1. **NO sub-agents (Task tool)** - Perform all work yourself using direct tool calls
+2. **ONLY stopping point is plan approval** - Never stop/wait between phases, during context handoff, or for user acknowledgment. Execute session continuation automatically.
 3. **Batch questions together** - Don't interrupt user flow
 4. **Run explorations sequentially** - One at a time, never in parallel
 5. **NEVER write implementation code during planning** - Planning and implementing are separate phases

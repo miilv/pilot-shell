@@ -45,3 +45,12 @@ Plan → Approve → Implement → Verify → Done
 - Finish current task properly, then hand off
 - Never skip tests or cut corners
 - A clean handoff beats rushed completion
+
+## No Stopping - Automatic Continuation
+
+**The ONLY user interaction point is plan approval.**
+
+- Never stop after writing continuation file - trigger clear immediately
+- Never wait for user acknowledgment before session handoff
+- Execute session continuation in a single turn: write file → trigger clear
+- Only ask user if a critical architectural decision is needed
