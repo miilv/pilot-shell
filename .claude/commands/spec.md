@@ -139,7 +139,7 @@ LOOP:
 - Continues until everything passes (VERIFIED)
 
 **Between iterations:**
-1. Check context: `$PWD/.claude/bin/ccp check-context --json`
+1. Check context: `ccp check-context --json`
 2. If context >= 90%: hand off cleanly (don't rush!)
 3. If context 80-89%: continue but wrap up current task with quality
 4. If context < 80%: continue the loop freely
@@ -208,7 +208,7 @@ LOOP:
 After each major operation, check context:
 
 ```bash
-$PWD/.claude/bin/ccp check-context --json
+ccp check-context --json
 ```
 
 If response shows `"status": "CLEAR_NEEDED"` (context >= 90%):
@@ -237,7 +237,7 @@ Write to `/tmp/claude-continuation.md`:
 **Step 2: Trigger session clear**
 
 ```bash
-$PWD/.claude/bin/ccp send-clear <plan-path>
+ccp send-clear <plan-path>
 ```
 
 CCP will restart with `/spec --continue <plan-path>`
