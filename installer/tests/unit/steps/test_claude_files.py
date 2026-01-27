@@ -773,24 +773,24 @@ class TestDirectoryClearing:
             assert (dest_commands / "spec.md").exists()
             assert (dest_commands / "spec.md").read_text() == "new spec command"
 
-    def test_plugin_folder_is_installed(self):
-        """ClaudeFilesStep installs plugin folder from repo."""
+    def test_ccp_folder_is_installed(self):
+        """ClaudeFilesStep installs ccp folder from repo."""
         from installer.context import InstallContext
         from installer.steps.claude_files import ClaudeFilesStep
         from installer.ui import Console
 
         step = ClaudeFilesStep()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create source with plugin directory
+            # Create source with ccp directory
             source_dir = Path(tmpdir) / "source"
             source_claude = source_dir / ".claude"
-            source_plugin = source_claude / "plugin"
-            source_plugin.mkdir(parents=True)
-            (source_plugin / "package.json").write_text('{"name": "test"}')
-            (source_plugin / "scripts").mkdir()
-            (source_plugin / "scripts" / "mcp-server.cjs").write_text("// mcp server")
-            (source_plugin / "hooks").mkdir()
-            (source_plugin / "hooks" / "hook.py").write_text("# hook")
+            source_ccp = source_claude / "ccp"
+            source_ccp.mkdir(parents=True)
+            (source_ccp / "package.json").write_text('{"name": "test"}')
+            (source_ccp / "scripts").mkdir()
+            (source_ccp / "scripts" / "mcp-server.cjs").write_text("// mcp server")
+            (source_ccp / "hooks").mkdir()
+            (source_ccp / "hooks" / "hook.py").write_text("# hook")
 
             dest_dir = Path(tmpdir) / "dest"
             dest_claude = dest_dir / ".claude"
@@ -805,10 +805,10 @@ class TestDirectoryClearing:
 
             step.run(ctx)
 
-            # Plugin files SHOULD be installed
-            assert (dest_claude / "plugin" / "package.json").exists()
-            assert (dest_claude / "plugin" / "scripts" / "mcp-server.cjs").exists()
-            assert (dest_claude / "plugin" / "hooks" / "hook.py").exists()
+            # CCP files SHOULD be installed
+            assert (dest_claude / "ccp" / "package.json").exists()
+            assert (dest_claude / "ccp" / "scripts" / "mcp-server.cjs").exists()
+            assert (dest_claude / "ccp" / "hooks" / "hook.py").exists()
 
     def test_hooks_are_not_installed_from_repo(self):
         """ClaudeFilesStep does NOT install hooks from repo (hooks come from plugin)."""

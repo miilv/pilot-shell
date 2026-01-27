@@ -28,7 +28,10 @@ def main() -> int:
             pass
 
     STATE_FILE.write_text(str(now))
-    print("🧠 EVALUATE: Did you learn something extractable? → Invoke Skill(learn)", file=sys.stderr)
+    print(
+        "🧠 EVALUATE: Non-obvious solution OR repeatable workflow? → Invoke Skill(learn)",
+        file=sys.stderr,
+    )
     return 2
 
 

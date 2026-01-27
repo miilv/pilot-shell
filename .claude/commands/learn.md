@@ -17,6 +17,7 @@ Invoke `/learn` after ANY task involving:
 | **Workarounds** | Found limitation and creative solution |
 | **Tool integration** | Figured out how to use tool/API in undocumented way |
 | **Trial-and-error** | Tried multiple approaches before finding what worked |
+| **Repeatable workflow** | Multi-step task that will recur; worth standardizing as a skill |
 
 ---
 
@@ -27,18 +28,19 @@ Ask yourself:
 1. "What did I just learn that wasn't obvious before starting?"
 2. "Would future-me benefit from having this documented?"
 3. "Was the solution non-obvious from documentation alone?"
+4. "Is this a multi-step workflow I'd repeat on similar tasks?"
 
 **If NO to all → Skip extraction, nothing to learn.**
 
 ### Quality Criteria
 
 - **Reusable**: Will help with future tasks (not just this instance)
-- **Non-trivial**: Required discovery, not just documentation lookup
+- **Non-trivial**: Required discovery, OR is a valuable workflow pattern
 - **Verified**: Solution actually worked, not theoretical
 
 ### What NOT to Extract
 
-- Routine tasks with documented solutions
+- Single-step tasks with no workflow value
 - One-off fixes unlikely to recur
 - Knowledge easily found in official docs
 

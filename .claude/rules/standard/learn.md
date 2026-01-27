@@ -13,18 +13,20 @@ After completing ANY task involving these triggers, **invoke `/learn`**:
 | **Workarounds** | Discovered limitation and found creative solution |
 | **Tool integration** | Figured out how to use tool/API in undocumented way |
 | **Trial-and-error** | Tried multiple approaches before finding what worked |
+| **Repeatable workflow** | Multi-step task that will recur; worth standardizing |
 
 ### Quick Self-Check
 
 After significant tasks, ask yourself:
 - "What did I just learn that wasn't obvious before starting?"
 - "Would future-me benefit from having this documented?"
+- "Is this a multi-step workflow I'd repeat on similar tasks?"
 
-**If YES → Invoke `/learn` immediately.**
+**If YES to any → Invoke `/learn` immediately.**
 
 ### What NOT to Extract
 
-- Routine tasks with documented solutions
+- Single-step tasks with no workflow value
 - One-off fixes unlikely to recur
 - Knowledge easily found in official docs
 - Unverified or theoretical solutions

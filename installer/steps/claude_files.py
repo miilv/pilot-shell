@@ -127,7 +127,7 @@ class ClaudeFilesStep(BaseStep):
             "commands": [],
             "rules_standard": [],
             "rules": [],
-            "plugin": [],
+            "ccp": [],
             "other": [],
         }
 
@@ -201,8 +201,8 @@ class ClaudeFilesStep(BaseStep):
                 categories["rules_standard"].append(file_info)
             elif "/rules/" in file_path:
                 categories["rules"].append(file_info)
-            elif "/plugin/" in file_path:
-                categories["plugin"].append(file_info)
+            elif "/ccp/" in file_path:
+                categories["ccp"].append(file_info)
             elif "/hooks/" in file_path:
                 continue
             elif "/skills/" in file_path:
@@ -216,7 +216,7 @@ class ClaudeFilesStep(BaseStep):
             "commands": "slash commands",
             "rules_standard": "standard rules",
             "rules": "custom rules",
-            "plugin": "plugin files",
+            "ccp": "CCP files",
             "other": "config files",
         }
 
