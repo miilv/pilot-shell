@@ -526,144 +526,80 @@ After `/learn` completes:
 2. Confirm SKILL.md has proper frontmatter (name, description with triggers)
 3. Test skill is recognized: mention it in conversation to trigger
 
-### Phase 10: Team Vault (sx)
+### Phase 10: Team Vault (sx) - Optional
 
-**Setup vault if needed, pull team assets, and share your discoveries.**
+**Share rules and skills with your team via sx. Skip if not using team sharing.**
 
-#### Step 10.1: Check/Setup Vault
+#### Step 10.1: Check sx Availability
 
-1. **Check sx availability and vault status:**
+```bash
+which sx 2>/dev/null || echo "sx not installed"
+```
+
+**If sx not installed:** Skip Phase 10 entirely. Inform user they can install sx later for team sharing.
+
+#### Step 10.2: Check Vault Status
+
+```bash
+sx vault list 2>&1
+```
+
+| Result | Action |
+|--------|--------|
+| Lists assets | Vault configured, proceed to Step 10.3 |
+| "no vault configured" | Ask if user wants to set up (Step 10.2a) |
+| Auth error | Tell user to run `sx init` manually |
+
+#### Step 10.2a: Vault Setup (if not configured)
+
+```
+Question: "Set up team vault for sharing skills/rules?"
+Header: "Team Vault"
+Options:
+- "Yes" - I'll paste my git repo URL
+- "Skip" - Continue without team sharing
+```
+
+**If user chooses Yes:**
+1. User will type their repo URL via "Other" option
+2. Run setup:
    ```bash
-   sx --version && sx update
-   sx vault list --json 2>/dev/null
+   sx init --type git --repo-url <user-provided-url>
    ```
+3. If setup fails, inform user to check credentials and try `sx init` manually
 
-   - If `sx vault list` succeeds → vault is configured, proceed to Step 10.2
-   - If `sx vault list` fails with "no vault configured" → ask user to set up
+#### Step 10.3: Pull Team Assets
 
-2. **If vault not configured, ask user:**
-   ```
-   Question: "sx vault not configured. Set up team skill/rule sharing? (repo can be empty or existing)"
-   Header: "Team Vault"
-   Options:
-   - "Yes, I'll provide my git repo URL" - Share skills/rules with my team (Recommended)
-   - "Skip" - Continue without team vault
-   ```
+```bash
+sx install --repair
+```
 
-3. **If user chooses to set up:**
+This installs any team assets the user doesn't have locally.
 
-   The user will type their repo URL via the "Other" option. Ask:
-   ```
-   Question: "Enter your git repository URL (select Other and paste your URL):"
-   Header: "Git Repo URL"
-   Options:
-   - "https://github.com/..." - HTTPS format (recommended)
-   - "git@github.com:..." - SSH format
-   ```
+#### Step 10.4: Share New Assets
 
-   **Note:** User MUST select "Other" and type their actual repo URL. The options above are format hints only.
+**Only if new rules/skills were created in this session (not `project.md`):**
 
-   Then run:
-   ```bash
-   echo "y" | sx init --type git --repo-url <user-provided-repo>
-   ```
+```
+Question: "Share these with your team?"
+Header: "Share Assets"
+multiSelect: true
+Options:
+- "[skill] skill-name" - Share this skill
+- "[rule] rule-name" - Share this rule
+- "None" - Skip sharing
+```
 
-   The repo can be empty (will be initialized) or already contain assets (will be synced).
+**For each selected asset:**
+```bash
+# Skills
+sx add .claude/skills/skill-name --yes --type skill --name "skill-name" --no-install
 
-4. **If authentication fails (HTTPS repos):**
+# Rules
+sx add .claude/rules/rule-name.md --yes --type rule --name "rule-name" --no-install
+```
 
-   After `sx init`, try `sx vault list`. If it fails with authentication error:
-   ```
-   Question: "Git authentication failed. How would you like to fix this?"
-   Header: "Auth Fix"
-   Options:
-   - "Use gh auth login" - Authenticate via GitHub CLI (recommended)
-   - "Switch to SSH" - Reinitialize with SSH URL
-   - "Skip for now" - Continue without vault
-   ```
-
-   **If user chooses gh auth:**
-   ```bash
-   gh auth status  # Check if already logged in
-   gh auth login --web --git-protocol https  # Interactive login
-   gh auth setup-git  # Configure git credential helper
-   sx vault list  # Retry vault access
-   ```
-
-   This sets up the GitHub credential helper so HTTPS repos work seamlessly.
-
-#### Step 10.2: Sync Team Assets
-
-1. **Compare vault assets with local assets:**
-   ```bash
-   # List vault assets
-   sx vault list --json
-
-   # List local skills and rules
-   ls .claude/skills/*/SKILL.md 2>/dev/null
-   ls .claude/rules/*.md 2>/dev/null
-   ```
-
-2. **Determine install strategy:**
-
-   | Situation | Action |
-   |-----------|--------|
-   | Asset in vault AND in local `.claude/` | Skip (we're the source) |
-   | Asset in vault but NOT local | Install globally via `sx install` |
-   | Asset local but NOT in vault | Candidate for sharing (Step 10.3) |
-
-3. **For consumer repos (no local assets):**
-   ```bash
-   sx install --repair
-   ```
-
-4. **For source repos (assets exist locally):**
-   Skip `sx install` - local `.claude/` is the source of truth.
-   Only install vault assets that don't exist locally.
-
-5. **Show vault state:**
-   ```bash
-   sx vault list
-   ```
-
-#### Step 10.3: Share Your Assets
-
-1. **Collect shareable assets from this session:**
-   - New rules created (except `project.md` - project-specific)
-   - New skills created
-   - Updated rules/skills
-
-   **Never suggest for sharing:**
-   - `project.md` - Always project-specific
-   - Rules with project-specific paths or configs
-
-2. **Ask which to share:**
-   ```
-   Question: "Which assets would you like to share with your team?"
-   Header: "Share to Vault"
-   multiSelect: true
-   Options:
-   - "[skill] my-skill" - Custom skill (shows version: v1, v2, etc.)
-   - "[rule] my-rule" - Reusable rule (not project-specific)
-   - "None" - Skip sharing
-   ```
-
-3. **For each selected asset:**
-   ```bash
-   # Use --no-install to avoid duplicating assets that already exist locally
-   # For rules
-   sx add .claude/rules/my-rule.md --yes --type rule --name "my-rule" --no-install
-
-   # For skills
-   sx add .claude/skills/my-skill --yes --type skill --name "my-skill" --no-install
-   ```
-
-4. **Verify vault state:**
-   ```bash
-   sx vault list
-   ```
-
-**Note:** Using `--no-install` prevents sx from copying assets to `~/.claude/` when they already exist in the project's `.claude/` directory. Other projects will get these assets via `sx install`.
+**Note:** `--no-install` prevents duplicating assets that already exist locally.
 
 ---
 

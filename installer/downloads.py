@@ -38,6 +38,31 @@ def compute_git_blob_sha(file_path: Path) -> str:
     return hashlib.sha1(header + content).hexdigest()
 
 
+def get_cache_path() -> Path:
+    """Get path to the tree cache file."""
+    return Path.home() / ".pilot" / "cache" / "tree-cache.json"
+
+
+def load_tree_cache(cache_path: Path | None = None) -> dict:
+    """Load cached tree data from disk."""
+    if cache_path is None:
+        cache_path = get_cache_path()
+    if not cache_path.exists():
+        return {}
+    try:
+        return json.loads(cache_path.read_text())
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def save_tree_cache(cache_path: Path | None, cache_data: dict) -> None:
+    """Save tree cache data to disk."""
+    if cache_path is None:
+        cache_path = get_cache_path()
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    cache_path.write_text(json.dumps(cache_data, indent=2))
+
+
 def download_file(
     repo_path: str | FileInfo,
     dest_path: Path,
@@ -103,11 +128,17 @@ def download_file(
         return False
 
 
+def _files_from_cache(cached_files: list[dict], dir_path: str) -> list[FileInfo]:
+    """Convert cached file dicts to FileInfo objects, filtering by dir_path."""
+    return [FileInfo(path=f["path"], sha=f.get("sha")) for f in cached_files if f.get("path", "").startswith(dir_path)]
+
+
 def get_repo_files(dir_path: str, config: DownloadConfig) -> list[FileInfo]:
     """Get all files from a repository directory.
 
     Returns FileInfo objects. Remote mode includes SHA hashes for skip-if-unchanged.
     Local mode has sha=None (uses filecmp for comparison instead).
+    Uses ETag caching to avoid re-fetching unchanged data from GitHub API.
     """
     if config.local_mode and config.local_repo_dir:
         source_dir = config.local_repo_dir / dir_path
@@ -120,24 +151,46 @@ def get_repo_files(dir_path: str, config: DownloadConfig) -> list[FileInfo]:
             return result
         return []
 
+    cache_path = get_cache_path()
+    cache = load_tree_cache(cache_path)
+    branch_cache = cache.get(config.repo_branch, {})
+    cached_etag = branch_cache.get("etag")
+    cached_files = branch_cache.get("files", [])
+
     try:
         repo_path = config.repo_url.replace("https://github.com/", "")
         tree_url = f"https://api.github.com/repos/{repo_path}/git/trees/{config.repo_branch}?recursive=true"
 
         request = urllib.request.Request(tree_url)
+        if cached_etag:
+            request.add_header("If-None-Match", cached_etag)
+
         with urllib.request.urlopen(request, timeout=30.0) as response:
             if response.status != 200:
                 return []
 
+            new_etag = response.headers.get("ETag")
             data = json.loads(response.read().decode("utf-8"))
+
+            all_files: list[dict] = []
             remote_files: list[FileInfo] = []
             if "tree" in data:
                 for item in data["tree"]:
                     if item.get("type") == "blob":
                         path = item.get("path", "")
                         sha = item.get("sha")
+                        all_files.append({"path": path, "sha": sha})
                         if path.startswith(dir_path):
                             remote_files.append(FileInfo(path=path, sha=sha))
+
+            if new_etag and all_files:
+                cache[config.repo_branch] = {"etag": new_etag, "files": all_files}
+                save_tree_cache(cache_path, cache)
+
             return remote_files
+    except urllib.error.HTTPError as e:
+        if e.code == 304 and cached_files:
+            return _files_from_cache(cached_files, dir_path)
+        return []
     except (urllib.error.URLError, json.JSONDecodeError, TimeoutError):
         return []

@@ -159,7 +159,7 @@ class ClaudeFilesStep(BaseStep):
 
         categories = self._categorize_files(pilot_files, ctx)
 
-        self._cleanup_old_directories(ctx, config, categories, ui)
+        self._cleanup_old_directories(ctx, config, ui)
 
         installed_files, file_count, failed_files = self._install_categories(categories, ctx, config, ui)
 
@@ -230,10 +230,14 @@ class ClaudeFilesStep(BaseStep):
         self,
         ctx: InstallContext,
         config: DownloadConfig,
-        categories: dict[str, list[FileInfo]],
         ui: Any,
     ) -> None:
-        """Clean up old installation directories."""
+        """Clean up old installation directories.
+
+        Always cleans all directories when called - cleanup is decoupled from
+        which file categories were found. This ensures stale files are removed
+        even if specific categories are empty due to filtering or API issues.
+        """
         home_claude_dir = Path.home() / ".claude"
         home_pilot_plugin_dir = home_claude_dir / "pilot"
 
@@ -243,22 +247,19 @@ class ClaudeFilesStep(BaseStep):
         if source_is_destination:
             return
 
-        if categories["commands"]:
-            _clear_directory_safe(
-                home_claude_dir / "commands",
-                ui,
-                "Failed to clear global commands directory",
-            )
+        _clear_directory_safe(
+            home_claude_dir / "commands",
+            ui,
+            "Failed to clear global commands directory",
+        )
 
-        if categories["rules"]:
-            _clear_directory_safe(
-                home_claude_dir / "rules",
-                ui,
-                "Failed to clear global rules directory",
-            )
+        _clear_directory_safe(
+            home_claude_dir / "rules",
+            ui,
+            "Failed to clear global rules directory",
+        )
 
-        if categories["pilot_plugin"]:
-            _clear_directory_contents(home_pilot_plugin_dir)
+        _clear_directory_contents(home_pilot_plugin_dir)
 
         self._cleanup_legacy_project_dirs(ctx)
 
