@@ -2,6 +2,20 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.0.1] - 2026-02-02
+
+### Bug Fixes
+
+- Remove duplicate sync step in release workflow
+- Resolve release pipeline failure and remove codepro fallbacks
+- Resolve release pipeline failure and remove codepro fallbacks
+- Emphasize running installer in project folder and remove git setup step
+- Add backwards compatibility for --restart-ccp argument
+
+### Documentation
+
+- Simplify install command for easier copying
+
 ## [6.0.0] - 2026-02-02
 
 ### Bug Fixes
