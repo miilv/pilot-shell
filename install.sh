@@ -447,10 +447,10 @@ run_installer() {
 
 	if ! is_in_container && [ "$saved_mode" = "local" ]; then
 		uv run --python 3.12 --no-project --with rich \
-			python -m installer install --local-system "$version_arg" "$@"
+			python -m installer install --local-system $version_arg "$@"
 	else
 		uv run --python 3.12 --no-project --with rich \
-			python -m installer install "$version_arg" "$@"
+			python -m installer install $version_arg "$@"
 	fi
 }
 
@@ -523,7 +523,7 @@ fi
 download_installer
 download_pilot_binary
 
-run_installer "$INSTALLER_ARGS"
+run_installer $INSTALLER_ARGS
 
 if [ "$RESTART_PILOT" = true ]; then
 	PILOT_BIN="$HOME/.pilot/bin/pilot"
