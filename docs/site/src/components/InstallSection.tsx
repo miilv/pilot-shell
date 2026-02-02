@@ -21,7 +21,7 @@ const InstallSection = () => {
             One-Command Installation
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto">
-            Install Claude Pilot into any existing project
+            Run the command below inside your project folder
           </p>
         </div>
 
@@ -32,7 +32,7 @@ const InstallSection = () => {
           <div className="flex items-center gap-2 mb-2">
             <Terminal className="h-4 w-4 text-primary" />
             <span className="text-foreground font-medium text-sm">
-              Run in your project directory:
+              cd /path/to/your/project && run:
             </span>
           </div>
 

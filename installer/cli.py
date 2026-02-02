@@ -17,7 +17,6 @@ from installer.steps.claude_files import ClaudeFilesStep
 from installer.steps.config_files import ConfigFilesStep
 from installer.steps.dependencies import DependenciesStep
 from installer.steps.finalize import FinalizeStep
-from installer.steps.git_setup import GitSetupStep
 from installer.steps.migration import MigrationStep
 from installer.steps.prerequisites import PrerequisitesStep
 from installer.steps.shell_config import ShellConfigStep
@@ -29,7 +28,6 @@ def get_all_steps() -> list[BaseStep]:
     """Get all installation steps in order."""
     return [
         PrerequisitesStep(),
-        GitSetupStep(),
         MigrationStep(),
         ClaudeFilesStep(),
         ConfigFilesStep(),

@@ -481,6 +481,10 @@ if ! is_in_container; then
 	echo "  Claude Pilot Installer (v${VERSION})"
 	echo "======================================================================"
 	echo ""
+	echo "  ⚠️  Run this in your PROJECT FOLDER (not home directory)"
+	echo ""
+	echo "  Current directory: $(pwd)"
+	echo ""
 
 	if [ -d ".devcontainer" ]; then
 		echo "  Detected existing .devcontainer - using Dev Container mode."
