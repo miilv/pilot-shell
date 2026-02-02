@@ -24,7 +24,7 @@ Claude is powerful but inconsistent. Pilot adds the structure it needs:</br>
 curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/main/install.sh | bash
 ```
 
-Run `/sync` to load rules. Use `/spec` for planned features or just chat for quick fixes. Pilot does the rest.
+After installation, run `claude` in your project folder to launch Claude Pilot. Use `/sync` to load rules, `/spec` for planned features, or just chat for quick fixes.
 
 ---
 
@@ -128,7 +128,7 @@ VERSION=5.4.12 curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pil
 - **Automated Container Setup** - Isolated Linux environment with pre-configured tools and extensions
 - **Extended Language Support** - Optionally install extended support for Python, TypeScript & Go
 - **Automated Updater** - Updates Pilot to the latest version when launched over the binary
-- **Shell Integration** - Auto-configures bash, fish and zsh with `pilot` alias
+- **Shell Integration** - Auto-configures bash, fish and zsh so `claude` launches Pilot
 
 ---
 
@@ -151,7 +151,7 @@ VERSION=5.4.12 curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pil
 Run `/sync` to sync custom rules and skills with your codebase. Run it once initially, then anytime after major changes:
 
 ```bash
-pilot
+claude
 > /sync
 ```
 
@@ -160,7 +160,7 @@ pilot
 Best for complex features, refactoring, or when you want to review a plan before implementation:
 
 ```bash
-pilot
+claude
 > /spec "Add user authentication with OAuth and JWT tokens"
 ```
 
@@ -184,7 +184,7 @@ Just chat. No plan file, no approval gate. All quality hooks and TDD enforcement
 Best for bug fixes, small improvements, and exploratory work:
 
 ```bash
-pilot
+claude
 > Fix the null pointer bug in user.py
 ```
 
@@ -193,7 +193,7 @@ pilot
 Capture non-obvious discoveries as reusable skills. Automatically prompted by the context monitor, or invoke manually:
 
 ```bash
-pilot
+claude
 > /learn "Extract the debugging workflow we used for the race condition"
 ```
 
@@ -214,7 +214,7 @@ Create your own in your project's `.claude/` folder:
 Share rules, commands, and skills across your team via a private Git repository:
 
 ```bash
-pilot
+claude
 > /sync  # Configure team vault and sync assets
 ```
 
