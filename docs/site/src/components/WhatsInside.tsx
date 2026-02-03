@@ -56,7 +56,7 @@ const insideItems: InsideItem[] = [
     items: [
       "Persistent memory across sessions",
       "Semantic search (local embeddings)",
-      "Context7 library documentation",
+      "Context7 docs + GitHub code search",
       "Browser automation for E2E tests",
     ],
   },

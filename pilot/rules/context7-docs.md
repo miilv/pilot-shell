@@ -41,7 +41,8 @@ Use descriptive queries - they drive result relevance:
 |------|--------------|----------|
 | Library API reference | Context7 | Official docs |
 | Framework patterns | Context7 | Official docs |
-| Code examples | Context7 | GitHub search |
+| Code examples | Context7 | grep-mcp |
+| Production implementations | grep-mcp | GitHub search |
 | Error message lookup | WebSearch | Stack Overflow |
 | General web research | WebSearch | - |
 | Codebase patterns | Vexor | Grep/Glob |

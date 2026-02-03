@@ -6,7 +6,7 @@ Access custom MCP servers through the command line. MCP enables interaction with
 
 | Source | Location | How It Works |
 |--------|----------|--------------|
-| Pilot Core | `.claude/pilot/.mcp.json` | Built-in servers (context7, mem-search, web-search, web-fetch) |
+| Pilot Core | `.claude/pilot/.mcp.json` | Built-in servers (context7, mem-search, web-search, web-fetch, grep-mcp) |
 | Claude Code | `.mcp.json` (project root) | Lazy-loaded; **instructions enter context** when triggered |
 | mcp-cli | `mcp_servers.json` (project root) | Called via CLI; **instructions never enter context** |
 
@@ -28,6 +28,7 @@ Access custom MCP servers through the command line. MCP enables interaction with
 - `mem-search` - Persistent memory (see `memory.md`)
 - `web-search` - Web search (see `web-search.md`)
 - `web-fetch` - Page fetching (see `web-search.md`)
+- `grep-mcp` - GitHub code search (see `grep-mcp.md`)
 
 **User Servers** from `.mcp.json` or `mcp_servers.json` should be documented via `/sync`.
 
@@ -128,7 +129,7 @@ mcp-cli filesystem/search_files '{"path": "src/", "pattern": "*.ts"}' --json | j
 
 | Situation | Use |
 |-----------|-----|
-| Pilot core servers (context7, mem-search, web-search, web-fetch) | Direct tool calls via ToolSearch |
+| Pilot core servers (context7, mem-search, web-search, web-fetch, grep-mcp) | Direct tool calls via ToolSearch |
 | User servers in `.mcp.json` or `mcp_servers.json` | `mcp-cli` commands |
 | Discovering available tools | `mcp-cli` or `mcp-cli <server> -d` |
 | Complex JSON arguments with quotes | Use stdin: `mcp-cli server/tool -` |

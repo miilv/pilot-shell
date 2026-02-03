@@ -419,7 +419,11 @@ def install_vexor(use_local: bool = False, ui: Any = None) -> bool:
 
 
 def install_mcp_cli() -> bool:
-    """Install mcp-cli via bun for MCP server interaction."""
+    """Install mcp-cli via bun for MCP server interaction.
+
+    Requires bun to be installed first.
+    Install command: bun install -g https://github.com/philschmid/mcp-cli
+    """
     if not command_exists("bun"):
         return False
 

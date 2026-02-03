@@ -11,12 +11,16 @@ from installer.steps.base import BaseStep
 OLD_CCP_MARKER = "# Claude CodePro alias"
 CLAUDE_ALIAS_MARKER = "# Claude Pilot"
 PILOT_BIN = "$HOME/.pilot/bin/pilot"
+BUN_BIN_PATH = "$HOME/.bun/bin"
 
 
 def get_alias_lines(shell_type: str) -> str:
     """Get pilot and ccp alias lines for the given shell type."""
-    _ = shell_type
-    return f'{CLAUDE_ALIAS_MARKER}\nalias pilot="{PILOT_BIN}"\nalias ccp="{PILOT_BIN}"'
+    if shell_type == "fish":
+        path_line = f'set -gx PATH "{BUN_BIN_PATH}" $PATH'
+    else:
+        path_line = f'export PATH="{BUN_BIN_PATH}:$PATH"'
+    return f'{CLAUDE_ALIAS_MARKER}\n{path_line}\nalias pilot="{PILOT_BIN}"\nalias ccp="{PILOT_BIN}"'
 
 
 def alias_exists_in_file(config_file: Path) -> bool:

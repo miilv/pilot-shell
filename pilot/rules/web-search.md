@@ -6,6 +6,7 @@
 |------|------|------------|
 | Web search | `web-search/search` | open-websearch |
 | GitHub README | `web-search/fetchGithubReadme` | open-websearch |
+| GitHub code search | `searchGitHub` | grep-mcp |
 | Fetch full page | `web-fetch/fetch_url` | fetcher-mcp |
 | Fetch multiple | `web-fetch/fetch_urls` | fetcher-mcp |
 | Library docs | Context7 | (see `context7-docs.md`) |
@@ -70,5 +71,6 @@ mcp-cli web-fetch/fetch_urls '{"urls": ["https://a.com", "https://b.com"]}'
 | Find information on a topic | `web-search/search` |
 | Read a specific web page | `web-fetch/fetch_url` |
 | Get a GitHub repo's README | `web-search/fetchGithubReadme` |
+| Find production code examples | grep-mcp `searchGitHub` |
 | Library/framework docs | Context7 (faster, more accurate) |
 | Multiple pages at once | `web-fetch/fetch_urls` |

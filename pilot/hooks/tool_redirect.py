@@ -7,6 +7,13 @@ Blocks or redirects tools to better alternatives:
 - Task (sub-agents) → Direct tool calls (sub-agents lose context)
 - EnterPlanMode/ExitPlanMode → /spec workflow (project-specific planning)
 
+Pilot Core MCP servers available:
+- web-search: Web search via DuckDuckGo/Bing
+- web-fetch: Full page fetching via Playwright
+- grep-mcp: GitHub code search via grep.app (1M+ repos)
+- context7: Library documentation
+- mem-search: Persistent memory across sessions
+
 Note: Task management tools (TaskCreate, TaskList, etc.) are ALLOWED.
 
 This is a PreToolUse hook that prevents the tool from executing.

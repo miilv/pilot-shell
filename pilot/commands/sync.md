@@ -307,6 +307,7 @@ MCP servers can be configured in two locations:
 - `mem-search` - Persistent memory
 - `web-search` - Web search via open-websearch
 - `web-fetch` - Web page fetching via fetcher-mcp
+- `grep-mcp` - GitHub code search via grep.app
 
 #### Step 6.1: Discover All MCP Servers
 
@@ -327,7 +328,7 @@ MCP servers can be configured in two locations:
 
 4. **Build inventory of user servers:**
    - Parse both config files
-   - Exclude Pilot core servers: `context7`, `mem-search`, `web-search`, `web-fetch`
+   - Exclude Pilot core servers: `context7`, `mem-search`, `web-search`, `web-fetch`, `grep-mcp`
    - Note which config file each server comes from
 
 #### Step 6.2: Document User MCP Servers

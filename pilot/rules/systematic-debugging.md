@@ -8,6 +8,7 @@
 |------|-------------|
 | **Context7** | Library/framework API lookup (see `context7-docs.md` for full docs) |
 | **Vexor** | Find similar patterns in codebase (`vexor search "error handling"`) |
+| **grep-mcp** | Find how others solved similar issues (`searchGitHub(query="error pattern")`) |
 
 **Context7 Quick Reference:**
 ```

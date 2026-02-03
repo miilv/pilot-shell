@@ -366,6 +366,7 @@ Use AskUserQuestion to ask everything upfront in a single interaction.
 |------|-------------|---------|
 | **Context7** | Library/framework docs | `resolve-library-id(query="your question", libraryName="lib")` then `query-docs(libraryId, query)` |
 | **Vexor** | Semantic code search | `vexor search "query" --mode code` |
+| **grep-mcp** | Real-world GitHub examples | `searchGitHub(query="FastMCP", language=["Python"])` |
 | **Read/Grep/Glob** | Direct file exploration | Use directly, no sub-agents |
 
 **Exploration areas (in order):**
@@ -672,6 +673,7 @@ PHASE 2 → PHASE 3 → issues found → PHASE 2 → PHASE 3 → ... → VERIFIE
 |------|-------------|---------|
 | **Context7** | Library API lookup | `resolve-library-id(query="how to use fixtures", libraryName="pytest")` then `query-docs(libraryId, query)` |
 | **Vexor** | Find similar patterns | `vexor search "query" --mode code` |
+| **grep-mcp** | Production code examples | `searchGitHub(query="useEffect cleanup", language=["TypeScript"])` |
 
 ---
 
