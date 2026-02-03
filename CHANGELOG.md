@@ -2,6 +2,13 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.0.8] - 2026-02-03
+
+### Bug Fixes
+
+- Add memory system source from other repo
+- Added grep-mcp server for GitHub code search
+
 ## [6.0.7] - 2026-02-03
 
 ### Bug Fixes

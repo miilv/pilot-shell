@@ -490,6 +490,42 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Update version files for manual trigger
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          VERSION="${{ needs.prepare-release.outputs.version }}"
+          echo "Updating version files to ${VERSION}..."
+
+          # Update version in Python files (same as semantic-release prepareCmd)
+          sed -i 's/^__version__ = ".*"/__version__ = "'"${VERSION}"'"/' installer/__init__.py launcher/__init__.py
+
+          # Update version in README.md
+          sed -i "s/VERSION=[0-9.]* curl/VERSION=${VERSION} curl/g" README.md
+
+          echo "Version files updated:"
+          grep __version__ installer/__init__.py launcher/__init__.py
+          grep "VERSION=" README.md | head -1
+
+      - name: Commit and push version updates for manual trigger
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          VERSION="${{ needs.prepare-release.outputs.version }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Stage all updated files
+          git add installer/__init__.py launcher/__init__.py README.md CHANGELOG.md
+
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(release): ${VERSION} [skip ci]"
+            git push origin main
+            echo "Version updates committed and pushed"
+          fi
+
       - name: Create release for manual trigger
         if: github.event_name == 'workflow_dispatch'
         env:
@@ -498,7 +534,7 @@ jobs:
           VERSION="${{ needs.prepare-release.outputs.version }}"
           if ! gh release view "v${VERSION}" >/dev/null 2>&1; then
             echo "Creating release v${VERSION}..."
-            gh release create "v${VERSION}" --title "v${VERSION}" --notes "Manual release rebuild"
+            gh release create "v${VERSION}" --title "v${VERSION}" --generate-notes
           fi
 
       - name: Upload artifacts to release
