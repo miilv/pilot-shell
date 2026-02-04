@@ -444,18 +444,16 @@ if ! is_in_container; then
 	echo "  Current project folder: $(pwd)"
 	echo ""
 
-	if [ -d ".devcontainer" ]; then
-		echo "  Detected existing .devcontainer - using Dev Container mode."
-		echo ""
-		setup_devcontainer
-	fi
-
 	saved_mode=$(get_saved_install_mode)
 	if [ "$saved_mode" = "local" ]; then
 		echo "  Using saved preference: Local Installation"
 		echo ""
 	elif [ "$saved_mode" = "container" ]; then
 		echo "  Using saved preference: Dev Container"
+		echo ""
+		setup_devcontainer
+	elif [ -d ".devcontainer" ]; then
+		echo "  Detected existing .devcontainer - using Dev Container mode."
 		echo ""
 		setup_devcontainer
 	else

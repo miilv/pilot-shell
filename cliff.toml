@@ -39,6 +39,9 @@ split_commits = false
 # This prevents git-cliff from regenerating old changelog entries
 skip_tags = "v[0-5].*"
 
+# Ignore all tags before v6.0.0 to prevent including historical commits
+ignore_tags = "v[0-5].*"
+
 # Commit preprocessors
 commit_preprocessors = [
     # Remove issue numbers from commits
