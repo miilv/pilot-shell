@@ -2,6 +2,13 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.0.12] - 2026-02-04
+
+### Bug Fixes
+
+- Show combined changelog for all versions during update
+- Remove aggressive process cleanup on startup
+
 ## [6.0.11] - 2026-02-04
 
 ### Bug Fixes
