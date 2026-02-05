@@ -2,6 +2,24 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.1.0] - 2026-02-05
+
+### Bug Fixes
+
+- Rebuild console assets with latest changes
+- Address code review findings
+- Stale session cleanup, context hook, install docs, and CI pipeline
+- Continue reworking towards Claude Pilot Console
+
+### Features
+
+- Pilot Console improvements and enhanced development workflow
+- Rebrand memory system to Pilot Console
+
+### Miscellaneous
+
+- Fix changelog generation to prepend-only, restore clean v6 changelog
+
 ## [6.0.13] - 2026-02-04
 
 ### Bug Fixes
