@@ -21,7 +21,7 @@ const Index = () => {
       "url": "https://www.claude-pilot.com",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://storage.googleapis.com/gpt-engineer-file-uploads/qmjt5RyHpNP9GFnerZmcYYkrVd13/uploads/1761495399643-favicon.jpg"
+        "url": "https://www.claude-pilot.com/logo.png"
       },
       "sameAs": [
         "https://github.com/maxritter/claude-pilot"

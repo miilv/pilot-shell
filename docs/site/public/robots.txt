@@ -14,4 +14,4 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://www.claude-code.pro/sitemap.xml
+Sitemap: https://www.claude-pilot.com/sitemap.xml
