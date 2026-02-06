@@ -2,6 +2,26 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.2.0] - 2026-02-06
+
+### Bug Fixes
+
+- Resolve continuation path bug, clean up console UI, and add Vexor search backend
+- Remove remote mode, extract worker daemon, add offline grace period, and refine hooks/UI
+- Address PR #45 review findings and refine console UI
+- Clean stale npm temp dirs before Claude Code install and block Explore agent
+- Split spec command into phases, add design skill, and optimize skill descriptions
+- Remove dead code, unused imports, and legacy integrations
+
+### Features
+
+- Add multi-session parallel support with isolated session state
+
+### Miscellaneous
+
+- Update site tagline
+- Update site meta tags
+
 ## [6.1.1] - 2026-02-05
 
 ### Bug Fixes
