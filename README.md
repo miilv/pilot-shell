@@ -42,8 +42,8 @@ After installation, run `pilot` to launch Claude Pilot. Use `/sync` to load rule
 - [Usage](#-usage)
 - [Claude Pilot Console](#-claude-pilot-console)
 - [What's Inside](#-whats-inside)
-- [Changelog](#-changelog)
 - [License](#-license)
+- [Changelog](#-changelog)
 - [Contributing](#-contributing)
 
 ---
@@ -248,12 +248,6 @@ Access the web-based Claude Pilot Console at **http://localhost:41777** to visua
 
 ---
 
-## 📋 Changelog
-
-See the full changelog at [pilot.openchangelog.com](https://pilot.openchangelog.com/).
-
----
-
 ## 📄 License
 
 Claude Pilot is source-available under a commercial license. See the [LICENSE](LICENSE) file for full terms.
@@ -264,6 +258,12 @@ Claude Pilot is source-available under a commercial license. See the [LICENSE](L
 | **Enterprise** | Standard + dedicated email support and priority feature requests |
 
 Details and licensing at [license.claude-pilot.com](https://license.claude-pilot.com).
+
+---
+
+## 📋 Changelog
+
+See the full changelog at [pilot.openchangelog.com](https://pilot.openchangelog.com/).
 
 ---
 
