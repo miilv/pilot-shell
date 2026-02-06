@@ -256,16 +256,14 @@ See the full changelog at [pilot.openchangelog.com](https://pilot.openchangelog.
 
 ## 📄 License
 
-> **Try free for 7 days** — No signup, no credit card. Just install and go.
-
-After your trial, choose the tier that fits your needs [here](https://license.claude-pilot.com):
+Claude Pilot is source-available under a commercial license. See the [LICENSE](LICENSE) file for full terms.
 
 | Tier | Includes |
 |:-----|:---------|
-| **Standard** | All features, continuous updates with latest learnings, GitHub support |
+| **Standard** | All features, continuous updates, GitHub support |
 | **Enterprise** | Standard + dedicated email support and priority feature requests |
 
-See the [LICENSE](LICENSE) file for full terms.
+Details and licensing at [license.claude-pilot.com](https://license.claude-pilot.com).
 
 ---
 
