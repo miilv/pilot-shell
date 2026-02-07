@@ -70,11 +70,6 @@ const HeroSection = () => {
           </div>
           <div className="w-px h-8 bg-border/50 hidden xs:block" />
           <div className="text-center">
-            <div className="text-lg xs:text-xl sm:text-2xl font-bold text-primary">3</div>
-            <div className="text-[9px] xs:text-[10px] sm:text-xs text-muted-foreground">Language Servers</div>
-          </div>
-          <div className="w-px h-8 bg-border/50 hidden xs:block" />
-          <div className="text-center">
             <div className="text-lg xs:text-xl sm:text-2xl font-bold text-primary">5</div>
             <div className="text-[9px] xs:text-[10px] sm:text-xs text-muted-foreground">MCP Servers</div>
           </div>

@@ -135,7 +135,7 @@ class FinalizeStep(BaseStep):
                 ),
                 (
                     "Team Vault (Optional)",
-                    "/sync → Share rules, commands, and skills via a private Git repository",
+                    "/vault → Share rules, commands, and skills via a private Git repository",
                 ),
             ]
         )
