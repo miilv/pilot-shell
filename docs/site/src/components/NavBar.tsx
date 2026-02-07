@@ -8,6 +8,7 @@ const navLinks = [
   { label: "The Problem", href: "#problem" },
   { label: "Usage", href: "#workflow" },
   { label: "What's Inside", href: "#features" },
+  { label: "Under the Hood", href: "#deep-dive" },
   { label: "Pricing", href: "#pricing" },
 ];
 

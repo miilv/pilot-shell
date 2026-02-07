@@ -1,4 +1,4 @@
-import { FileText, Code2, CheckCircle2, RefreshCw, Zap } from "lucide-react";
+import { FileText, Code2, CheckCircle2, RefreshCw, Zap, Search, MessageSquare, Shield, Bug, Brain, BookOpen } from "lucide-react";
 import { useInView } from "@/hooks/use-in-view";
 
 const specSteps = [
@@ -8,10 +8,36 @@ const specSteps = [
   { icon: RefreshCw, title: "Verify", desc: "Tests pass or loops back" },
 ];
 
+const planDetails = [
+  { icon: Search, text: "Explores entire codebase with semantic search" },
+  { icon: MessageSquare, text: "Asks clarifying questions before committing to a design" },
+  { icon: FileText, text: "Writes detailed spec to docs/plans/ as reviewed markdown" },
+  { icon: Shield, text: "Verifies plan logic for correctness before presenting" },
+  { icon: CheckCircle2, text: "Waits for your approval — you can edit the plan first" },
+];
+
+const implementDetails = [
+  { icon: Bug, text: "Writes a failing test first (RED phase of TDD)" },
+  { icon: Code2, text: "Implements code to make the test pass (GREEN phase)" },
+  { icon: RefreshCw, text: "Refactors while keeping tests green (REFACTOR phase)" },
+  { icon: Shield, text: "Quality hooks auto-lint, format, and type-check every edit" },
+  { icon: CheckCircle2, text: "Updates plan checkboxes after each completed task" },
+];
+
+const verifyDetails = [
+  { icon: CheckCircle2, text: "Runs full test suite — unit, integration, and E2E" },
+  { icon: Shield, text: "Type checking across the entire project" },
+  { icon: Search, text: "Verifier sub-agents perform independent code review" },
+  { icon: FileText, text: "Validates every plan task was actually completed" },
+  { icon: RefreshCw, text: "Loops back to implementation if any check fails" },
+];
+
 const WorkflowSteps = () => {
   const [headerRef, headerInView] = useInView<HTMLDivElement>();
   const [diagramRef, diagramInView] = useInView<HTMLDivElement>();
   const [modesRef, modesInView] = useInView<HTMLDivElement>();
+  const [detailsRef, detailsInView] = useInView<HTMLDivElement>();
+  const [commandsRef, commandsInView] = useInView<HTMLDivElement>();
 
   return (
     <section id="workflow" className="py-16 lg:py-24 px-4 sm:px-6 relative">
@@ -75,7 +101,7 @@ const WorkflowSteps = () => {
         {/* Spec-Driven Workflow Diagram */}
         <div
           ref={diagramRef}
-          className={`rounded-2xl p-6 border border-border/50 bg-card/30 backdrop-blur-sm ${diagramInView ? "animate-fade-in-up animation-delay-200" : "opacity-0"}`}
+          className={`rounded-2xl p-6 border border-border/50 bg-card/30 backdrop-blur-sm mb-8 ${diagramInView ? "animate-fade-in-up animation-delay-200" : "opacity-0"}`}
         >
           <h3 className="text-base font-semibold text-foreground mb-6 text-center">
             <code className="text-primary">/spec</code> Workflow
@@ -91,12 +117,118 @@ const WorkflowSteps = () => {
                   <span className="text-sm text-foreground mt-3 font-medium">{step.title}</span>
                   <span className="text-xs text-muted-foreground text-center max-w-[100px]">{step.desc}</span>
                 </div>
-                {i < specSteps.length - 1 && <span className="text-primary text-xl sm:text-2xl font-light">→</span>}
+                {i < specSteps.length - 1 && <span className="text-primary text-xl sm:text-2xl font-light">&rarr;</span>}
               </div>
             ))}
             <span className="text-muted-foreground text-sm ml-4 flex items-center gap-1">
               <RefreshCw className="h-4 w-4" /> Loop
             </span>
+          </div>
+        </div>
+
+        {/* Detailed Phase Breakdowns */}
+        <div
+          ref={detailsRef}
+          className={`grid md:grid-cols-3 gap-6 mb-12 ${detailsInView ? "animate-fade-in-up" : "opacity-0"}`}
+        >
+          {/* Plan Phase */}
+          <div className="rounded-2xl p-5 border border-border/50 bg-card/30 backdrop-blur-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-9 h-9 bg-sky-400/10 rounded-lg flex items-center justify-center">
+                <FileText className="h-4 w-4 text-sky-400" />
+              </div>
+              <h4 className="font-semibold text-foreground">Plan Phase</h4>
+            </div>
+            <ul className="space-y-2.5">
+              {planDetails.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <li key={item.text} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <Icon className="h-3.5 w-3.5 text-sky-400 flex-shrink-0 mt-0.5" />
+                    <span>{item.text}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          {/* Implement Phase */}
+          <div className="rounded-2xl p-5 border border-border/50 bg-card/30 backdrop-blur-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center">
+                <Code2 className="h-4 w-4 text-primary" />
+              </div>
+              <h4 className="font-semibold text-foreground">Implement Phase</h4>
+            </div>
+            <ul className="space-y-2.5">
+              {implementDetails.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <li key={item.text} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <Icon className="h-3.5 w-3.5 text-primary flex-shrink-0 mt-0.5" />
+                    <span>{item.text}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          {/* Verify Phase */}
+          <div className="rounded-2xl p-5 border border-border/50 bg-card/30 backdrop-blur-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-9 h-9 bg-emerald-400/10 rounded-lg flex items-center justify-center">
+                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+              </div>
+              <h4 className="font-semibold text-foreground">Verify Phase</h4>
+            </div>
+            <ul className="space-y-2.5">
+              {verifyDetails.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <li key={item.text} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <Icon className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                    <span>{item.text}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </div>
+
+        {/* All Commands */}
+        <div
+          ref={commandsRef}
+          className={`rounded-2xl p-6 border border-border/50 bg-card/30 backdrop-blur-sm ${commandsInView ? "animate-fade-in-up" : "opacity-0"}`}
+        >
+          <h3 className="text-lg font-semibold text-foreground mb-5 text-center">All Commands</h3>
+          <div className="grid sm:grid-cols-3 gap-4">
+            <div className="rounded-xl p-4 border border-border/40 bg-background/30">
+              <div className="flex items-center gap-2 mb-2">
+                <FileText className="h-4 w-4 text-primary" />
+                <code className="text-sm font-medium text-primary">/spec</code>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Spec-Driven Development — plan, approve, implement, verify. The full structured workflow for features and complex changes.
+              </p>
+            </div>
+            <div className="rounded-xl p-4 border border-border/40 bg-background/30">
+              <div className="flex items-center gap-2 mb-2">
+                <RefreshCw className="h-4 w-4 text-primary" />
+                <code className="text-sm font-medium text-primary">/sync</code>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                11-phase sync — explores your codebase, updates project rules, discovers undocumented patterns, creates skills, shares via Team Vault.
+              </p>
+            </div>
+            <div className="rounded-xl p-4 border border-border/40 bg-background/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Brain className="h-4 w-4 text-primary" />
+                <code className="text-sm font-medium text-primary">/learn</code>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Online learning — extracts non-obvious debugging discoveries, workarounds, and tool integrations into reusable skills.
+              </p>
+            </div>
           </div>
         </div>
       </div>

@@ -5,6 +5,8 @@ import {
   ShieldCheck,
   Container,
   Infinity as InfinityIcon,
+  Users,
+  GitBranch,
 } from "lucide-react";
 import { useInView } from "@/hooks/use-in-view";
 import ImageModal from "@/components/ImageModal";
@@ -22,10 +24,11 @@ const insideItems: InsideItem[] = [
     title: "Endless Mode",
     description: "Never lose context mid-task",
     items: [
-      "Seamless continuity across sessions",
-      "Automatic handoffs at context limits",
-      "Persistent memory bridges sessions",
-      "Multi-session parallel support",
+      "Context monitor with 80% / 90% / 95% thresholds",
+      "Automatic session handoff with state preservation",
+      "Continuation files written to ~/.pilot/sessions/",
+      "Multiple Pilot sessions in parallel, zero interference",
+      "Persistent memory bridges observations across all sessions",
     ],
   },
   {
@@ -33,54 +36,83 @@ const insideItems: InsideItem[] = [
     title: "Spec-Driven Development",
     description: "Structured planning with verification",
     items: [
-      "Plan → Approve → Implement → Verify",
-      "Automatic TDD enforcement",
-      "Code review before completion",
-      "Loop until verified correct",
-    ],
-  },
-  {
-    icon: FileCode2,
-    title: "Rules, Commands & Skills",
-    description: "Best practices, customizable",
-    items: [
-      "12+ standard rules for quality",
-      "/spec, /sync, /learn commands",
-      "Online learning extracts patterns",
-      "Team Vault via private Git repo",
-    ],
-  },
-  {
-    icon: Plug2,
-    title: "Enhanced Context",
-    description: "Memory, search & visual dashboard",
-    items: [
-      "Pilot Console at localhost:41777",
-      "Persistent memory across sessions",
-      "Semantic search (local embeddings)",
-      "Context7 docs + GitHub code search",
+      "Plan: semantic search, clarifying questions, markdown spec",
+      "Approve: human review gate before any code is written",
+      "Implement: mandatory TDD — RED, GREEN, REFACTOR cycle",
+      "Verify: sub-agent code review + full test suite",
+      "Automatic loop-back if verification finds issues",
     ],
   },
   {
     icon: ShieldCheck,
     title: "Quality Automation",
-    description: "Enforced standards on every edit",
+    description: "7 hooks enforce standards on every edit",
     items: [
-      "TDD enforcer - tests before code",
-      "Quality hooks for Python/TS/Go",
-      "LSP integration (auto-installed)",
-      "Status line with live metrics",
+      "TDD enforcer — warns if no failing test before code change",
+      "Python: ruff format + lint + basedpyright type checking",
+      "TypeScript: Prettier + ESLint + vtsls type checking",
+      "Go: gofmt + golangci-lint + gopls type checking",
+      "Spec stop guard — blocks completion without verification",
+    ],
+  },
+  {
+    icon: FileCode2,
+    title: "Rules, Commands & Skills",
+    description: "21 rules, 6 commands, 14 skills",
+    items: [
+      "21 rules (2,800+ lines) loaded into every session",
+      "/spec, /sync, /learn — structured workflows",
+      "14 coding standard skills activated on demand",
+      "Custom rules, commands, skills survive updates",
+      "/sync: 11-phase codebase analysis and documentation",
+    ],
+  },
+  {
+    icon: Plug2,
+    title: "Enhanced Context",
+    description: "5 MCP servers + 3 language servers",
+    items: [
+      "Pilot Console at localhost:41777 — visual dashboard",
+      "Persistent memory with semantic search (Vexor)",
+      "Context7 library docs + grep-mcp GitHub search",
+      "LSP: basedpyright, vtsls, gopls — real-time diagnostics",
+      "Agent browser for E2E UI testing",
     ],
   },
   {
     icon: Container,
     title: "One-Command Installer",
-    description: "Ready in minutes",
+    description: "Ready in minutes, auto-updates",
     items: [
-      "Dev Container auto-setup",
-      "Python, TypeScript & Go support",
-      "Auto-updater included",
-      "macOS, Linux, Windows (WSL2)",
+      "Dev Container auto-setup with all tools pre-configured",
+      "Extended support for Python, TypeScript & Go",
+      "Automated updater — always the latest version",
+      "Shell integration: bash, fish, zsh with pilot alias",
+      "macOS, Linux, Windows (WSL2) support",
+    ],
+  },
+  {
+    icon: Users,
+    title: "Team Vault",
+    description: "Share knowledge across your team",
+    items: [
+      "Private Git repo for shared rules, commands, skills",
+      "Pull shared assets from your team's vault",
+      "Push custom rules and skills to teammates",
+      "Automatic versioning (v1, v2, v3...)",
+      "Works with GitHub, GitLab, Bitbucket",
+    ],
+  },
+  {
+    icon: GitBranch,
+    title: "Online Learning",
+    description: "Captures discoveries as reusable skills",
+    items: [
+      "Extracts non-obvious debugging patterns automatically",
+      "Captures workarounds and tool integration knowledge",
+      "Creates .claude/skills/ with proper frontmatter",
+      "Triggered by 10+ minute investigation sessions",
+      "Quality gates verify content is reusable",
     ],
   },
 ];
@@ -96,6 +128,8 @@ const WhatsInside = () => {
     "animation-delay-300",
     "animation-delay-400",
     "animation-delay-500",
+    "animation-delay-0",
+    "animation-delay-100",
   ];
 
   return (
@@ -111,50 +145,51 @@ const WhatsInside = () => {
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
             What's Inside
           </h2>
-          <p className="text-muted-foreground text-lg sm:text-xl max-w-2xl mx-auto">
-            Everything you need to make Claude Code production-ready
+          <p className="text-muted-foreground text-lg sm:text-xl max-w-3xl mx-auto">
+            A production-grade system — not a prompt template. Every component is designed to enforce
+            quality, preserve context, and automate verification across your entire development workflow.
           </p>
         </div>
 
         {/* Feature Grid */}
         <div
           ref={gridRef}
-          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
         >
           {insideItems.map((item, index) => {
             const Icon = item.icon;
             return (
               <div
                 key={item.title}
-                className={`group relative rounded-2xl p-6 border border-border/50 bg-card/30 backdrop-blur-sm
+                className={`group relative rounded-2xl p-5 border border-border/50 bg-card/30 backdrop-blur-sm
                   hover:border-primary/50 hover:bg-card/50 hover:shadow-lg hover:shadow-primary/5
                   hover:-translate-y-1 transition-all duration-300
                   ${gridInView ? `animate-fade-in-up ${animationDelays[index]}` : "opacity-0"}`}
               >
                 {/* Icon and Title */}
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-11 h-11 bg-primary/10 rounded-xl flex items-center justify-center
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center
                     group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300">
                     <Icon className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-foreground">
+                    <h3 className="text-base font-semibold text-foreground">
                       {item.title}
                     </h3>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[11px] text-muted-foreground">
                       {item.description}
                     </p>
                   </div>
                 </div>
 
                 {/* Feature List */}
-                <ul className="space-y-2 mt-4">
+                <ul className="space-y-1.5 mt-3">
                   {item.items.map((listItem, i) => (
                     <li
                       key={i}
-                      className="text-muted-foreground text-sm flex items-start gap-2"
+                      className="text-muted-foreground text-xs flex items-start gap-1.5"
                     >
-                      <span className="text-primary mt-1 text-xs">▸</span>
+                      <span className="text-primary mt-0.5 text-[10px]">&#x25B8;</span>
                       <span className="group-hover:text-foreground/80 transition-colors duration-200">
                         {listItem}
                       </span>
@@ -176,7 +211,7 @@ const WhatsInside = () => {
               Pilot Console
             </h3>
             <p className="text-muted-foreground text-sm sm:text-base">
-              Visual dashboard at localhost:41777
+              Visual dashboard at localhost:41777 — real-time observations, session management, and semantic search
             </p>
           </div>
           <div className="relative rounded-xl overflow-hidden border border-border/50 shadow-2xl shadow-primary/10 max-w-4xl mx-auto">

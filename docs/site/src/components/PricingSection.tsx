@@ -1,10 +1,11 @@
-import { ExternalLink, Check, Building2, Clock, Sparkles } from "lucide-react";
+import { ExternalLink, Check, Building2, Clock, Sparkles, Shield, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useInView } from "@/hooks/use-in-view";
 
 const PricingSection = () => {
   const [headerRef, headerInView] = useInView<HTMLDivElement>();
   const [cardsRef, cardsInView] = useInView<HTMLDivElement>();
+  const [valueRef, valueInView] = useInView<HTMLDivElement>();
 
   return (
     <section id="pricing" className="py-16 lg:py-24 px-4 sm:px-6 relative" aria-labelledby="pricing-heading">
@@ -87,7 +88,11 @@ const PricingSection = () => {
             <ul className="space-y-3 mb-8">
               <li className="flex items-start gap-3">
                 <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                <span className="text-muted-foreground text-sm group-hover:text-foreground/80 transition-colors">All features included</span>
+                <span className="text-muted-foreground text-sm group-hover:text-foreground/80 transition-colors">21 rules, 7 hooks, 14 skills, 3 LSPs</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                <span className="text-muted-foreground text-sm group-hover:text-foreground/80 transition-colors">Endless Mode + persistent memory</span>
               </li>
               <li className="flex items-start gap-3">
                 <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
@@ -95,7 +100,7 @@ const PricingSection = () => {
               </li>
               <li className="flex items-start gap-3">
                 <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                <span className="text-muted-foreground text-sm group-hover:text-foreground/80 transition-colors">Support via GitHub</span>
+                <span className="text-muted-foreground text-sm group-hover:text-foreground/80 transition-colors">Continuous updates + GitHub support</span>
               </li>
             </ul>
 
@@ -149,6 +154,34 @@ const PricingSection = () => {
                 Subscribe
               </a>
             </Button>
+          </div>
+        </div>
+
+        {/* Value proposition */}
+        <div
+          ref={valueRef}
+          className={`mt-12 rounded-2xl p-6 border border-border/50 bg-card/30 backdrop-blur-sm ${valueInView ? "animate-fade-in-up" : "opacity-0"}`}
+        >
+          <h3 className="text-lg font-semibold text-foreground mb-4 text-center">What You Get</h3>
+          <div className="grid sm:grid-cols-3 gap-4 text-center">
+            <div className="flex flex-col items-center gap-2">
+              <Shield className="h-6 w-6 text-primary" />
+              <p className="text-sm text-muted-foreground">
+                <span className="text-foreground font-medium">2,800+ lines</span> of production-tested rules and best practices loaded into every session
+              </p>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <Zap className="h-6 w-6 text-primary" />
+              <p className="text-sm text-muted-foreground">
+                <span className="text-foreground font-medium">7 automated hooks</span> enforcing quality on every file edit — formatting, linting, type checking, TDD
+              </p>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <Sparkles className="h-6 w-6 text-primary" />
+              <p className="text-sm text-muted-foreground">
+                <span className="text-foreground font-medium">Continuous updates</span> from daily production usage — new rules, skills, and optimizations shipped regularly
+              </p>
+            </div>
           </div>
         </div>
       </div>

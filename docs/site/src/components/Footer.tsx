@@ -59,6 +59,14 @@ const Footer = () => {
               </li>
               <li>
                 <button
+                  onClick={() => smoothScrollTo('deep-dive')}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Under the Hood
+                </button>
+              </li>
+              <li>
+                <button
                   onClick={() => smoothScrollTo('pricing')}
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
