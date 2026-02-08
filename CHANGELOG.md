@@ -2,6 +2,16 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.2.2] - 2026-02-08
+
+### Bug Fixes
+
+- Resolve signal handler deadlock and improve session cleanup
+
+### Miscellaneous
+
+- Small changes to Website and Readme
+
 ## [6.2.1] - 2026-02-07
 
 ### Bug Fixes
