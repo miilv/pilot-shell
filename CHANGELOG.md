@@ -2,6 +2,18 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.3.1] - 2026-02-11
+
+### Bug Fixes
+
+- Fixing Stale Context Monitor on session restart and statusline
+- Update spec implementation agent to produce better quality
+- Replace raw Python worktree calls with pilot CLI commands in spec instructions
+
+### Miscellaneous
+
+- Fix team checkout seat selection and update changelog
+
 ## [6.3.0] - 2026-02-11
 
 ### Bug Fixes
