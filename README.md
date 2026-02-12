@@ -50,7 +50,7 @@ So I built Pilot. Instead of adding process on top, it bakes quality into every 
 | Every session starts fresh | Persistent memory across sessions via Pilot Console             |
 | Hope it works              | Verifier sub-agents perform code review before marking complete |
 | No codebase knowledge      | Production-tested rules loaded into every session               |
-| Generic suggestions        | Coding skills activated dynamically when relevant               |
+| Generic suggestions        | Coding standards activated conditionally by file type           |
 | Changes mixed into branch  | Isolated worktrees — review and squash merge when verified      |
 | Manual tool setup          | MCP servers + language servers pre-configured and ready         |
 
@@ -97,7 +97,7 @@ After installation, run `pilot` or `ccp` in your project folder to start Claude 
 1. **Prerequisites** — Checks Homebrew, Node.js, Python 3.12+, uv, git
 2. **Dependencies** — Installs Vexor, playwright-cli, mcp-cli, Claude Code
 3. **Shell integration** — Auto-configures bash, fish, and zsh with `pilot` alias
-4. **Config & Claude files** — Sets up `.claude/` plugin, rules, skills, hooks, MCP servers
+4. **Config & Claude files** — Sets up `.claude/` plugin, rules, commands, hooks, MCP servers
 5. **VS Code extensions** — Installs recommended extensions for your stack
 6. **Dev Container** — Auto-setup with all tools pre-configured
 7. **Automated updater** — Checks for updates on launch with release notes and one-key upgrade
@@ -118,9 +118,9 @@ curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/main/install
 
 ## How It Works
 
-### /sync — Sync Rules & Skills
+### /sync — Sync Rules & Standards
 
-Run `/sync` to sync custom rules and skills with your codebase. Explores your codebase, builds a semantic search index, discovers undocumented patterns, updates project documentation, and creates new skills. Run it once initially, then anytime again:
+Run `/sync` to sync rules and standards with your codebase. Explores your codebase, builds a semantic search index, discovers undocumented patterns, updates project documentation, and creates new custom skills. Run it once initially, then anytime again:
 
 ```bash
 pilot
@@ -133,13 +133,13 @@ pilot
 | Phase | Action                                                          |
 | ----- | --------------------------------------------------------------- |
 | 0     | Load reference guidelines, output locations, error handling     |
-| 1     | Read existing rules and skills from `.claude/`                  |
+| 1     | Read existing rules and standards from `.claude/`               |
 | 2     | Build Vexor semantic search index (first run may take 5-15 min) |
 | 3     | Explore codebase with Vexor/Grep to find patterns               |
 | 4     | Compare discovered vs documented patterns                       |
 | 5     | Sync/update `project.md` with tech stack and commands           |
 | 6     | Sync MCP server documentation                                   |
-| 7     | Update existing skills that have changed                        |
+| 7     | Update existing custom skills that have changed                 |
 | 8     | Discover and document new undocumented patterns as rules        |
 | 9     | Create new skills via `/learn` command                          |
 | 10    | Report summary of all changes                                   |
@@ -300,13 +300,13 @@ All commands support `--json` for structured output. Multiple Pilot sessions can
 
 Create your own in your project's `.claude/` folder:
 
-| Type         | Loaded                            | Best for                                 |
-| ------------ | --------------------------------- | ---------------------------------------- |
-| **Rules**    | Every session (always in context) | Guidelines Claude should always follow   |
-| **Commands** | On demand via `/command`          | Specific workflows or multi-step tasks   |
-| **Skills**   | Dynamically when relevant         | Specialized knowledge for specific tasks |
+| Type         | Loaded                                          | Best for                                 |
+| ------------ | ----------------------------------------------- | ---------------------------------------- |
+| **Rules**    | Every session, or conditionally by file type    | Guidelines Claude should always follow   |
+| **Commands** | On demand via `/command`                        | Specific workflows or multi-step tasks   |
+| **Skills**   | On demand, created via `/learn`                 | Reusable knowledge from past sessions    |
 
-Claude Pilot automatically installs best-practice rules, commands, and coding standard skills.
+Claude Pilot automatically installs best-practice rules, commands, and coding standards. Standards rules use `paths` frontmatter to activate only when you're working with matching file types (e.g., Python standards load only when editing `.py` files). Custom skills are created by `/learn` when it detects non-obvious discoveries, workarounds, or reusable workflows — and can be shared across your team via `/vault`.
 
 ### Custom MCP Servers
 
@@ -424,26 +424,25 @@ Production-tested best practices loaded into **every session**. These aren't sug
 
 </details>
 
-### Built-in Coding Skills
+### Built-in Coding Standards
 
-Dynamically activated when relevant — specialized knowledge loaded on demand:
+Conditional rules activated by file type — loaded only when working with matching files:
 
-| Skill                | Coverage                                                         |
-| -------------------- | ---------------------------------------------------------------- |
-| Python Standards     | uv, pytest, ruff, basedpyright, type hints, docstrings           |
-| TypeScript Standards | npm/pnpm, Jest, ESLint, Prettier, React patterns                 |
-| Go Standards         | Modules, testing, formatting, error handling                     |
-| Testing Patterns     | Unit testing, integration testing, mocking, coverage goals       |
-| Test Organization    | File structure, naming conventions, fixtures, setup              |
-| API Design           | RESTful patterns, response envelopes, error handling, versioning |
-| Data Models          | Database schemas, type safety, migrations, relationships         |
-| Components           | Reusable patterns, props design, documentation, testing          |
-| CSS / Styling        | Naming conventions, organization, responsive design, performance |
-| Responsive Design    | Mobile-first, breakpoints, Flexbox/Grid, touch interactions      |
-| Design System        | Color palette, typography, spacing, component consistency        |
-| Accessibility        | WCAG compliance, ARIA attributes, keyboard nav, screen readers   |
-| DB Migrations        | Schema changes, data transformation, rollback strategy           |
-| Query Optimization   | Indexing, N+1 problems, query patterns, performance              |
+| Standard             | Activates On                    | Coverage                                                         |
+| -------------------- | ------------------------------- | ---------------------------------------------------------------- |
+| Python               | `*.py`                          | uv, pytest, ruff, basedpyright, type hints, docstrings           |
+| TypeScript           | `*.ts`, `*.tsx`, `*.js`, `*.jsx`| npm/pnpm, Jest, ESLint, Prettier, React patterns                 |
+| Go                   | `*.go`                          | Modules, testing, formatting, error handling                     |
+| Testing Strategies   | `*test*`, `*spec*`              | Unit vs integration vs E2E, mocking, coverage goals              |
+| API Design           | `*route*`, `*endpoint*`, `*api*`| RESTful patterns, response envelopes, error handling, versioning |
+| Data Models          | `*model*`, `*schema*`, `*entity*`| Database schemas, type safety, migrations, relationships        |
+| Components           | `*component*`, `*.tsx`, `*.vue` | Reusable patterns, props design, documentation, testing          |
+| CSS / Styling        | `*.css`, `*.scss`, `*.tailwind*`| Naming conventions, organization, responsive design, performance |
+| Responsive Design    | `*.css`, `*.scss`, `*.tsx`      | Mobile-first, breakpoints, Flexbox/Grid, touch interactions      |
+| Design System        | `*.css`, `*.tsx`, `*.vue`       | Color palette, typography, spacing, component consistency        |
+| Accessibility        | `*.tsx`, `*.jsx`, `*.vue`, `*.html`| WCAG compliance, ARIA attributes, keyboard nav, screen readers |
+| DB Migrations        | `*migration*`, `*alembic*`      | Schema changes, data transformation, rollback strategy           |
+| Query Optimization   | `*query*`, `*repository*`, `*dao*`| Indexing, N+1 problems, query patterns, performance            |
 
 ### MCP Servers
 
@@ -537,21 +536,21 @@ Yes. Pilot enhances Claude Code — it doesn't replace it. You need an active Cl
 <details>
 <summary><b>Does Pilot work with any programming language?</b></summary>
 
-Pilot's quality hooks (auto-formatting, linting, type checking) currently support Python, TypeScript/JavaScript, and Go out of the box. TDD enforcement, spec-driven development, Endless Mode, persistent memory, and all rules and skills work with any language that Claude Code supports. You can add custom hooks for additional languages.
+Pilot's quality hooks (auto-formatting, linting, type checking) currently support Python, TypeScript/JavaScript, and Go out of the box. TDD enforcement, spec-driven development, Endless Mode, persistent memory, and all rules and standards work with any language that Claude Code supports. You can add custom hooks for additional languages.
 
 </details>
 
 <details>
 <summary><b>Can I use Pilot on multiple projects?</b></summary>
 
-Yes. Pilot installs once and works across all your projects. Each project can have its own `.claude/` rules, skills, and MCP servers. Run `/sync` in each project to generate project-specific documentation and skills.
+Yes. Pilot installs once and works across all your projects. Each project can have its own `.claude/` rules, custom skills, and MCP servers. Run `/sync` in each project to generate project-specific documentation and standards.
 
 </details>
 
 <details>
 <summary><b>Can I customize the rules and hooks?</b></summary>
 
-Yes. All rules in `.claude/rules/` are markdown files you can edit, extend, or replace. Hooks are Python scripts you can modify. Skills are dynamically loaded and can be customized or created via `/learn`. Project-specific rules override global defaults. Use `/vault` to share customizations across your team.
+Yes. All rules in `.claude/rules/` are markdown files you can edit, extend, or replace. Hooks are Python scripts you can modify. Built-in coding standards are conditional rules that activate by file type and can be customized. You can also create custom skills via `/learn`. Project-specific rules override global defaults. Use `/vault` to share customizations across your team.
 
 </details>
 
