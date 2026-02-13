@@ -390,6 +390,38 @@ export class PendingMessageStore {
   }
 
   /**
+   * Delete all non-processed messages for a session (cleanup on session end).
+   * Removes pending, processing, and failed messages since the session is ending.
+   * @returns Number of messages deleted
+   */
+  deleteAllForSession(sessionDbId: number): number {
+    const stmt = this.db.prepare(`
+      DELETE FROM pending_messages
+      WHERE session_db_id = ? AND status IN ('pending', 'processing', 'failed')
+    `);
+    const result = stmt.run(sessionDbId);
+    return result.changes;
+  }
+
+  /**
+   * Mark all pending and processing messages for a session as failed.
+   * Unlike markSessionMessagesFailed (which only targets 'processing'),
+   * this targets both 'pending' and 'processing' statuses.
+   * Used when generator hits restart limit or needs full session failure.
+   * @returns Number of messages marked failed
+   */
+  markAllSessionMessagesFailed(sessionDbId: number): number {
+    const now = Date.now();
+    const stmt = this.db.prepare(`
+      UPDATE pending_messages
+      SET status = 'failed', failed_at_epoch = ?
+      WHERE session_db_id = ? AND status IN ('pending', 'processing')
+    `);
+    const result = stmt.run(now, sessionDbId);
+    return result.changes;
+  }
+
+  /**
    * Clear all pending, processing, and failed messages from the queue
    * Keeps only processed messages (for history)
    * @returns Number of messages deleted

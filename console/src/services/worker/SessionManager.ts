@@ -268,6 +268,7 @@ export class SessionManager {
 
   /**
    * Delete a session (abort SDK agent and cleanup)
+   * Also cleans up any pending messages from the database to prevent orphaned queue growth.
    */
   async deleteSession(sessionDbId: number): Promise<void> {
     const session = this.sessions.get(sessionDbId);
@@ -283,6 +284,18 @@ export class SessionManager {
       await session.generatorPromise.catch((error) => {
         logger.debug("SYSTEM", "Generator already failed, cleaning up", { sessionId: session.sessionDbId });
       });
+    }
+
+    try {
+      const deletedMessages = this.getPendingStore().deleteAllForSession(sessionDbId);
+      if (deletedMessages > 0) {
+        logger.info("SESSION", "Cleaned up pending messages on session delete", {
+          sessionId: sessionDbId,
+          deletedMessages,
+        });
+      }
+    } catch (error) {
+      logger.error("SESSION", "Failed to clean up pending messages", { sessionId: sessionDbId }, error as Error);
     }
 
     this.sessions.delete(sessionDbId);

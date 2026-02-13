@@ -48,6 +48,7 @@ This prevents forgetting steps, manages dependencies, shows the user real-time p
 | Work has multiple steps      | Create tasks with dependencies                          |
 | Complex investigation        | Create tasks for each area to explore                   |
 | Bug fix with verification    | Task for fix, task for test, task for verify            |
+| **Deferring a user request** | **TaskCreate IMMEDIATELY — never just say "noted"**     |
 | Any non-trivial request      | Break it down into tasks FIRST                          |
 | `/spec` implementation phase | Create tasks from plan (see Step 2.2 in spec-implement) |
 
@@ -70,6 +71,17 @@ This prevents forgetting steps, manages dependencies, shows the user real-time p
 5. Mark task completed when done
 6. Check TaskList for next task
 7. Repeat until all tasks completed
+```
+
+### ⛔ Never "Note" Without a Task
+
+**When a user makes a request while you're busy with something else, NEVER just say "noted" or "I'll do that after."** You WILL forget.
+
+**Instead:** Call `TaskCreate` immediately with the user's request, then continue your current work. The task list is your memory — use it.
+
+```
+❌ "Noted, I'll handle that after the current task."
+✅ TaskCreate("Fix TDD rules per user request", "...") → "Tracked as task #4, continuing current work."
 ```
 
 ### Session Start: Clean Up Stale Tasks

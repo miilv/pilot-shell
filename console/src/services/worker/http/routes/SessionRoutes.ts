@@ -102,7 +102,7 @@ export class SessionRoutes extends BaseRouteHandler {
 
         const pendingStore = this.sessionManager.getPendingMessageStore();
         try {
-          const failedCount = pendingStore.markSessionMessagesFailed(session.sessionDbId);
+          const failedCount = pendingStore.markAllSessionMessagesFailed(session.sessionDbId);
           if (failedCount > 0) {
             logger.error("SESSION", `Marked messages as failed after generator error`, {
               sessionId: session.sessionDbId,
@@ -145,15 +145,16 @@ export class SessionRoutes extends BaseRouteHandler {
               session.consecutiveRestarts = (session.consecutiveRestarts || 0) + 1;
 
               if (session.consecutiveRestarts > MAX_CONSECUTIVE_RESTARTS) {
+                const failedCount = pendingStore.markAllSessionMessagesFailed(sessionDbId);
                 logger.error(
                   "SESSION",
-                  `CRITICAL: Generator restart limit exceeded - stopping to prevent runaway costs`,
+                  `CRITICAL: Generator restart limit exceeded - marking pending messages as failed`,
                   {
                     sessionId: sessionDbId,
                     pendingCount,
+                    failedCount,
                     consecutiveRestarts: session.consecutiveRestarts,
                     maxRestarts: MAX_CONSECUTIVE_RESTARTS,
-                    action: "Generator will NOT restart. Check logs for root cause. Messages remain in pending state.",
                   },
                 );
                 session.abortController.abort();

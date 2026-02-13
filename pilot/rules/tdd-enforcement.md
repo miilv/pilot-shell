@@ -1,6 +1,8 @@
 ## TDD (Test-Driven Development) - Mandatory Workflow
 
-**Core Rule:** No production code without a failing test first. No exceptions.
+**⛔ STOP AND THINK BEFORE WRITING ANY CODE: Do you have a failing test? If not, write the test FIRST.**
+
+**Core Rule:** No production code without a failing test first.
 
 ### The Red-Green-Refactor Cycle
 
@@ -132,10 +134,17 @@ When implementing features, follow this exact sequence:
 
 **When uncertain, use TDD.**
 
-### Common Mistakes to Avoid
+### Recovery: Code Written Before Test (Hook Reminder)
 
-**Writing code before test:**
-If you catch yourself writing implementation code before a failing test exists, stop immediately. Delete the code and start with the test.
+**If you already wrote production code and the TDD hook fires:**
+1. **Do NOT revert/delete the production code** — that wastes work
+2. Write the test immediately (it will pass — that's fine in recovery mode)
+3. Verify the test would catch regressions (check it tests the right behavior)
+4. **Learn from it:** apply TDD properly for the remaining work in this session
+
+**The goal is test coverage, not ritual.** Reverting working code to re-do the TDD ceremony is wasteful. But this is recovery mode — the default is still test-first.
+
+### Common Mistakes to Avoid
 
 **Test passes immediately:**
 This means you're testing existing behavior or the test is wrong. Rewrite the test to actually test new functionality.
@@ -162,7 +171,7 @@ Before marking any implementation complete, verify:
 - [ ] Tests use real code (mocks only for external dependencies)
 - [ ] Can explain why each test failed initially
 
-**If any checkbox is unchecked, TDD was not followed. Start over.**
+**If any checkbox is unchecked, fill in the gaps (write missing tests, run verifications) — don't start over.**
 
 ### Why This Order Matters
 
