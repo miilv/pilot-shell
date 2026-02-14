@@ -2,6 +2,12 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.5.7] - 2026-02-14
+
+### Bug Fixes
+
+- Use uv tool install for vexor to work on macOS and dev containers
+
 ## [6.5.6] - 2026-02-14
 
 ### Bug Fixes
