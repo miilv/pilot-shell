@@ -2,6 +2,12 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.5.5] - 2026-02-14
+
+### Bug Fixes
+
+- Consolidate Search into Memories, add Vault view, remove custom modes, improve hooks
+
 ## [6.5.4] - 2026-02-14
 
 ### Bug Fixes
