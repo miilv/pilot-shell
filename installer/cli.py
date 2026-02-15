@@ -72,16 +72,19 @@ def _start_trial(
     project_dir: Path,
     local_mode: bool,
     local_repo_dir: Path | None,
-) -> bool:
-    """Start a 7-day trial using pilot binary."""
+) -> int | None:
+    """Start a 7-day trial using pilot binary.
+
+    Returns days remaining on success, None on failure.
+    """
     _ = project_dir, local_mode, local_repo_dir
     bin_path = Path.home() / ".pilot" / "bin" / "pilot"
 
     if not bin_path.exists():
         console.error("Pilot binary not found")
-        return False
+        return None
 
-    def _run_trial_start() -> bool:
+    def _run_trial_start() -> int | None:
         result = subprocess.run(
             [str(bin_path), "trial", "--start", "--json"],
             capture_output=True,
@@ -89,16 +92,13 @@ def _start_trial(
             timeout=30,
         )
         if result.returncode == 0:
-            return True
+            return _get_trial_days_remaining(bin_path)
         output = result.stdout.strip() or result.stderr.strip()
         if output:
             try:
                 data = json.loads(output)
                 if data.get("error") == "trial_already_used":
                     console.error("Trial has already been used on this machine")
-                    console.print(
-                        "  [bold yellow]50% off your first month:[/bold yellow] [bold white]TRIAL50OFF[/bold white]"
-                    )
                     console.print("  [cyan]Subscribe at: https://claude-pilot.com[/cyan]")
                 else:
                     detail = data.get("detail", data.get("error", "Unknown error"))
@@ -107,17 +107,34 @@ def _start_trial(
                 console.error(f"Failed to start trial: {output}")
         else:
             console.error("Failed to start trial")
-        return False
+        return None
 
     try:
         with console.spinner("Starting trial..."):
             return _run_trial_start()
     except subprocess.TimeoutExpired:
         console.error("Trial start timed out")
-        return False
+        return None
     except Exception as e:
         console.error(f"Failed to start trial: {e}")
-        return False
+        return None
+
+
+def _get_trial_days_remaining(bin_path: Path) -> int:
+    """Get remaining trial days from pilot CLI. Defaults to 7 on failure."""
+    try:
+        result = subprocess.run(
+            [str(bin_path), "trial", "--check", "--json"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            data = json.loads(result.stdout.strip())
+            return int(data.get("days_remaining", 7))
+    except (subprocess.SubprocessError, json.JSONDecodeError, OSError, ValueError):
+        pass
+    return 7
 
 
 def _check_trial_used(
@@ -237,7 +254,6 @@ def _prompt_license_key(
 
     console.print()
     console.error(f"License validation failed after {max_attempts} attempts.")
-    console.print("  [bold yellow]50% off your first month:[/bold yellow] [bold white]TRIAL50OFF[/bold white]")
     console.print("  [bold]Subscribe at:[/bold] [cyan]https://claude-pilot.com[/cyan]")
     console.print()
     return False
@@ -258,7 +274,6 @@ def _handle_license_flow(
 
         if tier == "trial" and is_expired:
             console.print()
-            console.print("  [bold yellow]50% off your first month:[/bold yellow] [bold white]TRIAL50OFF[/bold white]")
             console.print("  [cyan]Subscribe at: https://claude-pilot.com[/cyan]")
             console.print()
             console.print("  [bold]Enter your license key to continue:[/bold]")
@@ -277,7 +292,6 @@ def _handle_license_flow(
 
     if trial_used and not can_reactivate:
         console.print("  [bold yellow]Trial has expired on this machine.[/bold yellow]")
-        console.print("  [bold yellow]50% off your first month:[/bold yellow] [bold white]TRIAL50OFF[/bold white]")
         console.print("  [cyan]Subscribe at: https://claude-pilot.com[/cyan]")
         console.print()
         console.print("  Please enter a license key to continue.")
@@ -285,11 +299,15 @@ def _handle_license_flow(
         if not _prompt_license_key(console, project_dir):
             return 1
     else:
-        started = _start_trial(console, project_dir, local_mode, local_repo_dir)
-        if started:
+        days = _start_trial(console, project_dir, local_mode, local_repo_dir)
+        if days is not None:
             console.print()
-            console.success("Your 7-day trial has started!")
-            console.print("  All features are unlocked for 7 days.")
+            if days > 0:
+                console.success(f"Your {days}-day trial has started!")
+                console.print(f"  All features are unlocked for {days} days.")
+            else:
+                console.success("Your trial is active!")
+                console.print("  Trial ends today.")
             console.print()
             console.print("  [bold]Subscribe after trial:[/bold] [cyan]https://claude-pilot.com[/cyan]")
             console.print()

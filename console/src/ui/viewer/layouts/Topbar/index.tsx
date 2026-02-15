@@ -44,12 +44,8 @@ export function Topbar({ theme, onToggleTheme, onToggleLogs }: TopbarProps) {
         </span>
         {!isLoading && license?.tier && <span className="text-base-content/20">|</span>}
         <LicenseBadge license={license} isLoading={isLoading} onClick={() => setShowActivation(true)} />
-        {!isLoading && license && (license.tier === 'trial' || license.isExpired) && (
+        {!isLoading && (!license || !license.tier || license.tier === 'trial' || license.isExpired) && (
           <>
-            <span className="text-base-content/20">|</span>
-            <span className="text-warning/80">
-              50% off your first month: <code className="font-bold text-base-content/70">TRIAL50OFF</code>
-            </span>
             <span className="text-base-content/20">|</span>
             <a
               href="https://claude-pilot.com/#pricing"

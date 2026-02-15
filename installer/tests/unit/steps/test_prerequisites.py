@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -209,8 +210,8 @@ class TestPrerequisitesHelpers:
     @patch("subprocess.run")
     @patch("installer.steps.prerequisites.is_linux")
     @patch("installer.steps.prerequisites.is_apt_available")
-    def test_install_ripgrep_via_apt_runs_update_and_install(self, mock_apt, mock_linux, mock_run):
-        """_install_ripgrep_via_apt runs apt-get update then install."""
+    def test_install_ripgrep_via_apt_runs_with_sudo_n_and_devnull_stdin(self, mock_apt, mock_linux, mock_run):
+        """_install_ripgrep_via_apt uses sudo -n and stdin=DEVNULL to prevent hanging."""
         from installer.steps.prerequisites import _install_ripgrep_via_apt
 
         mock_linux.return_value = True
@@ -223,9 +224,13 @@ class TestPrerequisitesHelpers:
         assert mock_run.call_count == 2
         first_call = mock_run.call_args_list[0]
         assert "update" in first_call[0][0]
+        assert "sudo" in first_call[0][0]
+        assert "-n" in first_call[0][0]
         second_call = mock_run.call_args_list[1]
         assert "install" in second_call[0][0]
         assert "ripgrep" in second_call[0][0]
+        assert second_call[1].get("stdin") == subprocess.DEVNULL
+        assert second_call[1].get("timeout") is not None
 
     @patch("subprocess.run")
     def test_add_bun_tap_runs_brew_tap(self, mock_run):
@@ -292,6 +297,62 @@ class TestPrerequisitesHelpers:
             assert os.environ["PATH"].count("/opt/homebrew/bin") == 1
         finally:
             os.environ["PATH"] = original_path
+
+
+class TestInstallHomebrew:
+    """Test _install_homebrew function."""
+
+    @patch("installer.steps.prerequisites.is_homebrew_available")
+    @patch("subprocess.run")
+    def test_install_homebrew_uses_string_command_with_noninteractive(self, mock_run, mock_brew_available):
+        """_install_homebrew passes a string (not list) to subprocess.run with shell=True and NONINTERACTIVE=1."""
+        from installer.steps.prerequisites import _install_homebrew
+
+        mock_run.return_value = MagicMock(returncode=0)
+        mock_brew_available.return_value = True
+
+        _install_homebrew()
+
+        mock_run.assert_called_once()
+        call_kwargs = mock_run.call_args
+        cmd = call_kwargs[0][0]
+        assert isinstance(cmd, str), f"Expected string command, got {type(cmd)}"
+        assert "curl" in cmd
+        assert "Homebrew/install" in cmd
+        assert call_kwargs[1].get("shell") is True
+        env = call_kwargs[1].get("env", {})
+        assert env.get("NONINTERACTIVE") == "1", "Must set NONINTERACTIVE=1 for Homebrew"
+        assert "timeout" in call_kwargs[1], "Must have a timeout to prevent hanging"
+        assert call_kwargs[1]["timeout"] > 0
+
+    @patch("installer.steps.prerequisites.is_homebrew_available")
+    @patch("subprocess.run")
+    def test_install_homebrew_uses_devnull_stdin(self, mock_run, mock_brew_available):
+        """_install_homebrew passes stdin=DEVNULL to prevent interactive prompts."""
+        import subprocess as sp
+
+        from installer.steps.prerequisites import _install_homebrew
+
+        mock_run.return_value = MagicMock(returncode=0)
+        mock_brew_available.return_value = True
+
+        _install_homebrew()
+
+        call_kwargs = mock_run.call_args[1]
+        assert call_kwargs.get("stdin") == sp.DEVNULL, "Must use stdin=DEVNULL to prevent hanging on prompts"
+
+    @patch("installer.steps.prerequisites.is_homebrew_available")
+    @patch("subprocess.run")
+    def test_install_homebrew_returns_false_on_timeout(self, mock_run, _mock_brew_available):
+        """_install_homebrew returns False when subprocess times out."""
+        import subprocess as sp
+
+        from installer.steps.prerequisites import _install_homebrew
+
+        mock_run.side_effect = sp.TimeoutExpired(cmd="brew", timeout=300)
+
+        result = _install_homebrew()
+        assert result is False
 
 
 class TestIsHomebrewAvailable:

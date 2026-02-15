@@ -44,12 +44,13 @@ export class LicenseRoutes extends BaseRouteHandler {
     app.post("/api/license/activate", this.handleActivate.bind(this));
   }
 
-  private handleGetLicense = this.wrapHandler((_req: Request, res: Response): void => {
-    res.json(this.getLicenseInfo());
+  private handleGetLicense = this.wrapHandler((req: Request, res: Response): void => {
+    const refresh = req.query.refresh === "1";
+    res.json(this.getLicenseInfo(refresh));
   });
 
-  getLicenseInfo(): LicenseResponse {
-    if (this.cache && Date.now() < this.cache.expiresAt) {
+  getLicenseInfo(refresh = false): LicenseResponse {
+    if (!refresh && this.cache && Date.now() < this.cache.expiresAt) {
       return this.cache.data;
     }
 

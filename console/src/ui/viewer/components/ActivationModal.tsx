@@ -76,10 +76,6 @@ export function ActivationModal({ open, onClose, onActivated }: ActivationModalP
               claude-pilot.com
             </a>
           </p>
-          <p className="text-xs text-base-content/60">
-            <span className="font-semibold text-warning">50% off your first month:</span>{' '}
-            <code className="bg-base-300 px-1.5 py-0.5 rounded font-bold text-base-content">TRIAL50OFF</code>
-          </p>
         </div>
       </div>
       <div className="modal-action">

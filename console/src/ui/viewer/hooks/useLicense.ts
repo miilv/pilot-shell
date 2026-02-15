@@ -11,8 +11,9 @@ export function useLicense(): UseLicenseResult {
   const [license, setLicense] = useState<LicenseResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchLicense = useCallback(() => {
-    fetch('/api/license')
+  const fetchLicense = useCallback((refresh = false) => {
+    const url = refresh ? '/api/license?refresh=1' : '/api/license';
+    fetch(url)
       .then((res) => res.json())
       .then((data: LicenseResponse) => {
         setLicense(data);
@@ -27,5 +28,7 @@ export function useLicense(): UseLicenseResult {
     fetchLicense();
   }, [fetchLicense]);
 
-  return { license, isLoading, refetch: fetchLicense };
+  const refetch = useCallback(() => fetchLicense(true), [fetchLicense]);
+
+  return { license, isLoading, refetch };
 }

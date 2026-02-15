@@ -39,9 +39,9 @@ const faqItems = [
       "Yes. Pilot installs once and works across all your projects. Each project can have its own rules, standards, and MCP servers in the .claude/ folder. Run /sync in each project to generate project-specific documentation and standards.",
   },
   {
-    question: "Can I customize the rules and hooks?",
+    question: "Can I add my own rules, commands, and skills?",
     answer:
-      "Yes. All rules are markdown files you can edit, extend, or replace. Hooks are Python scripts you can modify. Built-in coding standards are conditional rules that activate by file type and can be customized. You can also create custom skills via /learn. Project-specific rules override global defaults. Use /vault to share customizations across your team.",
+      "Yes. Create your own in your project\u2019s .claude/ folder \u2014 rules, commands, and skills are all plain markdown files. Your project-level assets are loaded alongside Pilot\u2019s built-in defaults and take precedence when they overlap. /sync auto-discovers your codebase patterns and generates project-specific rules for you. /learn extracts reusable knowledge from sessions into custom skills. Hooks can be extended for additional languages. Use /vault to share your custom assets across your team.",
   },
 ];
 

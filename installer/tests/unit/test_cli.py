@@ -224,7 +224,7 @@ class TestLicenseInfo:
 class TestLicenseFlowTrialFallback:
     """Test _handle_license_flow falls back to license key prompt when trial fails."""
 
-    @patch("installer.cli._start_trial", return_value=False)
+    @patch("installer.cli._start_trial", return_value=None)
     @patch("installer.cli._check_trial_used", return_value=(False, False))
     @patch("installer.cli._prompt_license_key", return_value=True)
     def test_trial_failure_falls_back_to_license_prompt(
@@ -243,7 +243,7 @@ class TestLicenseFlowTrialFallback:
         mock_prompt.assert_called_once()
         assert result is None
 
-    @patch("installer.cli._start_trial", return_value=False)
+    @patch("installer.cli._start_trial", return_value=None)
     @patch("installer.cli._check_trial_used", return_value=(False, False))
     @patch("installer.cli._prompt_license_key", return_value=False)
     def test_trial_failure_and_license_failure_exits(
@@ -262,7 +262,7 @@ class TestLicenseFlowTrialFallback:
         mock_prompt.assert_called_once()
         assert result == 1
 
-    @patch("installer.cli._start_trial", return_value=True)
+    @patch("installer.cli._start_trial", return_value=7)
     @patch("installer.cli._check_trial_used", return_value=(False, False))
     def test_trial_success_does_not_prompt_for_license(
         self, mock_check_trial, mock_start_trial, tmp_path: Path

@@ -16,7 +16,7 @@ MAX_RETRIES = 3
 RETRY_DELAY = 2
 
 
-def _run_bash_with_retry(command: str, cwd: Path | None = None) -> bool:
+def _run_bash_with_retry(command: str, cwd: Path | None = None, timeout: int = 120) -> bool:
     """Run a bash command with retry logic for transient failures."""
     for attempt in range(MAX_RETRIES):
         try:
@@ -25,9 +25,14 @@ def _run_bash_with_retry(command: str, cwd: Path | None = None) -> bool:
                 check=True,
                 capture_output=True,
                 cwd=cwd,
+                timeout=timeout,
             )
             return True
         except subprocess.CalledProcessError:
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_DELAY)
+            continue
+        except subprocess.TimeoutExpired:
             if attempt < MAX_RETRIES - 1:
                 time.sleep(RETRY_DELAY)
             continue

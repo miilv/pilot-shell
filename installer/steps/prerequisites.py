@@ -37,19 +37,23 @@ def _is_nvm_installed() -> bool:
     if (nvm_dir / "nvm.sh").exists():
         return True
     try:
-        result = subprocess.run(["brew", "list", "nvm"], capture_output=True, check=False)
+        result = subprocess.run(["brew", "list", "nvm"], capture_output=True, check=False, timeout=30)
         return result.returncode == 0
     except (subprocess.SubprocessError, OSError):
         return False
 
 
 def _install_homebrew() -> bool:
-    """Install Homebrew."""
+    """Install Homebrew non-interactively."""
     try:
+        env = {**os.environ, "NONINTERACTIVE": "1"}
         result = subprocess.run(
-            ["/bin/bash", "-c", "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"],
+            '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"',
             shell=True,
             check=False,
+            stdin=subprocess.DEVNULL,
+            env=env,
+            timeout=300,
         )
         if result.returncode != 0:
             return False
@@ -76,6 +80,7 @@ def _add_bun_tap() -> bool:
             ["brew", "tap", "oven-sh/bun"],
             capture_output=True,
             check=False,
+            timeout=60,
         )
         return result.returncode == 0 or b"already tapped" in result.stderr.lower()
     except (subprocess.SubprocessError, OSError):
@@ -104,6 +109,7 @@ def _install_homebrew_package(package: str) -> bool:
             ["brew", "install", package],
             capture_output=True,
             check=False,
+            timeout=120,
         )
         if result.returncode == 0:
             _ensure_homebrew_in_path()
@@ -131,19 +137,27 @@ def _get_command_for_package(package: str) -> str:
 
 
 def _install_ripgrep_via_apt() -> bool:
-    """Install ripgrep via apt on Debian/Ubuntu Linux."""
+    """Install ripgrep via apt on Debian/Ubuntu Linux.
+
+    Uses sudo -n (non-interactive) and stdin=DEVNULL so sudo fails immediately
+    if it needs a password instead of hanging indefinitely.
+    """
     if not is_linux() or not is_apt_available():
         return False
     try:
         subprocess.run(
-            ["sudo", "apt-get", "update", "-qq"],
+            ["sudo", "-n", "apt-get", "update", "-qq"],
             capture_output=True,
             check=False,
+            stdin=subprocess.DEVNULL,
+            timeout=60,
         )
         result = subprocess.run(
-            ["sudo", "apt-get", "install", "-y", "ripgrep"],
+            ["sudo", "-n", "apt-get", "install", "-y", "ripgrep"],
             capture_output=True,
             check=False,
+            stdin=subprocess.DEVNULL,
+            timeout=120,
         )
         return result.returncode == 0
     except (subprocess.SubprocessError, OSError):
