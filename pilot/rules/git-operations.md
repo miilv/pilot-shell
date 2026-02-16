@@ -1,141 +1,35 @@
 ## Git Operations - Read-Only by Default
 
-**Rule:** You may READ git state freely, but NEVER execute git WRITE COMMANDS without EXPLICIT user permission.
+**Rule:** Read git state freely. NEVER execute git write commands without EXPLICIT user permission.
 
-### Clarification: File Modifications Are Always Allowed
+**This rule is about git commands, not file operations.** Editing files is always allowed.
 
-**This rule is about git commands, NOT file operations.**
+### ⛔ Write Commands Need Explicit Permission
 
-- ✅ **Always allowed:** Creating, editing, deleting files in the working tree
-- ✅ **Always allowed:** Making code changes, writing tests, modifying configs
-- ❌ **Needs permission:** Git commands that modify repository state (commit, push, etc.)
+**NEVER execute without user saying "commit", "push", etc.:**
+`git add`, `commit`, `push`, `pull`, `fetch`, `merge`, `rebase`, `reset`, `revert`, `stash`, `checkout`, `switch`, `restore`, `cherry-pick`, `tag`, `remote`, `submodule`
 
-Editing files is normal development work. The rule only restricts git commands that persist changes to the repository.
+**"Fix this bug" ≠ "commit it".** Make changes → run tests → STOP → wait for explicit git instruction.
 
-### ⛔ CRITICAL: User Approval Required for Git Commands
+### ⛔ Never Override .gitignore
 
-**NEVER execute these git commands without the user explicitly saying "commit", "push", etc.:**
-- `git add` / `git commit` / `git commit --amend`
-- `git push` / `git push --force`
-- `git pull` / `git fetch` / `git merge` / `git rebase`
-- `git reset` / `git revert` / `git stash`
+**NEVER use `git add -f`.** If a file is gitignored, tell the user — don't force-add it. Even "stage everything" excludes gitignored files.
 
-**"Fix this bug" does NOT mean "commit it". Wait for explicit git instructions.**
+### ⛔ Never Selectively Unstage
 
-### ⛔ ABSOLUTE BAN: Never Override .gitignore
+When the user says "commit", commit ALL staged changes as-is. Don't use `git reset HEAD` to curate the changeset.
 
-**NEVER use `git add -f` or `git add --force` to stage gitignored files.** No exceptions.
+### Read Commands — Always Allowed
 
-If `git add` fails because a path is in `.gitignore`:
-1. **STOP** — the file is ignored for a reason
-2. **Tell the user** the file is gitignored and cannot be staged
-3. **Ask the user** if they want to update `.gitignore` to unignore it
-4. **NEVER force-add it** — this bypasses project safeguards and can leak secrets, local configs, or proprietary assets into the repository
+`git status`, `git diff [--staged]`, `git log`, `git show`, `git branch [-a]` — use freely to understand repo state.
 
-This applies even if the user says "stage everything" or "push all changes" — gitignored files are excluded from "everything" by design.
+### When User Gives Permission
 
-### What You Can Do
+- Execute directly — don't re-ask for confirmation
+- Follow commit message format from `.claude/rules/git-commits.md`
+- `commit` and `push` are separate permissions
 
-Execute these commands freely to understand repository state:
+### Exceptions
 
-```bash
-git status              # Check working tree
-git status --short      # Compact status
-git diff                # Unstaged changes
-git diff --staged       # Staged changes
-git diff HEAD~1         # Compare with previous commit
-git log                 # Commit history
-git log --oneline -10   # Recent commits
-git show <commit>       # Commit details
-git branch              # Local branches
-git branch -a           # All branches
-git branch -r           # Remote branches
-```
-
-Use these to:
-- Understand what files changed
-- Check current branch
-- Review recent commits
-- Identify merge conflicts
-- Verify repository state before suggesting actions
-
-### Write Operations - Only With Explicit Permission
-
-These commands require the user to explicitly say "commit", "push", etc.:
-
-```bash
-git add                 # Staging
-git commit              # Committing
-git push                # Pushing
-git pull                # Pulling
-git fetch               # Fetching
-git merge               # Merging
-git rebase              # Rebasing
-git checkout            # Switching branches/files
-git switch              # Switching branches
-git restore             # Restoring files
-git reset               # Resetting
-git revert              # Reverting
-git stash               # Stashing
-git cherry-pick         # Cherry-picking
-git tag                 # Tagging
-git remote add/remove   # Remote management
-git submodule           # Submodule operations
-```
-
-### ⛔ NEVER Selectively Unstage Files
-
-**When the user says "commit", commit ALL staged changes as-is.** Do NOT use `git reset HEAD` to selectively unstage files you think are unrelated. The user staged those files intentionally. Your job is to write a good commit message that covers everything staged, not to curate the changeset.
-
-### When User Gives Explicit Permission
-
-When user explicitly says "commit", "push", "commit and push", etc.:
-1. **Execute the command** - don't ask for confirmation again
-2. **Use appropriate commit message format** (see `.claude/rules/git-commits.md`)
-
-### When User Hasn't Mentioned Git
-
-If user asks you to fix/change code but doesn't mention committing:
-1. **Make the code changes**
-2. **Run tests to verify**
-3. **STOP and report completion**
-4. **Wait for user to say "commit" or "push"**
-
-**Do NOT assume the user wants you to commit.**
-
-### Suggesting Commit Messages
-
-You can suggest commit messages following conventional commits:
-
-- `feat:` - New feature
-- `fix:` - Bug fix
-- `docs:` - Documentation
-- `refactor:` - Code refactoring
-- `test:` - Test changes
-- `chore:` - Maintenance tasks
-
-Format: `<type>: <description>`
-
-Example: `feat: add password reset functionality`
-
-### Checking Work Before Completion
-
-Always check git status before marking work complete:
-
-```bash
-git status              # Verify expected files changed
-git diff                # Review actual changes
-```
-
-This helps you:
-- Confirm changes were applied correctly
-- Identify unintended modifications
-- Verify no files were accidentally created/deleted
-
-### Exception: Explicit User Override
-
-If user explicitly says "checkout branch X" or "switch to branch Y", you may execute `git checkout` or `git switch` as directly requested.
-
-### Exception: Worktree During /spec
-
-During `/spec` implementation with `Worktree: Yes`, code runs in an isolated git worktree on a dedicated branch. Git commits ARE allowed within this worktree context because the worktree branch is isolated from the main branch. The worktree branch is not pushed to remote — changes are synced back via squash merge after verification. When `Worktree: No` is set in the plan (the default), implementation happens directly on the current branch and normal git rules apply.
+- **Explicit user override:** "checkout branch X" → do it
+- **Worktree during /spec:** When `Worktree: Yes`, git commits are allowed in the isolated worktree branch (not pushed, synced via squash merge after verification)

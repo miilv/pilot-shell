@@ -1,6 +1,8 @@
-## Semantic Code Search using Vexor CLI (IMPORTANT)
+## Semantic Code Search using Vexor CLI
 
-Semantic file discovery via `vexor`. Use whenever locating where something is implemented/loaded/defined in a medium or large repo, or when the file location is unclear. Prefer this over manual browsing. Find files by intent (what they do), not exact text.
+**⭐ MANDATORY: Use vexor as primary tool for codebase exploration**
+
+Semantic file discovery via `vexor`. This is your **first-choice tool** for locating where something is implemented/loaded/defined in any repo. Use whenever the file location is unclear. Prefer this over manual browsing. Find files by intent (what they do), not exact text.
 
 ### ⛔ CRITICAL: Timeout and No Background
 
@@ -8,14 +10,29 @@ Semantic file discovery via `vexor`. Use whenever locating where something is im
 
 **NEVER let vexor run in background.** If it times out, increase the timeout — don't background it.
 
-### When to Use Vexor
+### When to Use Vexor (Decision Tree)
 
-- **Replaces the Explore agent** — vexor delivers higher-quality results with semantic ranking
-- Use `vexor` first for intent-based file discovery
-- Prefer over Grep/Glob when searching by meaning, not exact text
-- Great for: "where is X implemented?", "how does Y work?", "find config loading"
-- Use `Grep`/`Glob` for exact text/pattern matching; use `vexor` for everything else
-- **Do NOT use vexor when you already know the file paths** — use `Read`/`Grep` directly instead
+```
+Need to explore codebase?
+├─ Know exact file paths? → Use Read/Grep directly
+├─ Know exact text/pattern? → Use Grep/Glob
+└─ Searching by intent/meaning? → Use vexor ⭐
+```
+
+**Use vexor for:**
+- "Where is X implemented?" → `vexor "X implementation"`
+- "How does Y work?" → `vexor "Y functionality"`
+- "Find config loading" → `vexor "config loader"`
+- Any semantic/intent-based codebase exploration
+
+**Tool Selection Guide:**
+
+| Need | Primary Tool | When to Use |
+|------|--------------|-------------|
+| Semantic search (meaning/intent) | **vexor** | Finding where features are implemented, how things work |
+| Exact text/pattern match | Grep/Glob | Known function names, specific error messages |
+| Known file paths | Read | Already know what files to read |
+| Complex multi-file exploration | vexor + Read | Use vexor to find files, then Read to examine them |
 
 ### Command
 

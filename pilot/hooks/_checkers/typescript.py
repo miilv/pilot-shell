@@ -1,4 +1,4 @@
-"""TypeScript/JavaScript file checker — comment stripping, prettier, eslint, tsc."""
+"""TypeScript/JavaScript file checker — comment stripping, prettier, eslint."""
 
 from __future__ import annotations
 
@@ -91,7 +91,7 @@ def find_tool(tool_name: str, project_root: Path | None) -> str | None:
 
 
 def check_typescript(file_path: Path) -> tuple[int, str]:
-    """Check TypeScript file with eslint and tsc. Returns (exit_code, reason)."""
+    """Check TypeScript file with prettier and eslint. Returns (exit_code, reason)."""
     strip_typescript_comments(file_path)
 
     if ".test." in file_path.name or ".spec." in file_path.name:
@@ -111,9 +111,8 @@ def check_typescript(file_path: Path) -> tuple[int, str]:
             pass
 
     eslint_bin = find_tool("eslint", project_root)
-    tsc_bin = find_tool("tsc", project_root) if file_path.suffix in {".ts", ".tsx", ".mts"} else None
 
-    if not (eslint_bin or tsc_bin):
+    if not eslint_bin:
         return 0, ""
 
     results: dict[str, tuple] = {}
@@ -122,18 +121,12 @@ def check_typescript(file_path: Path) -> tuple[int, str]:
     if eslint_bin:
         has_issues, results = _run_eslint(eslint_bin, file_path, project_root, has_issues, results)
 
-    if tsc_bin:
-        has_issues, results = _run_tsc(tsc_bin, file_path, project_root, has_issues, results)
-
     if has_issues:
         _print_typescript_issues(file_path, results)
         parts = []
         if "eslint" in results:
             errs, warns, _ = results["eslint"]
             parts.append(f"{errs + warns} eslint")
-        if "tsc" in results:
-            count, _ = results["tsc"]
-            parts.append(f"{count} tsc")
         reason = f"TypeScript: {', '.join(parts)} in {file_path.name}"
         return 2, reason
 
@@ -172,41 +165,6 @@ def _run_eslint(
     return has_issues, results
 
 
-def _run_tsc(
-    tsc_bin: str,
-    file_path: Path,
-    project_root: Path | None,
-    has_issues: bool,
-    results: dict[str, tuple],
-) -> tuple[bool, dict[str, tuple]]:
-    """Run tsc and collect results."""
-    tsconfig_path = None
-    if project_root:
-        for tsconfig_name in ["tsconfig.json", "tsconfig.app.json"]:
-            potential = project_root / tsconfig_name
-            if potential.exists():
-                tsconfig_path = potential
-                break
-
-    try:
-        cmd = [tsc_bin, "--noEmit"]
-        if tsconfig_path:
-            cmd.extend(["--project", str(tsconfig_path)])
-        else:
-            cmd.append(str(file_path))
-
-        result = subprocess.run(cmd, capture_output=True, text=True, check=False, cwd=project_root)
-        output = result.stdout + result.stderr
-        if result.returncode != 0:
-            error_lines = [line for line in output.splitlines() if "error TS" in line]
-            if error_lines:
-                has_issues = True
-                results["tsc"] = (len(error_lines), error_lines)
-    except Exception:
-        pass
-    return has_issues, results
-
-
 def _print_typescript_issues(file_path: Path, results: dict[str, tuple]) -> None:
     """Print TypeScript diagnostic issues to stderr."""
     print("", file=sys.stderr)
@@ -234,30 +192,6 @@ def _print_typescript_issues(file_path: Path, results: dict[str, tuple]) -> None
             if len(file_result.get("messages", [])) > 10:
                 remaining = len(file_result["messages"]) - 10
                 print(f"  ... and {remaining} more issues", file=sys.stderr)
-        print("", file=sys.stderr)
-
-    if "tsc" in results:
-        count, error_lines = results["tsc"]
-        plural = "issue" if count == 1 else "issues"
-        print("", file=sys.stderr)
-        print(f"🔷 TypeScript: {count} {plural}", file=sys.stderr)
-        print("───────────────────────────────────────", file=sys.stderr)
-        for line in error_lines[:10]:
-            if "): error TS" in line:
-                parts = line.split("): error TS", 1)
-                location = parts[0].split("/")[-1] if "/" in parts[0] else parts[0]
-                error_msg = parts[1] if len(parts) > 1 else ""
-                code_end = error_msg.find(":")
-                if code_end > 0:
-                    code = "TS" + error_msg[:code_end]
-                    msg = error_msg[code_end + 1 :].strip()
-                    print(f"  {location}) [{code}]: {msg}", file=sys.stderr)
-                else:
-                    print(f"  {line}", file=sys.stderr)
-            else:
-                print(f"  {line}", file=sys.stderr)
-        if count > 10:
-            print(f"  ... and {count - 10} more issues", file=sys.stderr)
         print("", file=sys.stderr)
 
     print(f"{RED}Fix TypeScript issues above before continuing{NC}", file=sys.stderr)

@@ -9,93 +9,49 @@ paths:
 
 # Models Standards
 
-**Core Rule:** Models define data structure and integrity. Keep them focused on data representation, not business logic.
+**Core Rule:** Models define data structure and integrity. No business logic, no API calls.
 
-## Naming Conventions
+## Naming
 
-**Models:** Singular, PascalCase (`User`, `OrderItem`, `PaymentMethod`)
-
-**Tables:** Plural, snake_case (`users`, `order_items`, `payment_methods`)
-
-**Avoid generic names:** `data`, `info`, `record`, `entity`
+- **Models:** Singular PascalCase (`User`, `OrderItem`)
+- **Tables:** Plural snake_case (`users`, `order_items`)
+- Avoid: `data`, `info`, `record`, `entity`
 
 ## Required Fields
 
-**Timestamps on every model:**
-```python
-created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
-```
+- `created_at` and `updated_at` timestamps on every model
+- Explicit primary keys (UUIDs for distributed, auto-increment for simplicity)
 
-**Primary keys:** Always explicit, prefer UUIDs for distributed systems or auto-incrementing integers for simplicity.
+## Data Integrity at DB Level
 
-## Data Integrity - Database Level
+Use constraints, not just application validation: `unique=True`, `nullable=False`, `CheckConstraint`, `ForeignKey` with explicit `ondelete`.
 
-**Use constraints, not just application validation:**
+## Data Types
 
-```python
-email = Column(String(255), unique=True, nullable=False)
-age = Column(Integer, CheckConstraint('age >= 18'))
-user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
-```
+| Data | Use | Avoid |
+|------|-----|-------|
+| Money | DECIMAL(10,2) | FLOAT |
+| Boolean | BOOLEAN | TINYINT |
+| Timestamps | TIMESTAMP/DATETIME | VARCHAR |
+| JSON | JSON/JSONB | TEXT |
+| UUIDs | UUID | VARCHAR(36) |
 
-## Data Types - Choose Appropriately
+## Indexes & Relationships
 
-| Data       | Type               | Avoid       |
-| ---------- | ------------------ | ----------- |
-| Email, URL | VARCHAR(255)       | TEXT        |
-| Money      | DECIMAL(10,2)      | FLOAT       |
-| Boolean    | BOOLEAN            | TINYINT     |
-| Timestamps | TIMESTAMP/DATETIME | VARCHAR     |
-| JSON data  | JSON/JSONB         | TEXT        |
-| UUIDs      | UUID               | VARCHAR(36) |
+- Index foreign keys and columns in WHERE/JOIN/ORDER BY. Don't over-index.
+- Define both sides of relationships with explicit cascade behavior.
 
-## Indexes
+## Scope
 
-**Always index:** Foreign keys, columns in WHERE/JOIN/ORDER BY clauses.
+**In models:** Fields, relationships, simple properties, data validation, constraints.
+**Not in models:** Business logic, API calls, complex calculations, emails.
 
-**Don't over-index:** Each index slows writes. Index only queried columns.
+## Checklist
 
-## Relationships - Explicit Configuration
-
-**Define both sides of relationships:**
-```python
-class User(Base):
-    orders = relationship('Order', back_populates='user', cascade='all, delete-orphan')
-
-class Order(Base):
-    user_id = Column(Integer, ForeignKey('users.id'))
-    user = relationship('User', back_populates='orders')
-```
-
-**Cascade behaviors:** CASCADE (delete related), SET NULL (nullify FK), RESTRICT (prevent deletion). Choose based on business logic.
-
-## What Belongs in Models
-
-**YES:** Field definitions, relationships, simple properties, data validation, database constraints
-
-**NO:** Business logic, external API calls, complex calculations, email sending
-
-## Common Patterns
-
-**Enums for fixed values:**
-```python
-class OrderStatus(str, Enum):
-    PENDING = 'pending'
-    PAID = 'paid'
-    SHIPPED = 'shipped'
-
-status = Column(Enum(OrderStatus), nullable=False, default=OrderStatus.PENDING)
-```
-
-## Checklist for New Models
-
-- [ ] Singular model name, plural table name
-- [ ] Primary key defined
-- [ ] `created_at` and `updated_at` timestamps
-- [ ] NOT NULL on required fields
-- [ ] UNIQUE constraints where appropriate
-- [ ] Foreign keys with explicit cascade behavior
-- [ ] Indexes on foreign keys and queried columns
-- [ ] Appropriate data types (not all VARCHAR)
-- [ ] Relationships defined on both sides
+- [ ] Singular model, plural table
+- [ ] Primary key, timestamps
+- [ ] NOT NULL on required fields, UNIQUE where appropriate
+- [ ] Foreign keys with cascade behavior
+- [ ] Indexes on queried columns
+- [ ] Appropriate data types
+- [ ] Relationships on both sides

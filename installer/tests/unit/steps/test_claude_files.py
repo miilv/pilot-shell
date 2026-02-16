@@ -161,7 +161,7 @@ class TestClaudeFilesStep:
             assert (home_dir / ".claude" / "rules" / "rule.md").exists()
 
     def test_claude_files_installs_settings(self):
-        """ClaudeFilesStep installs settings.json to ~/.claude/."""
+        """ClaudeFilesStep installs settings to project .claude/settings.local.json."""
         from installer.context import InstallContext
         from installer.steps.claude_files import ClaudeFilesStep
         from installer.ui import Console
@@ -188,7 +188,8 @@ class TestClaudeFilesStep:
             with patch("installer.steps.claude_files.Path.home", return_value=home_dir):
                 step.run(ctx)
 
-            assert (home_dir / ".claude" / "settings.json").exists()
+            assert (dest_dir / ".claude" / "settings.local.json").exists()
+            assert not (home_dir / ".claude" / "settings.json").exists()
 
 
 class TestClaudeFilesCustomRulesPreservation:

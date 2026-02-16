@@ -34,6 +34,23 @@
 
 ---
 
+## Tool Selection Guidance
+
+**For codebase exploration and research, prefer direct tools over sub-agents:**
+
+| Need | First Choice | Alternative | Avoid |
+|------|--------------|-------------|-------|
+| Semantic search (intent/meaning) | **vexor** | Explore agent (if necessary) | Manual browsing |
+| Exact text/pattern match | Grep/Glob | - | Explore for simple patterns |
+| Known file paths | Read | - | - |
+| Complex multi-file exploration | **vexor** first → Read | Task/Explore (if needed) | Guessing locations |
+
+**Why prefer vexor:** Faster results, semantic ranking, direct tool calls (no agent overhead).
+
+**When Task/Explore agents are acceptable:** Complex exploration requiring multiple sequential searches across uncertain locations. Use your judgment.
+
+---
+
 ## ⭐ MANDATORY: Task Management for ALL Work
 
 **ALWAYS use task management tools to track non-trivial work, including /spec workflows.**
@@ -159,23 +176,28 @@ Tasks 3 and 4 won't show as ready until Task 2 completes.
 
 ## ⛔ ABSOLUTE BANS
 
-### No Ad-Hoc Sub-Agents (Exception: Verification)
+### Sub-Agent Usage (Prefer Direct Tools)
 
-**NEVER use the Task tool to spawn sub-agents for exploration or ad-hoc implementation.**
+**Prefer direct tools over sub-agents for most exploration work:**
 
 - Use `Read`, `Grep`, `Glob`, `Bash` directly for targeted lookups
-- Use `vexor search` for semantic/intent-based codebase exploration (replaces Explore agent)
-- Ad-hoc sub-agents lose context and make mistakes
+- Use **`vexor search`** as primary tool for semantic/intent-based codebase exploration
+- Direct tools are faster and maintain full context
 
-**⛔ Explore agent is BANNED.** It produces low-quality results compared to `vexor search`. For codebase exploration:
+**Sub-agents (Task/Explore) are allowed when the model judges them necessary:**
+- Complex multi-file exploration with uncertain locations
+- Sequential searches that build on previous results
+- Use discretion — if direct tools would work, use them instead
 
-| Need                                           | Use                                | NOT          |
-| ---------------------------------------------- | ---------------------------------- | ------------ |
-| Semantic questions ("where is X implemented?") | `vexor search "query" --mode code` | Task/Explore |
-| Exact text/pattern match                       | `Grep` or `Glob`                   | Task/Explore |
-| Specific file content                          | `Read`                             | Task/Explore |
+**Tool Selection:**
 
-**Exception: Verification sub-agents in /spec workflow — launched via the Task tool.**
+| Need | Recommended | When Sub-Agents OK |
+|------|-------------|-------------------|
+| Semantic questions ("where is X implemented?") | `vexor search` | Complex uncertain exploration |
+| Exact text/pattern match | `Grep` or `Glob` | Rarely needed |
+| Specific file content | `Read` | Never needed |
+
+**Verification sub-agents in /spec workflow are mandatory** — launched via the Task tool.
 
 The **Task tool** is the ONLY allowed mechanism for spawning sub-agents. It is used exclusively for /spec verification steps, where paired review agents run in parallel. No other use of the Task tool for sub-agents is permitted.
 

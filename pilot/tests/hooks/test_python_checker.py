@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -136,7 +135,7 @@ class TestCheckPythonNoTools:
     """When no tools are available, skip gracefully."""
 
     def test_no_tools_returns_zero(self, tmp_path: Path) -> None:
-        """No ruff or basedpyright installed returns 0."""
+        """No ruff installed returns 0."""
         py_file = tmp_path / "app.py"
         py_file.write_text("x = 1\n")
 
@@ -214,29 +213,20 @@ class TestCheckPythonRuffIssues:
         assert reason == ""
 
 
-class TestCheckPythonBasedpyrightIssues:
-    """Basedpyright issue detection and counting."""
+class TestCheckPythonRuffOnly:
+    """Verify basedpyright is NOT called (removed from per-edit hooks)."""
 
-    def test_type_errors_reported_in_reason(self, tmp_path: Path) -> None:
-        """Basedpyright type errors are counted."""
+    def test_basedpyright_not_invoked_even_if_available(self, tmp_path: Path) -> None:
+        """Even when basedpyright is on PATH, it is not called."""
         py_file = tmp_path / "app.py"
         py_file.write_text("x = 1\n")
 
-        pyright_output = json.dumps({
-            "summary": {"errorCount": 2},
-            "generalDiagnostics": [
-                {"file": "app.py", "range": {"start": {"line": 1}}, "message": "error one"},
-                {"file": "app.py", "range": {"start": {"line": 5}}, "message": "error two"},
-            ],
-        })
+        mock_result = MagicMock(returncode=0, stdout="", stderr="")
+        called_commands: list[list[str]] = []
 
-        mock_ruff = MagicMock(returncode=0, stdout="", stderr="")
-        mock_pyright = MagicMock(returncode=1, stdout=pyright_output, stderr="")
-
-        def run_side_effect(cmd, **kwargs):
-            if "basedpyright" in cmd[0]:
-                return mock_pyright
-            return mock_ruff
+        def run_side_effect(cmd, **_kwargs):
+            called_commands.append(cmd)
+            return mock_result
 
         def which_side_effect(name):
             return f"/usr/bin/{name}" if name in ("ruff", "basedpyright") else None
@@ -247,86 +237,7 @@ class TestCheckPythonBasedpyrightIssues:
             patch("_checkers.python.shutil.which", side_effect=which_side_effect),
             patch("_checkers.python.subprocess.run", side_effect=run_side_effect),
         ):
-            exit_code, reason = check_python(py_file)
+            check_python(py_file)
 
-        assert exit_code == 2
-        assert "2 basedpyright" in reason
-
-    def test_zero_errors_means_clean(self, tmp_path: Path) -> None:
-        """Basedpyright with 0 errors is clean."""
-        py_file = tmp_path / "app.py"
-        py_file.write_text("x = 1\n")
-
-        pyright_output = json.dumps({"summary": {"errorCount": 0}, "generalDiagnostics": []})
-        mock_ruff = MagicMock(returncode=0, stdout="", stderr="")
-        mock_pyright = MagicMock(returncode=0, stdout=pyright_output, stderr="")
-
-        def run_side_effect(cmd, **kwargs):
-            if "basedpyright" in cmd[0]:
-                return mock_pyright
-            return mock_ruff
-
-        def which_side_effect(name):
-            return f"/usr/bin/{name}" if name in ("ruff", "basedpyright") else None
-
-        with (
-            patch("_checkers.python.strip_python_comments"),
-            patch("_checkers.python.check_file_length"),
-            patch("_checkers.python.shutil.which", side_effect=which_side_effect),
-            patch("_checkers.python.subprocess.run", side_effect=run_side_effect),
-        ):
-            exit_code, reason = check_python(py_file)
-
-        assert exit_code == 2
-        assert reason == ""
-
-
-class TestCheckPythonCombinedIssues:
-    """Both ruff and basedpyright issues at once."""
-
-    def test_both_tools_report_issues(self, tmp_path: Path) -> None:
-        """Combined issues from ruff and basedpyright are reported."""
-        py_file = tmp_path / "app.py"
-        py_file.write_text("x = 1\n")
-
-        pyright_output = json.dumps({
-            "summary": {"errorCount": 1},
-            "generalDiagnostics": [
-                {"file": "app.py", "range": {"start": {"line": 1}}, "message": "type error"},
-            ],
-        })
-
-        mock_format = MagicMock(returncode=0, stdout="", stderr="")
-        mock_fix = MagicMock(returncode=0, stdout="", stderr="")
-        mock_check = MagicMock(
-            returncode=1,
-            stdout="app.py:1:1: F401 unused import\n",
-            stderr="",
-        )
-        mock_pyright = MagicMock(returncode=1, stdout=pyright_output, stderr="")
-
-        call_count = 0
-
-        def run_side_effect(cmd, **kwargs):
-            nonlocal call_count
-            if "basedpyright" in cmd[0]:
-                return mock_pyright
-            call_count += 1
-            if call_count <= 2:
-                return mock_fix if "--select" in cmd else mock_format
-            return mock_check
-
-        def which_side_effect(name):
-            return f"/usr/bin/{name}" if name in ("ruff", "basedpyright") else None
-
-        with (
-            patch("_checkers.python.strip_python_comments"),
-            patch("_checkers.python.check_file_length"),
-            patch("_checkers.python.shutil.which", side_effect=which_side_effect),
-            patch("_checkers.python.subprocess.run", side_effect=run_side_effect),
-        ):
-            exit_code, reason = check_python(py_file)
-
-        assert exit_code == 2
-        assert "ruff" in reason
-        assert "basedpyright" in reason
+        invoked_binaries = [cmd[0] for cmd in called_commands]
+        assert not any("basedpyright" in b for b in invoked_binaries)

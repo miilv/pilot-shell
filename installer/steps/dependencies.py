@@ -95,80 +95,9 @@ def install_python_tools() -> bool:
         return False
 
 
-def _patch_claude_config(config_updates: dict) -> bool:
-    """Patch ~/.claude.json with the given config updates.
-
-    Creates the file if it doesn't exist. Merges updates with existing config.
-    """
-
-    config_path = Path.home() / ".claude.json"
-
-    try:
-        if config_path.exists():
-            config = json.loads(config_path.read_text())
-        else:
-            config = {}
-
-        config.update(config_updates)
-        config_path.write_text(json.dumps(config, indent=2) + "\n")
-        return True
-    except Exception:
-        return False
-
-
-def _patch_claude_settings(settings_updates: dict) -> bool:
-    """Patch ~/.claude/settings.json with the given settings updates.
-
-    Creates the file if it doesn't exist. Merges updates with existing settings.
-    """
-
-    settings_dir = Path.home() / ".claude"
-    settings_dir.mkdir(parents=True, exist_ok=True)
-    settings_path = settings_dir / "settings.json"
-
-    try:
-        if settings_path.exists():
-            settings = json.loads(settings_path.read_text())
-        else:
-            settings = {}
-
-        settings.update(settings_updates)
-        settings_path.write_text(json.dumps(settings, indent=2) + "\n")
-        return True
-    except Exception:
-        return False
-
-
-def _configure_claude_defaults() -> bool:
-    """Configure Claude Code with recommended defaults after installation."""
-    config_ok = _patch_claude_config(
-        {
-            "installMethod": "npm",
-            "theme": "dark",
-            "verbose": True,
-            "autoCompactEnabled": False,
-            "autoConnectIde": True,
-            "showExpandedTodos": True,
-            "autoUpdates": False,
-            "lspRecommendationDisabled": True,
-            "showTurnDuration": False,
-            "terminalProgressBarEnabled": True,
-        }
-    )
-    settings_ok = _patch_claude_settings(
-        {
-            "attribution": {"commit": "", "pr": ""},
-            "respectGitignore": False,
-            "cleanupPeriodDays": 7,
-        }
-    )
-    return config_ok and settings_ok
-
-
 def _get_forced_claude_version(project_dir: Path) -> str | None:
-    """Check ~/.claude/settings.json for FORCE_CLAUDE_VERSION in env section."""
-    _ = project_dir
-    settings_path = Path.home() / ".claude" / "settings.json"
+    """Check project .claude/settings.local.json for FORCE_CLAUDE_VERSION in env section."""
+    settings_path = project_dir / ".claude" / "settings.local.json"
     if settings_path.exists():
         try:
             settings = json.loads(settings_path.read_text())
@@ -239,12 +168,10 @@ def install_claude_code(project_dir: Path, ui: Any = None) -> tuple[bool, str]:
 
     if not _run_bash_with_retry(npm_cmd):
         if command_exists("claude"):
-            _configure_claude_defaults()
             actual_version = _get_installed_claude_version()
             return True, actual_version or version
         return False, version
 
-    _configure_claude_defaults()
     return True, version
 
 
@@ -604,10 +531,9 @@ def _install_claude_code_with_ui(ui: Any, project_dir: Path) -> bool:
             if version != "latest":
                 ui.success(f"Claude Code installed (pinned to v{version})")
                 ui.info(f"Version {version} is the last stable release tested with Pilot")
-                ui.info("To change: edit FORCE_CLAUDE_VERSION in ~/.claude/settings.json")
+                ui.info("To change: edit FORCE_CLAUDE_VERSION in .claude/settings.local.json")
             else:
                 ui.success("Claude Code installed (latest)")
-            ui.success("Claude Code config defaults applied")
         else:
             ui.warning("Could not install Claude Code - please install manually")
         return success
@@ -744,30 +670,6 @@ def _precache_npx_mcp_servers(_ui: Any) -> bool:
     return True
 
 
-def _clean_mcp_servers_from_claude_config(ui: Any) -> None:
-    """Remove mcpServers section from ~/.claude.json (now in plugin/.mcp.json)."""
-
-    claude_config_path = Path.home() / ".claude.json"
-
-    try:
-        if not claude_config_path.exists():
-            return
-
-        config = json.loads(claude_config_path.read_text())
-
-        if "mcpServers" not in config:
-            return
-
-        del config["mcpServers"]
-        claude_config_path.write_text(json.dumps(config, indent=2) + "\n")
-
-        if ui:
-            ui.success("Cleaned mcpServers from ~/.claude.json (now in plugin/.mcp.json)")
-    except Exception as e:
-        if ui:
-            ui.warning(f"Could not clean mcpServers from config: {e}")
-
-
 class DependenciesStep(BaseStep):
     """Step that installs all required dependencies."""
 
@@ -821,7 +723,5 @@ class DependenciesStep(BaseStep):
 
         if _install_with_spinner(ui, "MCP server packages", _precache_npx_mcp_servers, ui):
             installed.append("mcp_npx_cache")
-
-        _clean_mcp_servers_from_claude_config(ui)
 
         ctx.config["installed_dependencies"] = installed

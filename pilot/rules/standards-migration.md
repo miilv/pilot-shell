@@ -8,90 +8,46 @@ paths:
 
 # Migration Standards
 
-Apply these rules when creating or modifying database migrations. Migrations are permanent records of schema evolution and must be treated with extreme care.
-
 ## Core Principles
 
-**Reversibility is Mandatory**: Every migration MUST have a working rollback method. If a change cannot be reversed safely, document why and consider a multi-step approach.
+- **Reversible:** Every migration MUST have a working rollback. If irreversible, document why.
+- **One logical change per migration:** Add a table, add a column, create an index — not all at once.
+- **Never modify deployed migrations:** Create a new one to fix issues.
 
-**One Logical Change Per Migration**: Each migration should do exactly one thing - add a table, add a column, create an index. This makes debugging easier, rollbacks safer, and code review clearer.
+## Naming
 
-**Never Modify Deployed Migrations**: Once a migration runs in any shared environment, it becomes immutable. Create a new migration to fix issues.
-
-## Migration Structure
-
-**Naming Convention**: Use timestamps and descriptive names:
-- `20241118120000_add_email_to_users.py`
-- `20241118120100_create_orders_table.rb`
-
-The name should answer "what does this migration do?" without reading the code.
+Timestamps + descriptive: `20241118120000_add_email_to_users.py`. Name answers "what does this do?"
 
 ## Schema Changes
 
-**Adding Columns**: Always specify default values for NOT NULL columns on existing tables:
+- **Adding NOT NULL columns:** Always specify `server_default` to avoid table locks
+- **Removing columns:** Multi-step — deploy code that stops using it, then remove
+- **Renaming columns:** Add new → write both → backfill → read new → remove old
 
-```python
-# BAD - locks table during backfill
-op.add_column('users', sa.Column('status', sa.String(), nullable=False))
+## Indexes
 
-# GOOD - uses default, no lock
-op.add_column('users', sa.Column('status', sa.String(), nullable=False, server_default='active'))
-```
-
-**Removing Columns**: Use multi-step approach for zero-downtime:
-1. Deploy code that stops using the column
-2. Deploy migration that removes the column
-
-**Renaming Columns**: Treat as add + remove for zero-downtime:
-1. Add new column → 2. Code writes to both → 3. Backfill → 4. Code reads from new → 5. Remove old
-
-## Index Management
-
-**Use concurrent index creation on large tables:**
-
-```python
-# PostgreSQL
-op.create_index('idx_users_email', 'users', ['email'], postgresql_concurrently=True)
-```
-
-**Index Naming**: `idx_<table>_<column(s)>` (e.g., `idx_users_email`, `idx_orders_user_id_created_at`)
+- Use concurrent creation on large tables (`postgresql_concurrently=True`)
+- Naming: `idx_<table>_<columns>`
 
 ## Data Migrations
 
-**Separate from Schema**: Never mix schema and data changes in one migration.
+- Separate from schema changes — never mix in one migration
+- Batch process large datasets. Make idempotent (safe to re-run).
 
-**Batch Processing**: Process large datasets in batches to avoid memory issues and long-running transactions.
+## Zero-Downtime
 
-**Idempotency**: Data migrations should be safe to run multiple times:
-```python
-# GOOD - idempotent
-op.execute("INSERT INTO settings (key, value) VALUES ('flag', 'true') ON CONFLICT (key) DO NOTHING")
-```
+New migrations must work with currently deployed code. Deploy order: migration first, then new code.
 
-## Zero-Downtime Deployments
+## Red Flags — STOP
 
-**Backwards Compatibility**: New migrations must work with the currently deployed code version. Deploy order:
-1. Deploy migration (schema change)
-2. Deploy new code (uses new schema)
+Modifying deployed migration, dropping column without multi-step plan, missing rollback, mixing schema+data, NOT NULL without default on large table, non-concurrent index on production.
 
-## Red Flags - Stop and Reconsider
+## Checklist
 
-If you're about to:
-- Modify an existing migration file that's been deployed
-- Drop a column without a multi-step plan
-- Create a migration without a down method
-- Mix schema and data changes in one migration
-- Add a NOT NULL column without a default to a large table
-- Create an index without CONCURRENT on a production table
-
-**STOP. Plan a safer approach.**
-
-## Checklist Before Committing
-
-- [ ] Migration has descriptive timestamp-based name
-- [ ] Down/rollback method implemented and tested
-- [ ] Ran migration up and down successfully
-- [ ] No schema and data changes mixed
-- [ ] Large table indexes use concurrent creation
-- [ ] NOT NULL columns on existing tables have defaults
-- [ ] Changes are backwards compatible with deployed code
+- [ ] Descriptive timestamp-based name
+- [ ] Rollback implemented and tested
+- [ ] Ran up and down successfully
+- [ ] No schema+data mixed
+- [ ] Large indexes use concurrent creation
+- [ ] NOT NULL columns have defaults
+- [ ] Backwards compatible with deployed code

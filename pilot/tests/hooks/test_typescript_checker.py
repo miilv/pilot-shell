@@ -264,56 +264,6 @@ class TestCheckTypescriptEslintIssues:
         assert "3 eslint" in reason
 
 
-class TestCheckTypescriptTscIssues:
-    """TypeScript compiler issue detection."""
-
-    def test_tsc_errors_reported_in_reason(self, tmp_path: Path) -> None:
-        """tsc type errors are counted."""
-        ts_file = tmp_path / "app.ts"
-        ts_file.write_text("const x: string = 1;\n")
-
-        tsc_output = "app.ts(1,7): error TS2322: Type 'number' is not assignable to type 'string'.\n"
-
-        mock_prettier = MagicMock(returncode=0, stdout="", stderr="")
-        mock_tsc = MagicMock(returncode=2, stdout=tsc_output, stderr="")
-
-        def run_side_effect(cmd, **kwargs):
-            if "tsc" in cmd[0]:
-                return mock_tsc
-            return mock_prettier
-
-        with (
-            patch("_checkers.typescript.strip_typescript_comments"),
-            patch("_checkers.typescript.check_file_length"),
-            patch("_checkers.typescript.find_project_root", return_value=None),
-            patch("_checkers.typescript.find_tool", side_effect=lambda name, _: f"/usr/bin/{name}" if name in ("prettier", "tsc") else None),
-            patch("_checkers.typescript.subprocess.run", side_effect=run_side_effect),
-        ):
-            exit_code, reason = check_typescript(ts_file)
-
-        assert exit_code == 2
-        assert "1 tsc" in reason
-
-    def test_tsc_skipped_for_js_files(self, tmp_path: Path) -> None:
-        """tsc is not run for .js files."""
-        js_file = tmp_path / "app.js"
-        js_file.write_text("const x = 1;\n")
-
-        mock_result = MagicMock(returncode=0, stdout="", stderr="")
-
-        with (
-            patch("_checkers.typescript.strip_typescript_comments"),
-            patch("_checkers.typescript.check_file_length"),
-            patch("_checkers.typescript.find_project_root", return_value=None),
-            patch("_checkers.typescript.find_tool", return_value=None),
-            patch("_checkers.typescript.subprocess.run", return_value=mock_result),
-        ):
-            exit_code, reason = check_typescript(js_file)
-
-        assert exit_code == 0
-        assert reason == ""
-
-
 class TestCheckTypescriptCleanFile:
     """Clean files should pass."""
 
@@ -326,20 +276,17 @@ class TestCheckTypescriptCleanFile:
 
         mock_prettier = MagicMock(returncode=0, stdout="", stderr="")
         mock_eslint = MagicMock(returncode=0, stdout=eslint_json, stderr="")
-        mock_tsc = MagicMock(returncode=0, stdout="", stderr="")
 
-        def run_side_effect(cmd, **kwargs):
+        def run_side_effect(cmd, **_kwargs):
             if "eslint" in cmd[0]:
                 return mock_eslint
-            if "tsc" in cmd[0]:
-                return mock_tsc
             return mock_prettier
 
         with (
             patch("_checkers.typescript.strip_typescript_comments"),
             patch("_checkers.typescript.check_file_length"),
             patch("_checkers.typescript.find_project_root", return_value=None),
-            patch("_checkers.typescript.find_tool", side_effect=lambda name, _: f"/usr/bin/{name}"),
+            patch("_checkers.typescript.find_tool", side_effect=lambda name, _: f"/usr/bin/{name}" if name in ("prettier", "eslint") else None),
             patch("_checkers.typescript.subprocess.run", side_effect=run_side_effect),
         ):
             exit_code, reason = check_typescript(ts_file)
@@ -348,31 +295,24 @@ class TestCheckTypescriptCleanFile:
         assert reason == ""
 
 
-class TestCheckTypescriptCombinedIssues:
-    """Both eslint and tsc issues at once."""
+class TestCheckTypescriptTscNotCalled:
+    """Verify tsc is NOT called (removed from per-edit hooks)."""
 
-    def test_both_tools_report_issues(self, tmp_path: Path) -> None:
-        """Combined issues from eslint and tsc are reported."""
+    def test_tsc_not_invoked_even_if_available(self, tmp_path: Path) -> None:
+        """Even when tsc is on PATH, it is not called."""
         ts_file = tmp_path / "app.ts"
         ts_file.write_text("const x = 1;\n")
 
-        eslint_json = json.dumps([{
-            "filePath": str(ts_file),
-            "errorCount": 1,
-            "warningCount": 0,
-            "messages": [{"line": 1, "ruleId": "no-unused-vars", "message": "unused", "severity": 2}],
-        }])
-        tsc_output = "app.ts(1,7): error TS2322: Type error\n"
-
+        eslint_json = json.dumps([{"filePath": str(ts_file), "errorCount": 0, "warningCount": 0, "messages": []}])
         mock_prettier = MagicMock(returncode=0, stdout="", stderr="")
-        mock_eslint = MagicMock(returncode=1, stdout=eslint_json, stderr="")
-        mock_tsc = MagicMock(returncode=2, stdout=tsc_output, stderr="")
+        mock_eslint = MagicMock(returncode=0, stdout=eslint_json, stderr="")
 
-        def run_side_effect(cmd, **kwargs):
+        called_commands: list[list[str]] = []
+
+        def run_side_effect(cmd, **_kwargs):
+            called_commands.append(cmd)
             if "eslint" in cmd[0]:
                 return mock_eslint
-            if "tsc" in cmd[0]:
-                return mock_tsc
             return mock_prettier
 
         with (
@@ -382,45 +322,7 @@ class TestCheckTypescriptCombinedIssues:
             patch("_checkers.typescript.find_tool", side_effect=lambda name, _: f"/usr/bin/{name}"),
             patch("_checkers.typescript.subprocess.run", side_effect=run_side_effect),
         ):
-            exit_code, reason = check_typescript(ts_file)
-
-        assert exit_code == 2
-        assert "eslint" in reason
-        assert "tsc" in reason
-
-
-class TestCheckTypescriptTsconfigDetection:
-    """tsconfig.json detection for tsc."""
-
-    def test_uses_tsconfig_when_present(self, tmp_path: Path) -> None:
-        """tsc uses --project with tsconfig.json when found."""
-        (tmp_path / "package.json").write_text("{}")
-        (tmp_path / "tsconfig.json").write_text("{}")
-        ts_file = tmp_path / "app.ts"
-        ts_file.write_text("const x = 1;\n")
-
-        mock_prettier = MagicMock(returncode=0, stdout="", stderr="")
-        mock_tsc = MagicMock(returncode=0, stdout="", stderr="")
-        eslint_json = json.dumps([{"filePath": str(ts_file), "errorCount": 0, "warningCount": 0, "messages": []}])
-        mock_eslint = MagicMock(returncode=0, stdout=eslint_json, stderr="")
-
-        calls = []
-
-        def run_side_effect(cmd, **kwargs):
-            calls.append(cmd)
-            if "tsc" in cmd[0]:
-                return mock_tsc
-            if "eslint" in cmd[0]:
-                return mock_eslint
-            return mock_prettier
-
-        with (
-            patch("_checkers.typescript.strip_typescript_comments"),
-            patch("_checkers.typescript.check_file_length"),
-            patch("_checkers.typescript.find_tool", side_effect=lambda name, _: f"/usr/bin/{name}"),
-            patch("_checkers.typescript.subprocess.run", side_effect=run_side_effect),
-        ):
             check_typescript(ts_file)
 
-        tsc_calls = [c for c in calls if "tsc" in c[0]]
-        assert any("--project" in c for c in tsc_calls)
+        invoked_binaries = [cmd[0] for cmd in called_commands]
+        assert not any("tsc" in b for b in invoked_binaries)

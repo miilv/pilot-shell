@@ -1,9 +1,8 @@
-"""Python file checker — comment stripping, ruff, basedpyright."""
+"""Python file checker — comment stripping, ruff."""
 
 from __future__ import annotations
 
 import io
-import json
 import re
 import shutil
 import subprocess
@@ -86,7 +85,7 @@ def strip_python_comments(file_path: Path) -> bool:
 
 
 def check_python(file_path: Path) -> tuple[int, str]:
-    """Check Python file with ruff and basedpyright. Returns (exit_code, reason)."""
+    """Check Python file with ruff. Returns (exit_code, reason)."""
     strip_python_comments(file_path)
 
     if "test_" in file_path.name or "spec" in file_path.name:
@@ -104,16 +103,13 @@ def check_python(file_path: Path) -> tuple[int, str]:
         except Exception:
             pass
 
-    has_ruff = ruff_bin is not None
-    has_basedpyright = shutil.which("basedpyright") is not None
-
-    if not (has_ruff or has_basedpyright):
+    if not ruff_bin:
         return 0, ""
 
     results: dict[str, tuple] = {}
     has_issues = False
 
-    if has_ruff and ruff_bin:
+    if ruff_bin:
         try:
             result = subprocess.run(
                 [ruff_bin, "check", "--output-format=concise", str(file_path)],
@@ -127,27 +123,6 @@ def check_python(file_path: Path) -> tuple[int, str]:
             if error_lines:
                 has_issues = True
                 results["ruff"] = (len(error_lines), error_lines)
-        except Exception:
-            pass
-
-    basedpyright_bin = shutil.which("basedpyright")
-    if basedpyright_bin:
-        try:
-            result = subprocess.run(
-                [basedpyright_bin, "--outputjson", str(file_path.resolve())],
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-            output = result.stdout + result.stderr
-            try:
-                data = json.loads(output)
-                error_count = data.get("summary", {}).get("errorCount", 0)
-                if error_count > 0:
-                    has_issues = True
-                    results["basedpyright"] = (error_count, data.get("generalDiagnostics", []))
-            except json.JSONDecodeError:
-                pass
         except Exception:
             pass
 
@@ -186,19 +161,6 @@ def _print_python_issues(file_path: Path, results: dict[str, tuple]) -> None:
                 msg = parts[1] if len(parts) > 1 else ""
                 msg = msg.replace("[*] ", "")
                 print(f"  {code}: {msg}", file=sys.stderr)
-        print("", file=sys.stderr)
-
-    if "basedpyright" in results:
-        count, diagnostics = results["basedpyright"]
-        plural = "issue" if count == 1 else "issues"
-        print("", file=sys.stderr)
-        print(f"🐍 BasedPyright: {count} {plural}", file=sys.stderr)
-        print("───────────────────────────────────────", file=sys.stderr)
-        for diag in diagnostics:
-            file_name = Path(diag.get("file", "")).name
-            line = diag.get("range", {}).get("start", {}).get("line", 0)
-            msg = diag.get("message", "").split("\n")[0]
-            print(f"  {file_name}:{line} - {msg}", file=sys.stderr)
         print("", file=sys.stderr)
 
     print(f"{RED}Fix Python issues above before continuing{NC}", file=sys.stderr)

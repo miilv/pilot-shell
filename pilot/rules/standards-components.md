@@ -8,121 +8,38 @@ paths:
 
 # Components Standards
 
-**Core Rule:** Build small, focused components with single responsibility. Compose complex UIs from simple pieces.
+**Core Rule:** Small, focused components with single responsibility. Compose complex UIs from simple pieces.
 
-## Component Design Principles
+## Design Principles
 
-### Single Responsibility
-
-Each component does one thing well. If you need "and" to describe it, split it.
-
-```tsx
-// Three focused components
-function UserProfileCard({ user }) { /* display only */ }
-function UserEditForm({ user, onSave }) { /* editing only */ }
-function UserNotifications({ userId }) { /* notifications only */ }
-```
-
-### Composition Over Configuration
-
-Build complex UIs by combining simple components, not by adding props.
-
-```tsx
-<Card>
-  <Card.Header align="left" color="blue">Title</Card.Header>
-  <Card.Body>Content</Card.Body>
-  <Card.Footer align="right">Actions</Card.Footer>
-</Card>
-```
-
-### Minimal Props
-
-Keep props under 5-7. More props = component doing too much.
-
-## Component Interface Design
-
-### Explicit Prop Types
-
-Always define prop types with TypeScript interfaces.
-
-```tsx
-interface ButtonProps {
-  variant?: 'primary' | 'secondary' | 'danger'
-  size?: 'sm' | 'md' | 'lg'
-  disabled?: boolean
-  onClick: () => void
-  children: React.ReactNode
-}
-
-function Button({
-  variant = 'primary',
-  size = 'md',
-  disabled = false,
-  onClick,
-  children
-}: ButtonProps) {
-  // Implementation
-}
-```
-
-### Sensible Defaults
-
-Provide defaults for optional props. Component should work with minimal configuration.
+- **Single responsibility:** If you need "and" to describe it, split it
+- **Composition over configuration:** Combine simple components, don't add props
+- **Minimal props:** Keep under 5-7. More = component doing too much
+- **Explicit prop types:** Always use TypeScript interfaces with sensible defaults
 
 ## State Management
 
-### Keep State Local
+- Keep state local — only lift when multiple components need it
+- If prop drilling 3+ levels, use composition or context instead
 
-State lives in the component that uses it. Only lift state when multiple components need it.
+## Naming
 
-```
-Does only this component need the state?
-├─ YES → Keep it local with useState/ref
-└─ NO → Do multiple children need it?
-    ├─ YES → Lift to common parent
-    └─ NO → Use global state (context/store)
-```
+- **Components:** PascalCase nouns (`UserCard`, `SearchInput`)
+- **Props:** camelCase. Booleans: `is*`, `has*`, `should*`, `can*`
+- **Events:** `on*` for props, `handle*` for internal functions
 
-### Avoid Prop Drilling
+## When to Split
 
-If passing props through 3+ levels, use composition or context instead.
-
-## Naming Conventions
-
-**Components:** PascalCase, descriptive noun (`Button`, `UserCard`, `SearchInput`)
-
-**Props:** camelCase, descriptive. Boolean props: `is*`, `has*`, `should*`, `can*`
-
-**Event handlers:** `on*` for props, `handle*` for internal functions
-```tsx
-function Form({ onSubmit }) {
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    onSubmit(data)
-  }
-  return <form onSubmit={handleSubmit}>...</form>
-}
-```
-
-## When to Split Components
-
-Split when:
 - Component exceeds 200-300 lines
-- Component has multiple responsibilities
-- Part of component is reusable elsewhere
-- Component has complex conditional rendering
-- Testing becomes difficult due to complexity
+- Multiple responsibilities or complex conditional rendering
+- Part is reusable elsewhere
+- Testing becomes difficult
 
-## Decision Checklist
+## Checklist
 
-Before completing component work:
-
-- [ ] Component has single, clear responsibility
-- [ ] Props are typed with TypeScript/PropTypes
-- [ ] Sensible defaults provided for optional props
-- [ ] State is as local as possible
-- [ ] Component name clearly describes purpose
-- [ ] Internal implementation details are private
-- [ ] Component is tested
+- [ ] Single, clear responsibility
+- [ ] Props typed with defaults
+- [ ] State as local as possible
 - [ ] No prop drilling beyond 2 levels
-- [ ] Component is under 300 lines (or split if larger)
+- [ ] Under 300 lines
+- [ ] Tested

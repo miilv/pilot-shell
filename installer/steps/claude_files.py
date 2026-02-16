@@ -17,7 +17,7 @@ from installer.downloads import (
 )
 from installer.steps.base import BaseStep
 
-SETTINGS_FILE = "settings.json"
+SETTINGS_FILE = "settings.local.json"
 
 REPO_URL = "https://github.com/maxritter/claude-pilot"
 
@@ -375,7 +375,7 @@ class ClaudeFilesStep(BaseStep):
             rel_path = Path(file_path).relative_to("pilot")
             return home_pilot_plugin_dir / rel_path
         elif category == "settings":
-            return home_claude_dir / "settings.json"
+            return ctx.project_dir / ".claude" / "settings.local.json"
         else:
             return ctx.project_dir / file_path
 
