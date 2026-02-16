@@ -422,7 +422,7 @@ class ClaudeFilesStep(BaseStep):
             rel_path = Path(file_path).relative_to("pilot")
             return home_pilot_plugin_dir / rel_path
         elif category == "settings":
-            return ctx.project_dir / ".claude" / "settings.local.json"
+            return ctx.project_dir / ".claude" / SETTINGS_FILE
         else:
             return ctx.project_dir / file_path
 
@@ -437,7 +437,7 @@ class ClaudeFilesStep(BaseStep):
         if not ctx.local_mode:
             self._update_hooks_config(home_pilot_plugin_dir)
 
-        self._merge_app_config(ctx)
+        self._merge_app_config()
         self._patch_overlapping_settings(ctx)
         self._cleanup_stale_rules(ctx)
         self._ensure_project_rules_dir(ctx)
@@ -481,7 +481,7 @@ class ClaudeFilesStep(BaseStep):
         except (json.JSONDecodeError, OSError, IOError):
             pass
 
-    def _merge_app_config(self, ctx: InstallContext) -> None:
+    def _merge_app_config(self) -> None:
         """Merge app-level preferences from pilot/claude.json into ~/.claude.json.
 
         Reads the installed claude.json template and merges its keys into the
@@ -518,7 +518,7 @@ class ClaudeFilesStep(BaseStep):
         override settings.local.json. Remove overlapping env vars and non-permission
         top-level keys from both so settings.local.json takes clean precedence.
         """
-        local_settings_path = ctx.project_dir / ".claude" / "settings.local.json"
+        local_settings_path = ctx.project_dir / ".claude" / SETTINGS_FILE
         if not local_settings_path.exists():
             return
 

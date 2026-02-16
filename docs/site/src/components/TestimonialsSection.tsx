@@ -7,7 +7,7 @@ const testimonials = [
     role: "Senior Developer",
   },
   {
-    quote: "Auto-compaction is a game-changer. I used to lose context halfway through complex refactors. Now it kicks in seamlessly and Claude just keeps going without missing a beat.",
+    quote: "The persistent memory is what sold me. I can pick up a project after a week and Claude already knows my architecture decisions, the bugs we fixed, and why we chose certain patterns. No more re-explaining everything.",
     role: "Full-Stack Engineer",
   },
   {

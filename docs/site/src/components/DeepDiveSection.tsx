@@ -167,7 +167,7 @@ const DeepDiveSection = () => {
             </div>
             <div>
               <h3 className="text-2xl font-bold text-foreground">Hooks Pipeline</h3>
-              <p className="text-sm text-muted-foreground">12 hooks across 6 lifecycle events — fire automatically at every stage</p>
+              <p className="text-sm text-muted-foreground">15 hooks across 6 lifecycle events — fire automatically at every stage</p>
             </div>
           </div>
 

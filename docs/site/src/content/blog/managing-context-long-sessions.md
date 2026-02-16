@@ -101,7 +101,7 @@ Here's how it works:
 
 ### 1. Context Monitoring
 
-A background hook continuously tracks context usage percentage. At 80%, it warns that context is getting high. At 90%, auto-compaction triggers and state is preserved via hooks.
+A background hook continuously tracks context usage percentage. At 75%, it warns that context is getting high. At 80%+, state-preservation hooks prepare for Claude Code's built-in auto-compaction at ~83%.
 
 ### 2. State Preservation
 

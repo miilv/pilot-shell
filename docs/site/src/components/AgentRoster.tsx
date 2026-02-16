@@ -45,7 +45,7 @@ const agents = [
     color: "text-amber-400",
     bgColor: "bg-amber-400/10",
     borderColor: "border-amber-400/30",
-    desc: "Monitors context usage. Auto-compaction preserves state via hooks — no work lost, ever.",
+    desc: "Monitors context usage. Hooks capture plan state and task progress before compaction, then restore it after — no work lost, ever.",
   },
   {
     name: "PLANNER",

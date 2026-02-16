@@ -46,7 +46,7 @@ So I built Pilot. Instead of adding process on top, it bakes quality into every 
 | --------------------------- | --------------------------------------------------------------- |
 | Writes code, skips tests    | TDD enforced — RED, GREEN, REFACTOR on every feature            |
 | No quality checks           | Hooks auto-lint, format, type-check on every file edit          |
-| Context degrades mid-task   | Intelligent context management with auto-compaction             |
+| Context degrades mid-task   | Hooks preserve and restore state across compaction cycles       |
 | Every session starts fresh  | Persistent memory across sessions via Pilot Console             |
 | Hope it works               | Verifier sub-agents perform code review before marking complete |
 | No codebase knowledge       | Production-tested rules loaded into every session               |
@@ -65,9 +65,9 @@ There are other AI coding frameworks out there. I tried them. They add complexit
 
 This isn't a vibe coding tool. It's built for developers who ship to production and need code that actually works. Every rule in the system comes from daily professional use: real bugs caught, real regressions prevented, real sessions where the AI cut corners and the hooks stopped it. The rules are continuously refined based on what measurably improves output.
 
-**The result: you can actually walk away.** Start a `/spec` task, approve the plan, then go grab a coffee. When you come back, the work is done — tested, verified, formatted, and ready to ship. Auto-compaction handles session continuity automatically, quality hooks catch every mistake along the way, and verifier agents review the code before marking it complete. No babysitting required.
+**The result: you can actually walk away.** Start a `/spec` task, approve the plan, then go grab a coffee. When you come back, the work is done — tested, verified, formatted, and ready to ship. Hooks preserve state across compaction cycles, persistent memory carries context between sessions, quality hooks catch every mistake along the way, and verifier agents review the code before marking it complete. No babysitting required.
 
-The system stays fast because it stays simple. Quick mode is direct execution with zero overhead — no sub-agents, no plan files, no directory scaffolding. You describe the task and it gets done. `/spec` adds structure only when you need it: plan verification, TDD enforcement, independent code review, automated quality checks. Both modes share the same quality hooks. Both modes benefit from automatic context compaction and persistent memory.
+The system stays fast because it stays simple. Quick mode is direct execution with zero overhead — no sub-agents, no plan files, no directory scaffolding. You describe the task and it gets done. `/spec` adds structure only when you need it: plan verification, TDD enforcement, independent code review, automated quality checks. Both modes share the same quality hooks. Both modes benefit from persistent memory and hooks that preserve state across compaction.
 
 ---
 
@@ -327,7 +327,7 @@ Run `/sync` after adding servers to generate documentation.
 
 ### The Hooks Pipeline
 
-**12 hooks** fire automatically across 6 lifecycle events:
+**15 hooks** fire automatically across 6 lifecycle events:
 
 #### SessionStart (on startup, clear, or compact)
 
@@ -431,7 +431,7 @@ Conditional rules activated by file type — loaded only when working with match
 | TypeScript| `*.ts`, `*.tsx`, `*.js`, `*.jsx`                 | npm/pnpm, Jest, ESLint, Prettier, React patterns                                  |
 | Go        | `*.go`                                           | Modules, testing, formatting, error handling                                       |
 | Frontend  | `*.tsx`, `*.jsx`, `*.html`, `*.vue`, `*.css`     | Components, CSS methodology, accessibility, responsive design, design principles   |
-| Backend   | `**/models/**`, `**/routes/**`, `**/api/**`, etc | API design, data models, query optimization, migrations                            |
+| Backend   | `**/models/**`, `**/routes/**`, `**/api/**`, etc. | API design, data models, query optimization, migrations                            |
 
 ### MCP Servers
 
@@ -475,7 +475,7 @@ Access the web-based Claude Pilot Console to visualize your development workflow
 
 > "Other frameworks I tried added so much overhead that half my tokens went to the system itself. Pilot is lean — quick mode has zero scaffolding, and even /spec only adds structure where it matters. More of my context goes to actual work."
 
-> "Auto-compaction solved the problem I didn't know how to fix. Complex refactors used to stall at 60% because Claude lost track of what it was doing. Now compaction kicks in seamlessly and Claude just keeps going without missing a beat."
+> "The persistent memory changed everything. I can pick up a project after a week and Claude already knows my architecture decisions, the bugs we fixed, and why we chose certain patterns. No more re-explaining the same context every session."
 
 ---
 
@@ -537,14 +537,14 @@ Yes. Pilot enhances Claude Code — it doesn't replace it. You need an active Cl
 <details>
 <summary><b>Does Pilot work with existing projects?</b></summary>
 
-Yes — that's the primary use case. Pilot doesn't scaffold or restructure your code. You install it, run `/sync`, and it explores your codebase to discover your tech stack, conventions, and patterns. From there, every session has full context about your project. The more complex and established your codebase, the more value Pilot adds — quality hooks catch regressions, auto-compaction preserves context across long sessions, and `/spec` plans features against your real architecture.
+Yes — that's the primary use case. Pilot doesn't scaffold or restructure your code. You install it, run `/sync`, and it explores your codebase to discover your tech stack, conventions, and patterns. From there, every session has full context about your project. The more complex and established your codebase, the more value Pilot adds — quality hooks catch regressions, persistent memory preserves decisions across sessions, and `/spec` plans features against your real architecture.
 
 </details>
 
 <details>
 <summary><b>Does Pilot work with any programming language?</b></summary>
 
-Pilot's quality hooks (auto-formatting, linting, type checking) currently support Python, TypeScript/JavaScript, and Go out of the box. TDD enforcement, spec-driven development, auto-compaction, persistent memory, and all rules and standards work with any language that Claude Code supports. You can add custom hooks for additional languages.
+Pilot's quality hooks (auto-formatting, linting, type checking) currently support Python, TypeScript/JavaScript, and Go out of the box. TDD enforcement, spec-driven development, persistent memory, context preservation hooks, and all rules and standards work with any language that Claude Code supports. You can add custom hooks for additional languages.
 
 </details>
 

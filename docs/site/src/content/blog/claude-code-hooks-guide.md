@@ -162,6 +162,7 @@ Claude Pilot installs several hooks automatically:
 - **TDD Enforcer** (PostToolUse): Reminds Claude to write tests before production code
 - **Context Monitor** (PostToolUse): Tracks context usage and prepares for auto-compaction at 90%
 - **Tool Redirect** (PreToolUse): Blocks inefficient tools and suggests better alternatives
-- **Session End** (SessionEnd): Saves session state for context restoration after compaction
+- **PreCompact** (PreCompact): Captures active plan, task progress, and key context to memory before compaction
+- **Session End** (SessionEnd): Stops worker daemon when no other sessions are active and sends completion notifications
 
 These hooks work together to enforce quality workflows without relying on Claude remembering rules. Hooks are deterministic — they always run, unlike rules which Claude might occasionally skip.
