@@ -39,9 +39,6 @@ while [ $# -gt 0 ]; do
 done
 
 get_version_from_redirect() {
-	# Fallback: extract version from GitHub releases/latest redirect URL.
-	# GitHub redirects /releases/latest to /releases/tag/vX.Y.Z.
-	# This endpoint is NOT rate-limited (unlike the API).
 	local redirect_url="https://github.com/${REPO}/releases/latest"
 	local final_url=""
 
@@ -67,7 +64,6 @@ get_latest_release() {
 	local version=""
 	local http_code=""
 
-	# Primary: GitHub API (returns structured JSON)
 	if command -v curl >/dev/null 2>&1; then
 		local response=""
 		response=$(curl -sL -w "\n%{http_code}" "$api_url" 2>/dev/null) || true
@@ -82,7 +78,6 @@ get_latest_release() {
 		return 0
 	fi
 
-	# Fallback: redirect-based detection (not rate-limited)
 	version=$(get_version_from_redirect) || true
 	if [ -n "$version" ]; then
 		echo "$version"
@@ -461,7 +456,6 @@ run_installer() {
 		local_arg="--local --local-repo-dir $(pwd)"
 	fi
 
-	# Local mode: use Python source from current directory
 	if [ "$USE_LOCAL_INSTALLER" = true ]; then
 		export PYTHONPATH="$(pwd):${PYTHONPATH:-}"
 		if ! is_in_container && [ ! -d ".devcontainer" ]; then
@@ -474,7 +468,6 @@ run_installer() {
 		return
 	fi
 
-	# Run compiled installer binary
 	local wrapper_path="${installer_dir}/installer"
 	if ! is_in_container && [ ! -d ".devcontainer" ]; then
 		"$wrapper_path" install --local-system $version_arg "$@"
