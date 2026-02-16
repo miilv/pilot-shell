@@ -18,18 +18,16 @@ def test_install_sh_runs_python_installer():
     assert "--local-system" in content, "install.sh must support --local-system flag"
 
 
-def test_install_sh_downloads_installer_files():
-    """Verify install.sh downloads the installer Python package dynamically."""
+def test_install_sh_downloads_installer_binary():
+    """Verify install.sh downloads the compiled installer binary from release assets."""
     install_sh = Path(__file__).parent.parent.parent.parent / "install.sh"
     content = install_sh.read_text()
 
     assert "download_installer" in content, "install.sh must have download_installer function"
 
-    assert "api.github.com" in content, "Must use GitHub API for file discovery"
-    assert "git/trees" in content, "Must use git trees API endpoint"
-
-    assert "installer/" in content, "Must filter for installer directory"
-    assert ".py" in content, "Must filter for Python files"
+    assert "installer-" in content, "Must reference installer binary with platform suffix"
+    assert ".so" in content, "Must download .so binary file"
+    assert "get_installer_so_name" in content, "Must have platform-specific .so name function"
 
 
 def test_install_sh_runs_installer():

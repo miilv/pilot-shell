@@ -141,7 +141,8 @@ jobs:
               apt-get update && apt-get install -y binutils build-essential && \
               pip install . && \
               python -m launcher.build --release --version ${{ steps.version.outputs.VERSION }} && \
-              ls -la launcher/dist/
+              python -m installer.build --release --version ${{ steps.version.outputs.VERSION }} && \
+              ls -la launcher/dist/ installer/dist/
             "
 
       - name: Upload artifact
@@ -151,6 +152,8 @@ jobs:
           path: |
             launcher/dist/pilot-linux-arm64.so
             launcher/dist/pilot
+            installer/dist/installer-linux-arm64.so
+            installer/dist/installer
           retention-days: 1
 
   build-pilot-darwin-arm64:
@@ -193,13 +196,16 @@ jobs:
         run: |
           pip install .
           python -m launcher.build --release --version ${{ steps.version.outputs.VERSION }}
-          ls -la launcher/dist/
+          python -m installer.build --release --version ${{ steps.version.outputs.VERSION }}
+          ls -la launcher/dist/ installer/dist/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: pilot-darwin-arm64
-          path: launcher/dist/pilot-darwin-arm64.so
+          path: |
+            launcher/dist/pilot-darwin-arm64.so
+            installer/dist/installer-darwin-arm64.so
           retention-days: 1
 
   publish-prerelease:
@@ -267,7 +273,10 @@ jobs:
             --prerelease \
             artifacts/pilot-linux-arm64/pilot-linux-arm64.so \
             artifacts/pilot-linux-arm64/pilot \
-            artifacts/pilot-darwin-arm64/pilot-darwin-arm64.so
+            artifacts/pilot-darwin-arm64/pilot-darwin-arm64.so \
+            artifacts/pilot-linux-arm64/installer-linux-arm64.so \
+            artifacts/pilot-linux-arm64/installer \
+            artifacts/pilot-darwin-arm64/installer-darwin-arm64.so
 
           echo "Pre-release $VERSION created successfully"
 

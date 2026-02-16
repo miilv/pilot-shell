@@ -274,7 +274,8 @@ jobs:
               apt-get update && apt-get install -y binutils build-essential && \
               pip install . && \
               python -m launcher.build --release --version \$BUILD_VERSION && \
-              ls -la launcher/dist/
+              python -m installer.build --release --version \$BUILD_VERSION && \
+              ls -la launcher/dist/ installer/dist/
             "
 
       - name: Upload artifact
@@ -284,6 +285,8 @@ jobs:
           path: |
             launcher/dist/pilot-linux-x86_64.so
             launcher/dist/pilot
+            installer/dist/installer-linux-x86_64.so
+            installer/dist/installer
           retention-days: 1
 
   build-pilot-arm64:
@@ -319,14 +322,17 @@ jobs:
               apt-get update && apt-get install -y binutils build-essential && \
               pip install . && \
               python -m launcher.build --release --version \$BUILD_VERSION && \
-              ls -la launcher/dist/
+              python -m installer.build --release --version \$BUILD_VERSION && \
+              ls -la launcher/dist/ installer/dist/
             "
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: pilot-linux-arm64
-          path: launcher/dist/pilot-linux-arm64.so
+          path: |
+            launcher/dist/pilot-linux-arm64.so
+            installer/dist/installer-linux-arm64.so
           retention-days: 1
 
   build-pilot-darwin-x86:
@@ -367,13 +373,16 @@ jobs:
         run: |
           pip install .
           python -m launcher.build --release --version ${{ needs.prepare-release.outputs.version }}
-          ls -la launcher/dist/
+          python -m installer.build --release --version ${{ needs.prepare-release.outputs.version }}
+          ls -la launcher/dist/ installer/dist/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: pilot-darwin-x86_64
-          path: launcher/dist/pilot-darwin-x86_64.so
+          path: |
+            launcher/dist/pilot-darwin-x86_64.so
+            installer/dist/installer-darwin-x86_64.so
           retention-days: 1
 
   build-pilot-darwin-arm64:
@@ -414,13 +423,16 @@ jobs:
         run: |
           pip install .
           python -m launcher.build --release --version ${{ needs.prepare-release.outputs.version }}
-          ls -la launcher/dist/
+          python -m installer.build --release --version ${{ needs.prepare-release.outputs.version }}
+          ls -la launcher/dist/ installer/dist/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: pilot-darwin-arm64
-          path: launcher/dist/pilot-darwin-arm64.so
+          path: |
+            launcher/dist/pilot-darwin-arm64.so
+            installer/dist/installer-darwin-arm64.so
           retention-days: 1
 
   # Manual approval gate - displays version and changelog, waits for approval
@@ -621,13 +633,18 @@ jobs:
             sleep $RETRY_DELAY
           done
 
-          # Upload all .so files
+          # Upload all .so files (pilot and installer)
           gh release upload "v${VERSION}" \
             artifacts/pilot-linux-x86_64/pilot-linux-x86_64.so \
             artifacts/pilot-linux-arm64/pilot-linux-arm64.so \
             artifacts/pilot-darwin-x86_64/pilot-darwin-x86_64.so \
             artifacts/pilot-darwin-arm64/pilot-darwin-arm64.so \
             artifacts/pilot-linux-x86_64/pilot \
+            artifacts/pilot-linux-x86_64/installer-linux-x86_64.so \
+            artifacts/pilot-linux-arm64/installer-linux-arm64.so \
+            artifacts/pilot-darwin-x86_64/installer-darwin-x86_64.so \
+            artifacts/pilot-darwin-arm64/installer-darwin-arm64.so \
+            artifacts/pilot-linux-x86_64/installer \
             --clobber
 
           echo "All artifacts uploaded successfully"

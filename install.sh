@@ -38,12 +38,41 @@ while [ $# -gt 0 ]; do
 	esac
 done
 
+get_version_from_redirect() {
+	# Fallback: extract version from GitHub releases/latest redirect URL.
+	# GitHub redirects /releases/latest to /releases/tag/vX.Y.Z.
+	# This endpoint is NOT rate-limited (unlike the API).
+	local redirect_url="https://github.com/${REPO}/releases/latest"
+	local final_url=""
+
+	if command -v curl >/dev/null 2>&1; then
+		final_url=$(curl -sIL -o /dev/null -w '%{url_effective}' "$redirect_url" 2>/dev/null) || true
+	elif command -v wget >/dev/null 2>&1; then
+		final_url=$(wget --spider -S --max-redirect=5 "$redirect_url" 2>&1 | grep -i 'Location:' | tail -1 | sed 's/.*Location: *//' | tr -d '\r') || true
+	fi
+
+	if [ -n "$final_url" ]; then
+		local version=""
+		version=$(echo "$final_url" | sed -n 's|.*/releases/tag/v\(.*\)|\1|p') || true
+		if [ -n "$version" ]; then
+			echo "$version"
+			return 0
+		fi
+	fi
+	return 1
+}
+
 get_latest_release() {
 	local api_url="https://api.github.com/repos/${REPO}/releases/latest"
 	local version=""
+	local http_code=""
 
+	# Primary: GitHub API (returns structured JSON)
 	if command -v curl >/dev/null 2>&1; then
-		version=$(curl -fsSL "$api_url" 2>/dev/null | grep -m1 '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/') || true
+		local response=""
+		response=$(curl -sL -w "\n%{http_code}" "$api_url" 2>/dev/null) || true
+		http_code=$(echo "$response" | tail -1)
+		version=$(echo "$response" | sed '$d' | grep -m1 '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/') || true
 	elif command -v wget >/dev/null 2>&1; then
 		version=$(wget -qO- "$api_url" 2>/dev/null | grep -m1 '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/') || true
 	fi
@@ -52,6 +81,14 @@ get_latest_release() {
 		echo "$version"
 		return 0
 	fi
+
+	# Fallback: redirect-based detection (not rate-limited)
+	version=$(get_version_from_redirect) || true
+	if [ -n "$version" ]; then
+		echo "$version"
+		return 0
+	fi
+
 	return 1
 }
 
@@ -206,44 +243,68 @@ setup_devcontainer() {
 
 download_installer() {
 	local installer_dir="$HOME/.pilot/installer"
+	local platform_suffix
+	local so_name
+	local base_url
 
-	echo "  [..] Downloading installer..."
+	platform_suffix=$(get_platform_suffix) || {
+		echo "  [!!] Unsupported platform for installer binary"
+		exit 1
+	}
 
-	rm -rf "$installer_dir"
-	mkdir -p "$installer_dir/installer"
+	so_name=$(get_installer_so_name)
 
-	local tag_ref=""
 	case "$VERSION" in
-	dev-*) tag_ref="$VERSION" ;;
-	*) tag_ref="v${VERSION}" ;;
+	dev-*) base_url="https://github.com/${REPO}/releases/download/${VERSION}" ;;
+	*) base_url="https://github.com/${REPO}/releases/download/v${VERSION}" ;;
 	esac
-	local api_url="https://api.github.com/repos/${REPO}/git/trees/${tag_ref}?recursive=true"
-	local tree_json=""
+
+	if [ -d "$installer_dir" ]; then
+		rm -rf "$installer_dir"
+	fi
+	mkdir -p "$installer_dir"
+
+	echo "  [..] Downloading installer binary (${platform_suffix})..."
+
+	local so_url="${base_url}/installer-${platform_suffix}.so"
+	local so_path="${installer_dir}/${so_name}"
 
 	if command -v curl >/dev/null 2>&1; then
-		tree_json=$(curl -fsSL "$api_url" 2>/dev/null) || true
+		if ! curl -fsSL "$so_url" -o "$so_path" 2>/dev/null; then
+			echo "  [!!] Failed to download installer binary"
+			echo "  [!!] Please try again or specify a version: VERSION=X.Y.Z curl ... | bash"
+			exit 1
+		fi
 	elif command -v wget >/dev/null 2>&1; then
-		tree_json=$(wget -qO- "$api_url" 2>/dev/null) || true
+		if ! wget -q "$so_url" -O "$so_path" 2>/dev/null; then
+			echo "  [!!] Failed to download installer binary"
+			echo "  [!!] Please try again or specify a version: VERSION=X.Y.Z curl ... | bash"
+			exit 1
+		fi
 	fi
 
-	if [ -z "$tree_json" ]; then
-		echo "  [!!] Failed to fetch file list from GitHub API"
-		exit 1
+	chmod +x "$so_path"
+
+	local wrapper_url="${base_url}/installer"
+	local wrapper_path="${installer_dir}/installer"
+
+	if command -v curl >/dev/null 2>&1; then
+		if ! curl -fsSL "$wrapper_url" -o "$wrapper_path" 2>/dev/null; then
+			echo "  [!!] Failed to download installer wrapper"
+			rm -f "$so_path"
+			exit 1
+		fi
+	elif command -v wget >/dev/null 2>&1; then
+		if ! wget -q "$wrapper_url" -O "$wrapper_path" 2>/dev/null; then
+			echo "  [!!] Failed to download installer wrapper"
+			rm -f "$so_path"
+			exit 1
+		fi
 	fi
 
-	echo "$tree_json" | grep -oE '"path": ?"installer/[^"]*\.py"' | sed 's/"path": *"//g; s/"$//g' | while IFS= read -r file_path; do
-		case "$file_path" in
-		*__pycache__* | *dist/* | *build/* | *tests/*) continue ;;
-		esac
+	chmod +x "$wrapper_path"
 
-		local dest_file="$installer_dir/$file_path"
-		mkdir -p "$(dirname "$dest_file")"
-		download_file "$file_path" "$dest_file"
-	done
-
-	download_file "pyproject.toml" "$installer_dir/pyproject.toml"
-
-	echo "  [OK] Installer downloaded"
+	echo "  [OK] Installer binary ready"
 }
 
 get_platform_suffix() {
@@ -278,6 +339,21 @@ get_local_so_name() {
 	esac
 
 	echo "pilot.cpython-312-${platform_tag}.so"
+}
+
+get_installer_so_name() {
+	local platform_tag=""
+	case "$(uname -s)" in
+	Linux)
+		case "$(uname -m)" in
+		x86_64 | amd64) platform_tag="x86_64-linux-gnu" ;;
+		arm64 | aarch64) platform_tag="aarch64-linux-gnu" ;;
+		esac
+		;;
+	Darwin) platform_tag="darwin" ;;
+	esac
+
+	echo "pilot_installer.cpython-312-${platform_tag}.so"
 }
 
 download_pilot_binary() {
@@ -379,20 +455,31 @@ run_installer() {
 
 	echo ""
 
-	export PYTHONPATH="$installer_dir:${PYTHONPATH:-}"
-
 	local version_arg="--target-version $VERSION"
 	local local_arg=""
 	if [ "$USE_LOCAL_INSTALLER" = true ]; then
 		local_arg="--local --local-repo-dir $(pwd)"
 	fi
 
+	# Local mode: use Python source from current directory
+	if [ "$USE_LOCAL_INSTALLER" = true ]; then
+		export PYTHONPATH="$(pwd):${PYTHONPATH:-}"
+		if ! is_in_container && [ ! -d ".devcontainer" ]; then
+			uv run --python 3.12 --no-project --with rich \
+				python -m installer install --local-system $version_arg $local_arg "$@"
+		else
+			uv run --python 3.12 --no-project --with rich \
+				python -m installer install $version_arg $local_arg "$@"
+		fi
+		return
+	fi
+
+	# Run compiled installer binary
+	local wrapper_path="${installer_dir}/installer"
 	if ! is_in_container && [ ! -d ".devcontainer" ]; then
-		uv run --python 3.12 --no-project --with rich \
-			python -m installer install --local-system $version_arg $local_arg "$@"
+		"$wrapper_path" install --local-system $version_arg "$@"
 	else
-		uv run --python 3.12 --no-project --with rich \
-			python -m installer install $version_arg $local_arg "$@"
+		"$wrapper_path" install $version_arg "$@"
 	fi
 }
 
