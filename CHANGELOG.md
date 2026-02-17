@@ -2,6 +2,16 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.7.2] - 2026-02-17
+
+### Bug Fixes
+
+- Add retry logic to installer network operations
+
+### Miscellaneous
+
+- Updated Demo Gif
+
 ## [6.7.1] - 2026-02-17
 
 ### Bug Fixes
