@@ -2,6 +2,13 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.7.4] - 2026-02-17
+
+### Bug Fixes
+
+- Use --autostash on rebase during worktree sync
+- Prevent stash data loss during worktree sync
+
 ## [6.7.3] - 2026-02-17
 
 ### Bug Fixes
