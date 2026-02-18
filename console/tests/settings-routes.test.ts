@@ -152,7 +152,7 @@ describe('SettingsRoutes', () => {
       expect(m.body.commands['spec-plan']).toBe(DEFAULT_SETTINGS.commands['spec-plan']);
     });
 
-    it('should strip legacy 1m model without enabling extendedContext', async () => {
+    it('should auto-enable extendedContext when legacy 1m model found', async () => {
       fs.writeFileSync(configPath, JSON.stringify({ model: 'opus[1m]' }));
 
       const m = makeMockRes();
@@ -161,10 +161,10 @@ describe('SettingsRoutes', () => {
       await (routes as any).handleGet(req as Request, m.res as Response);
 
       expect(m.body.model).toBe('opus');
-      expect(m.body.extendedContext).toBe(false);
+      expect(m.body.extendedContext).toBe(true);
     });
 
-    it('should strip legacy 1m commands without enabling extendedContext', async () => {
+    it('should auto-enable extendedContext when legacy 1m commands found', async () => {
       fs.writeFileSync(configPath, JSON.stringify({ model: 'opus', commands: { spec: 'sonnet[1m]' } }));
 
       const m = makeMockRes();
@@ -173,7 +173,7 @@ describe('SettingsRoutes', () => {
       await (routes as any).handleGet(req as Request, m.res as Response);
 
       expect(m.body.commands.spec).toBe('sonnet');
-      expect(m.body.extendedContext).toBe(false);
+      expect(m.body.extendedContext).toBe(true);
     });
   });
 

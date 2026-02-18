@@ -71,6 +71,9 @@ export class SettingsRoutes extends BaseRouteHandler {
   }
 
   private mergeWithDefaults(raw: Record<string, unknown>): ModelSettings {
+    let hasLegacy1m =
+      typeof raw.model === "string" && raw.model.includes("[1m]");
+
     let mainModel =
       typeof raw.model === "string"
         ? SettingsRoutes.stripLegacy1m(raw.model)
@@ -92,6 +95,7 @@ export class SettingsRoutes extends BaseRouteHandler {
         rawCommands as Record<string, unknown>,
       )) {
         if (typeof v === "string") {
+          if (v.includes("[1m]")) hasLegacy1m = true;
           const stripped = SettingsRoutes.stripLegacy1m(v);
           if (MODEL_CHOICES.includes(stripped)) {
             mergedCommands[k] = stripped;
@@ -119,7 +123,7 @@ export class SettingsRoutes extends BaseRouteHandler {
       }
     }
 
-    const extendedContext = raw.extendedContext === true;
+    const extendedContext = raw.extendedContext === true || hasLegacy1m;
 
     return {
       model: mainModel,
