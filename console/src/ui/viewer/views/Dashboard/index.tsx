@@ -40,6 +40,7 @@ export function DashboardView() {
       {/* Stats Grid */}
       <StatsGrid stats={stats} specStats={specStats} />
 
+      {/* Workspace status cards — not filtered by project */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 [&>*]:h-full">
         <VexorStatus
           isIndexed={vexorStatus.isIndexed}
