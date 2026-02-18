@@ -1,18 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { Icon, Button, Tooltip } from '../../components/ui';
+import { useState, useEffect } from "react";
+import { Icon, Button, Tooltip } from "../../components/ui";
+import { NotificationBell } from "../../components/NotificationBell";
+import { useNotifications } from "../../hooks/useNotifications";
 
 interface TopbarActionsProps {
-  theme: 'light' | 'dark';
+  theme: "light" | "dark";
   onToggleTheme: () => void;
   onToggleLogs?: () => void;
 }
 
-export function TopbarActions({ theme, onToggleTheme, onToggleLogs }: TopbarActionsProps) {
+export function TopbarActions({
+  theme,
+  onToggleTheme,
+  onToggleLogs,
+}: TopbarActionsProps) {
   const [showLogout, setShowLogout] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
-    fetch('/api/auth/status')
+    fetch("/api/auth/status")
       .then((res) => res.json())
       .then((data) => {
         setShowLogout(data.authRequired);
@@ -25,12 +31,15 @@ export function TopbarActions({ theme, onToggleTheme, onToggleLogs }: TopbarActi
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      window.location.href = '/login';
+      await fetch("/api/auth/logout", { method: "POST" });
+      window.location.href = "/login";
     } catch {
       setIsLoggingOut(false);
     }
   };
+
+  const { notifications, unreadCount, markAsRead, markAllAsRead } =
+    useNotifications();
 
   return (
     <div className="flex items-center gap-2">
@@ -41,9 +50,15 @@ export function TopbarActions({ theme, onToggleTheme, onToggleLogs }: TopbarActi
           </Button>
         </Tooltip>
       )}
-      <Tooltip text={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`} position="bottom">
+      <Tooltip
+        text={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+        position="bottom"
+      >
         <Button variant="ghost" size="sm" onClick={onToggleTheme}>
-          <Icon icon={theme === 'light' ? 'lucide:moon' : 'lucide:sun'} size={18} />
+          <Icon
+            icon={theme === "light" ? "lucide:moon" : "lucide:sun"}
+            size={18}
+          />
         </Button>
       </Tooltip>
       <Tooltip text="Repository" position="bottom">
@@ -58,11 +73,22 @@ export function TopbarActions({ theme, onToggleTheme, onToggleLogs }: TopbarActi
       </Tooltip>
       {showLogout && (
         <Tooltip text="Logout" position="bottom">
-          <Button variant="ghost" size="sm" onClick={handleLogout} disabled={isLoggingOut}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+          >
             <Icon icon="lucide:log-out" size={18} />
           </Button>
         </Tooltip>
       )}
+      <NotificationBell
+        notifications={notifications}
+        unreadCount={unreadCount}
+        onMarkAsRead={markAsRead}
+        onMarkAllAsRead={markAllAsRead}
+      />
     </div>
   );
 }

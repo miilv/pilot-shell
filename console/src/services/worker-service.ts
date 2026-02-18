@@ -14,11 +14,18 @@ import { existsSync } from "fs";
 import { homedir } from "os";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { getWorkerPort, getWorkerHost, getWorkerBind } from "../shared/worker-utils.js";
+import {
+  getWorkerPort,
+  getWorkerHost,
+  getWorkerBind,
+} from "../shared/worker-utils.js";
 import { logger } from "../utils/logger.js";
 
 declare const __DEFAULT_PACKAGE_VERSION__: string;
-const packageVersion = typeof __DEFAULT_PACKAGE_VERSION__ !== "undefined" ? __DEFAULT_PACKAGE_VERSION__ : "0.0.0-dev";
+const packageVersion =
+  typeof __DEFAULT_PACKAGE_VERSION__ !== "undefined"
+    ? __DEFAULT_PACKAGE_VERSION__
+    : "0.0.0-dev";
 
 import {
   writePidFile,
@@ -63,6 +70,7 @@ import { RetentionRoutes } from "./worker/http/routes/RetentionRoutes.js";
 import { MetricsRoutes } from "./worker/http/routes/MetricsRoutes.js";
 import { AuthRoutes } from "./worker/http/routes/AuthRoutes.js";
 import { PlanRoutes } from "./worker/http/routes/PlanRoutes.js";
+import { NotificationRoutes } from "./worker/http/routes/NotificationRoutes.js";
 import { WorktreeRoutes } from "./worker/http/routes/WorktreeRoutes.js";
 import { UsageRoutes } from "./worker/http/routes/UsageRoutes.js";
 import { LicenseRoutes } from "./worker/http/routes/LicenseRoutes.js";
@@ -70,7 +78,10 @@ import { VaultRoutes } from "./worker/http/routes/VaultRoutes.js";
 import { VexorRoutes } from "./worker/http/routes/VexorRoutes.js";
 import { SettingsRoutes } from "./worker/http/routes/SettingsRoutes.js";
 import { MetricsService } from "./worker/MetricsService.js";
-import { startRetentionScheduler, stopRetentionScheduler } from "./worker/RetentionScheduler.js";
+import {
+  startRetentionScheduler,
+  stopRetentionScheduler,
+} from "./worker/RetentionScheduler.js";
 
 /**
  * Build JSON status output for hook framework communication.
@@ -87,7 +98,10 @@ export interface StatusOutput {
   message?: string;
 }
 
-export function buildStatusOutput(status: "ready" | "error", message?: string): StatusOutput {
+export function buildStatusOutput(
+  status: "ready" | "error",
+  message?: string,
+): StatusOutput {
   return {
     continue: true,
     suppressOutput: true,
@@ -156,7 +170,10 @@ export class WorkerService {
     this.sdkAgent = new SDKAgent(this.dbManager, this.sessionManager);
 
     this.paginationHelper = new PaginationHelper(this.dbManager);
-    this.sessionEventBroadcaster = new SessionEventBroadcaster(this.sseBroadcaster, this);
+    this.sessionEventBroadcaster = new SessionEventBroadcaster(
+      this.sseBroadcaster,
+      this,
+    );
 
     this.sessionManager.setOnSessionDeleted(() => {
       this.broadcastProcessingStatus();
@@ -220,7 +237,10 @@ export class WorkerService {
       const timeoutMs = 300000;
       try {
         const timeoutPromise = new Promise<void>((_, reject) =>
-          setTimeout(() => reject(new Error("Initialization timeout")), timeoutMs),
+          setTimeout(
+            () => reject(new Error("Initialization timeout")),
+            timeoutMs,
+          ),
         );
 
         await Promise.race([this.initializationComplete, timeoutPromise]);
@@ -238,9 +258,21 @@ export class WorkerService {
 
     this.server.registerRoutes(new AuthRoutes());
 
-    this.server.registerRoutes(new ViewerRoutes(this.sseBroadcaster, this.dbManager, this.sessionManager));
     this.server.registerRoutes(
-      new SessionRoutes(this.sessionManager, this.dbManager, this.sdkAgent, this.sessionEventBroadcaster, this),
+      new ViewerRoutes(
+        this.sseBroadcaster,
+        this.dbManager,
+        this.sessionManager,
+      ),
+    );
+    this.server.registerRoutes(
+      new SessionRoutes(
+        this.sessionManager,
+        this.dbManager,
+        this.sdkAgent,
+        this.sessionEventBroadcaster,
+        this,
+      ),
     );
     this.server.registerRoutes(
       new DataRoutes(
@@ -253,13 +285,24 @@ export class WorkerService {
       ),
     );
     this.server.registerRoutes(new LogsRoutes());
-    this.server.registerRoutes(new MemoryRoutes(this.dbManager, "pilot-memory"));
+    this.server.registerRoutes(
+      new MemoryRoutes(this.dbManager, "pilot-memory"),
+    );
     this.server.registerRoutes(new BackupRoutes(this.dbManager));
     this.server.registerRoutes(new RetentionRoutes(this.dbManager));
-    this.server.registerRoutes(new PlanRoutes(this.dbManager, this.sseBroadcaster));
+    this.server.registerRoutes(
+      new PlanRoutes(this.dbManager, this.sseBroadcaster),
+    );
+    this.server.registerRoutes(
+      new NotificationRoutes(this.dbManager, this.sseBroadcaster),
+    );
     this.server.registerRoutes(new WorktreeRoutes());
 
-    this.metricsService = new MetricsService(this.dbManager, this.sessionManager, this.startTime);
+    this.metricsService = new MetricsService(
+      this.dbManager,
+      this.sessionManager,
+      this.startTime,
+    );
     this.server.registerRoutes(new MetricsRoutes(this.metricsService));
 
     this.vexorRoutes = new VexorRoutes(this.dbManager);
@@ -282,10 +325,20 @@ export class WorkerService {
     const host = getWorkerHost();
 
     await this.server.listen(port, bind);
-    logger.info("SYSTEM", "Worker started", { bind, host, port, pid: process.pid });
+    logger.info("SYSTEM", "Worker started", {
+      bind,
+      host,
+      port,
+      pid: process.pid,
+    });
 
     this.initializeBackground().catch((error) => {
-      logger.error("SYSTEM", "Background initialization failed", {}, error as Error);
+      logger.error(
+        "SYSTEM",
+        "Background initialization failed",
+        {},
+        error as Error,
+      );
     });
   }
 
@@ -305,14 +358,24 @@ export class WorkerService {
 
       const projectRoot = process.env.CLAUDE_PROJECT_ROOT || process.cwd();
       const projectName = path.basename(projectRoot);
-      this.dbManager.getSessionStore().upsertProjectRoot(projectName, projectRoot);
+      this.dbManager
+        .getSessionStore()
+        .upsertProjectRoot(projectName, projectRoot);
 
-      const { PendingMessageStore } = await import("./sqlite/PendingMessageStore.js");
-      const pendingStore = new PendingMessageStore(this.dbManager.getSessionStore().db, 3);
+      const { PendingMessageStore } =
+        await import("./sqlite/PendingMessageStore.js");
+      const pendingStore = new PendingMessageStore(
+        this.dbManager.getSessionStore().db,
+        3,
+      );
       const STUCK_THRESHOLD_MS = 5 * 60 * 1000;
       const resetCount = pendingStore.resetStuckMessages(STUCK_THRESHOLD_MS);
       if (resetCount > 0) {
-        logger.info("SYSTEM", `Recovered ${resetCount} stuck messages from previous session`, { thresholdMinutes: 5 });
+        logger.info(
+          "SYSTEM",
+          `Recovered ${resetCount} stuck messages from previous session`,
+          { thresholdMinutes: 5 },
+        );
       }
 
       const formattingService = new FormattingService();
@@ -326,7 +389,10 @@ export class WorkerService {
       );
       this.searchRoutes = new SearchRoutes(searchManager);
       this.server.registerRoutes(this.searchRoutes);
-      logger.info("WORKER", "SearchManager initialized and search routes registered");
+      logger.info(
+        "WORKER",
+        "SearchManager initialized and search routes registered",
+      );
 
       this.coreReady = true;
       logger.info("SYSTEM", "Core services ready (hooks can proceed)");
@@ -336,7 +402,8 @@ export class WorkerService {
         path.join(__dirname, "..", "servers", "mcp-server.ts"),
         path.join(__dirname, "..", "..", "servers", "mcp-server.ts"),
       ];
-      const mcpServerPath = possibleMcpPaths.find((p) => existsSync(p)) || possibleMcpPaths[0];
+      const mcpServerPath =
+        possibleMcpPaths.find((p) => existsSync(p)) || possibleMcpPaths[0];
       const isTsFile = mcpServerPath.endsWith(".ts");
 
       const transport = new StdioClientTransport({
@@ -348,7 +415,10 @@ export class WorkerService {
       const MCP_INIT_TIMEOUT_MS = 300000;
       const mcpConnectionPromise = this.mcpClient.connect(transport);
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("MCP connection timeout after 5 minutes")), MCP_INIT_TIMEOUT_MS),
+        setTimeout(
+          () => reject(new Error("MCP connection timeout after 5 minutes")),
+          MCP_INIT_TIMEOUT_MS,
+        ),
       );
 
       await Promise.race([mcpConnectionPromise, timeoutPromise]);
@@ -362,24 +432,38 @@ export class WorkerService {
       this.processPendingQueues(50)
         .then((result) => {
           if (result.sessionsStarted > 0) {
-            logger.info("SYSTEM", `Auto-recovered ${result.sessionsStarted} sessions with pending work`, {
-              totalPending: result.totalPendingSessions,
-              started: result.sessionsStarted,
-              sessionIds: result.startedSessionIds,
-            });
+            logger.info(
+              "SYSTEM",
+              `Auto-recovered ${result.sessionsStarted} sessions with pending work`,
+              {
+                totalPending: result.totalPendingSessions,
+                started: result.sessionsStarted,
+                sessionIds: result.startedSessionIds,
+              },
+            );
           }
         })
         .catch((error) => {
-          logger.error("SYSTEM", "Auto-recovery of pending queues failed", {}, error as Error);
+          logger.error(
+            "SYSTEM",
+            "Auto-recovery of pending queues failed",
+            {},
+            error as Error,
+          );
         });
 
       const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
       const STALE_SESSION_THRESHOLD_MS = 60 * 60 * 1000;
       this.cleanupInterval = setInterval(async () => {
         try {
-          const staleSessions = await this.sessionManager.cleanupStaleSessions(STALE_SESSION_THRESHOLD_MS);
+          const staleSessions = await this.sessionManager.cleanupStaleSessions(
+            STALE_SESSION_THRESHOLD_MS,
+          );
           if (staleSessions > 0) {
-            logger.info("SYSTEM", `Periodic cleanup: removed ${staleSessions} stale sessions`);
+            logger.info(
+              "SYSTEM",
+              `Periodic cleanup: removed ${staleSessions} stale sessions`,
+            );
           }
 
           await cleanupOrphanedProcesses();
@@ -391,7 +475,12 @@ export class WorkerService {
       }, CLEANUP_INTERVAL_MS);
       logger.info("SYSTEM", "Started periodic cleanup (every 5 minutes)");
     } catch (error) {
-      logger.error("SYSTEM", "Background initialization failed", {}, error as Error);
+      logger.error(
+        "SYSTEM",
+        "Background initialization failed",
+        {},
+        error as Error,
+      );
       throw error;
     }
   }
@@ -406,19 +495,28 @@ export class WorkerService {
   /**
    * Start a session processor
    */
-  private startSessionProcessor(session: ReturnType<typeof this.sessionManager.getSession>, source: string): void {
+  private startSessionProcessor(
+    session: ReturnType<typeof this.sessionManager.getSession>,
+    source: string,
+  ): void {
     if (!session) return;
 
     if (session.abortController.signal.aborted) {
       session.abortController = new AbortController();
-      logger.debug("SYSTEM", "Reset AbortController for session restart", { sessionId: session.sessionDbId });
+      logger.debug("SYSTEM", "Reset AbortController for session restart", {
+        sessionId: session.sessionDbId,
+      });
     }
 
     const sid = session.sessionDbId;
     const agent = this.getActiveAgent();
     const providerName = agent.constructor.name;
 
-    logger.info("SYSTEM", `Starting generator (${source}) using ${providerName}`, { sessionId: sid });
+    logger.info(
+      "SYSTEM",
+      `Starting generator (${source}) using ${providerName}`,
+      { sessionId: sid },
+    );
 
     session.generatorPromise = agent
       .startSession(session, this as unknown as WorkerRef)
@@ -449,8 +547,12 @@ export class WorkerService {
     sessionsSkipped: number;
     startedSessionIds: number[];
   }> {
-    const { PendingMessageStore } = await import("./sqlite/PendingMessageStore.js");
-    const pendingStore = new PendingMessageStore(this.dbManager.getSessionStore().db, 3);
+    const { PendingMessageStore } =
+      await import("./sqlite/PendingMessageStore.js");
+    const pendingStore = new PendingMessageStore(
+      this.dbManager.getSessionStore().db,
+      3,
+    );
     const sessionStore = this.dbManager.getSessionStore();
 
     const staleThresholdMs = 30 * 60 * 1000;
@@ -475,7 +577,9 @@ export class WorkerService {
         )
       `,
         )
-        .all(staleThreshold, staleThreshold, staleThreshold) as { id: number }[];
+        .all(staleThreshold, staleThreshold, staleThreshold) as {
+        id: number;
+      }[];
 
       if (staleSessionIds.length > 0) {
         const ids = staleSessionIds.map((r) => r.id);
@@ -507,10 +611,16 @@ export class WorkerService {
         const completedCount = completedIds.size;
         const failedCount = ids.length - completedCount;
         if (completedCount > 0) {
-          logger.info("SYSTEM", `Marked ${completedCount} stale sessions as completed (had summaries)`);
+          logger.info(
+            "SYSTEM",
+            `Marked ${completedCount} stale sessions as completed (had summaries)`,
+          );
         }
         if (failedCount > 0) {
-          logger.info("SYSTEM", `Marked ${failedCount} stale sessions as failed (no summaries)`);
+          logger.info(
+            "SYSTEM",
+            `Marked ${failedCount} stale sessions as failed (no summaries)`,
+          );
         }
 
         const msgResult = sessionStore.db
@@ -525,11 +635,19 @@ export class WorkerService {
           .run(Date.now(), ...ids);
 
         if (msgResult.changes > 0) {
-          logger.info("SYSTEM", `Marked ${msgResult.changes} pending messages from stale sessions as failed`);
+          logger.info(
+            "SYSTEM",
+            `Marked ${msgResult.changes} pending messages from stale sessions as failed`,
+          );
         }
       }
     } catch (error) {
-      logger.error("SYSTEM", "Failed to clean up stale sessions", {}, error as Error);
+      logger.error(
+        "SYSTEM",
+        "Failed to clean up stale sessions",
+        {},
+        error as Error,
+      );
     }
 
     const orphanedSessionIds = pendingStore.getSessionsWithPendingMessages();
@@ -543,7 +661,10 @@ export class WorkerService {
 
     if (orphanedSessionIds.length === 0) return result;
 
-    logger.info("SYSTEM", `Processing up to ${sessionLimit} of ${orphanedSessionIds.length} pending session queues`);
+    logger.info(
+      "SYSTEM",
+      `Processing up to ${sessionLimit} of ${orphanedSessionIds.length} pending session queues`,
+    );
 
     for (const sessionDbId of orphanedSessionIds) {
       if (result.sessionsStarted >= sessionLimit) break;
@@ -567,7 +688,12 @@ export class WorkerService {
 
         await new Promise((resolve) => setTimeout(resolve, 100));
       } catch (error) {
-        logger.error("SYSTEM", `Failed to process session ${sessionDbId}`, {}, error as Error);
+        logger.error(
+          "SYSTEM",
+          `Failed to process session ${sessionDbId}`,
+          {},
+          error as Error,
+        );
         result.sessionsSkipped++;
       }
     }
@@ -667,7 +793,11 @@ async function main() {
       await httpShutdown(port);
       const freed = await waitForPortFree(port, getPlatformTimeout(15000));
       if (!freed) {
-        logger.error("SYSTEM", "Port did not free up after shutdown, aborting restart", { port });
+        logger.error(
+          "SYSTEM",
+          "Port did not free up after shutdown, aborting restart",
+          { port },
+        );
         process.exit(0);
       }
       removePidFile();
@@ -703,7 +833,9 @@ async function main() {
       if (!platform || !event) {
         console.error("Usage: pilot-memory hook <platform> <event>");
         console.error("Platforms: claude-code, raw");
-        console.error("Events: context, session-init, observation, summarize, user-message");
+        console.error(
+          "Events: context, session-init, observation, summarize, user-message",
+        );
         process.exit(1);
       }
       await ensureWorkerDaemon(port, __filename);
@@ -737,7 +869,12 @@ async function main() {
       });
 
       process.on("uncaughtException", (error) => {
-        logger.failure("SYSTEM", "Uncaught exception in daemon mode", {}, error);
+        logger.failure(
+          "SYSTEM",
+          "Uncaught exception in daemon mode",
+          {},
+          error,
+        );
       });
 
       const worker = new WorkerService();
@@ -753,7 +890,8 @@ async function main() {
 const isMainModule =
   typeof require !== "undefined" && typeof module !== "undefined"
     ? require.main === module || !module.parent
-    : import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith("worker-service");
+    : import.meta.url === `file://${process.argv[1]}` ||
+      process.argv[1]?.endsWith("worker-service");
 
 if (isMainModule) {
   main();

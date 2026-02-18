@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useProject } from '../context';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useProject } from "../context";
 
 interface Stats {
   observations: number;
@@ -24,7 +24,7 @@ interface SpecStats {
 type ObservationTimeline = Array<{ date: string; count: number }>;
 
 interface WorkerStatus {
-  status: 'online' | 'offline' | 'processing';
+  status: "online" | "offline" | "processing";
   version?: string;
   uptime?: string;
   queueDepth?: number;
@@ -42,7 +42,7 @@ interface VexorStatus {
 
 interface ActivityItem {
   id: number;
-  type: 'observation' | 'summary' | 'prompt';
+  type: "observation" | "summary" | "prompt";
   title: string;
   project: string;
   timestamp: string;
@@ -50,10 +50,10 @@ interface ActivityItem {
 
 interface PlanInfo {
   name: string;
-  status: 'PENDING' | 'COMPLETE' | 'VERIFIED';
+  status: "PENDING" | "COMPLETE" | "VERIFIED";
   completed: number;
   total: number;
-  phase: 'plan' | 'implement' | 'verify';
+  phase: "plan" | "implement" | "verify";
   iterations: number;
   approved: boolean;
   worktree: boolean;
@@ -126,69 +126,105 @@ export function useStats(): UseStatsResult {
     projects: 0,
   });
   const [workerStatus, setWorkerStatus] = useState<WorkerStatus>({
-    status: 'offline',
+    status: "offline",
   });
   const [vexorStatus, setVexorStatus] = useState<VexorStatus>({
     isIndexed: false,
     files: 0,
-    mode: '',
-    model: '',
+    mode: "",
+    model: "",
     generatedAt: null,
     isReindexing: false,
   });
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
-  const [planStatus, setPlanStatus] = useState<PlanStatus>({ active: false, plans: [] });
-  const [gitInfo, setGitInfo] = useState<GitInfo>({ branch: null, staged: 0, unstaged: 0, untracked: 0 });
-  const [specStats, setSpecStats] = useState<SpecStats>({
-    totalSpecs: 0, verified: 0, inProgress: 0, pending: 0,
-    avgIterations: 0, totalTasksCompleted: 0, totalTasks: 0,
-    completionTimeline: [], recentlyVerified: [],
+  const [planStatus, setPlanStatus] = useState<PlanStatus>({
+    active: false,
+    plans: [],
   });
-  const [observationTimeline, setObservationTimeline] = useState<ObservationTimeline>([]);
+  const [gitInfo, setGitInfo] = useState<GitInfo>({
+    branch: null,
+    staged: 0,
+    unstaged: 0,
+    untracked: 0,
+  });
+  const [specStats, setSpecStats] = useState<SpecStats>({
+    totalSpecs: 0,
+    verified: 0,
+    inProgress: 0,
+    pending: 0,
+    avgIterations: 0,
+    totalTasksCompleted: 0,
+    totalTasks: 0,
+    completionTimeline: [],
+    recentlyVerified: [],
+  });
+  const [observationTimeline, setObservationTimeline] =
+    useState<ObservationTimeline>([]);
   const [vaultStatus, setVaultStatus] = useState<VaultStatus>({
-    installed: false, version: null, configured: false, vaultUrl: null,
-    profile: null, assets: [], catalog: [], isInstalling: false,
+    installed: false,
+    version: null,
+    configured: false,
+    vaultUrl: null,
+    profile: null,
+    assets: [],
+    catalog: [],
+    isInstalling: false,
   });
   const [isLoading, setIsLoading] = useState(true);
 
   const loadVaultStatus = useCallback(async () => {
     try {
-      const res = await fetch('/api/vault/status');
+      const res = await fetch("/api/vault/status");
       const data = await res.json();
       setVaultStatus(data);
-    } catch {
-    }
+    } catch {}
   }, []);
 
   const loadVexorStatus = useCallback(async () => {
     try {
-      const vexorParam = selectedProject ? `?project=${encodeURIComponent(selectedProject)}` : '';
+      const vexorParam = selectedProject
+        ? `?project=${encodeURIComponent(selectedProject)}`
+        : "";
       const res = await fetch(`/api/vexor/status${vexorParam}`);
       const data = await res.json();
       setVexorStatus({
         isIndexed: data.isIndexed ?? false,
         files: data.files ?? 0,
-        mode: data.mode ?? '',
-        model: data.model ?? '',
+        mode: data.mode ?? "",
+        model: data.model ?? "",
         generatedAt: data.generatedAt ?? null,
         isReindexing: data.isReindexing ?? false,
       });
-    } catch {
-    }
+    } catch {}
   }, [selectedProject]);
 
   const loadStats = useCallback(async () => {
-    const projectParam = selectedProject ? `?project=${encodeURIComponent(selectedProject)}` : '';
+    const projectParam = selectedProject
+      ? `?project=${encodeURIComponent(selectedProject)}`
+      : "";
     try {
-      const [statsRes, healthRes, activityRes, projectsRes, planRes, gitRes, specStatsRes, timelineRes] = await Promise.all([
+      const [
+        statsRes,
+        healthRes,
+        activityRes,
+        projectsRes,
+        planRes,
+        gitRes,
+        specStatsRes,
+        timelineRes,
+      ] = await Promise.all([
         fetch(`/api/stats${projectParam}`),
-        fetch('/health'),
-        fetch(`/api/observations?limit=5${selectedProject ? `&project=${encodeURIComponent(selectedProject)}` : ''}`),
-        fetch('/api/projects'),
+        fetch("/health"),
+        fetch(
+          `/api/observations?limit=5${selectedProject ? `&project=${encodeURIComponent(selectedProject)}` : ""}`,
+        ),
+        fetch("/api/projects"),
         fetch(`/api/plan${projectParam}`),
         fetch(`/api/git${projectParam}`),
         fetch(`/api/plans/stats${projectParam}`).catch(() => null),
-        fetch(`/api/analytics/timeline?range=30d${selectedProject ? `&project=${encodeURIComponent(selectedProject)}` : ''}`).catch(() => null),
+        fetch(
+          `/api/analytics/timeline?range=30d${selectedProject ? `&project=${encodeURIComponent(selectedProject)}` : ""}`,
+        ).catch(() => null),
       ]);
 
       const statsData = await statsRes.json();
@@ -208,9 +244,11 @@ export function useStats(): UseStatsResult {
         setObservationTimeline(tlData.data || []);
       }
 
-      const rawItems = activityData.items || activityData.observations || activityData || [];
+      const rawItems =
+        activityData.items || activityData.observations || activityData || [];
       const recentItems = Array.isArray(rawItems) ? rawItems : [];
-      const lastObsTimestamp = recentItems.length > 0 ? (recentItems[0]?.created_at || null) : null;
+      const lastObsTimestamp =
+        recentItems.length > 0 ? recentItems[0]?.created_at || null : null;
 
       const projectList: string[] = projectsData.projects || [];
       setProjects(projectList);
@@ -219,32 +257,41 @@ export function useStats(): UseStatsResult {
         observations: statsData.database?.observations || 0,
         summaries: statsData.database?.summaries || 0,
         sessions: statsData.database?.sessions || 0,
-        lastObservationAt: lastObsTimestamp ? formatTimestamp(lastObsTimestamp) : null,
+        lastObservationAt: lastObsTimestamp
+          ? formatTimestamp(lastObsTimestamp)
+          : null,
         projects: projectList.length,
       });
 
       setWorkerStatus({
-        status: healthData.status === 'ok'
-          ? (healthData.isProcessing ? 'processing' : 'online')
-          : 'offline',
+        status:
+          healthData.status === "ok"
+            ? healthData.isProcessing
+              ? "processing"
+              : "online"
+            : "offline",
         version: statsData.worker?.version,
-        uptime: statsData.worker?.uptime ? formatUptime(statsData.worker.uptime) : undefined,
+        uptime: statsData.worker?.uptime
+          ? formatUptime(statsData.worker.uptime)
+          : undefined,
         queueDepth: healthData.queueDepth || 0,
         workspaceProject: statsData.worker?.workspaceProject,
       });
 
-      const items = activityData.items || activityData.observations || activityData || [];
+      const items =
+        activityData.items || activityData.observations || activityData || [];
       setRecentActivity(
         (Array.isArray(items) ? items : []).slice(0, 5).map((obs: any) => ({
           id: obs.id,
-          type: obs.obs_type || obs.type || 'observation',
-          title: obs.title || obs.content?.slice(0, 100) || 'Untitled',
-          project: obs.project || 'unknown',
+          type: obs.obs_type || obs.type || "observation",
+          title: obs.title || obs.content?.slice(0, 100) || "Untitled",
+          project: obs.project || "unknown",
           timestamp: formatTimestamp(obs.created_at),
-        }))
+        })),
       );
 
-      const plans: PlanInfo[] = planData.plans || (planData.plan ? [planData.plan] : []);
+      const plans: PlanInfo[] =
+        planData.plans || (planData.plan ? [planData.plan] : []);
       setPlanStatus({
         active: plans.length > 0,
         plans,
@@ -256,17 +303,18 @@ export function useStats(): UseStatsResult {
         unstaged: gitData.unstaged || 0,
         untracked: gitData.untracked || 0,
       });
-
     } catch (error) {
-      console.error('Failed to load stats:', error);
-      setWorkerStatus({ status: 'offline' });
+      console.error("Failed to load stats:", error);
+      setWorkerStatus({ status: "offline" });
     } finally {
       setIsLoading(false);
     }
   }, [selectedProject, setProjects]);
 
   const loadStatsRef = useRef(loadStats);
-  useEffect(() => { loadStatsRef.current = loadStats; }, [loadStats]);
+  useEffect(() => {
+    loadStatsRef.current = loadStats;
+  }, [loadStats]);
 
   useEffect(() => {
     loadStats();
@@ -277,25 +325,28 @@ export function useStats(): UseStatsResult {
     loadVaultStatus();
     const vexorInterval = setInterval(loadVexorStatus, VEXOR_POLL_INTERVAL_MS);
 
-    const eventSource = new EventSource('/stream');
+    const eventSource = new EventSource("/stream");
 
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
 
-        if (data.type === 'processing_status') {
+        if (data.type === "processing_status") {
           setWorkerStatus((prev) => ({
             ...prev,
-            status: data.isProcessing ? 'processing' : 'online',
+            status: data.isProcessing ? "processing" : "online",
             queueDepth: data.queueDepth ?? prev.queueDepth,
           }));
         }
 
-        if (data.type === 'new_observation' || data.type === 'new_summary' || data.type === 'plan_association_changed') {
+        if (
+          data.type === "new_observation" ||
+          data.type === "new_summary" ||
+          data.type === "plan_association_changed"
+        ) {
           loadStatsRef.current();
         }
-      } catch (e) {
-      }
+      } catch (e) {}
     };
 
     return () => {
@@ -320,12 +371,12 @@ export function useStats(): UseStatsResult {
 }
 
 function formatTimestamp(timestamp: string): string {
-  if (!timestamp) return '';
+  if (!timestamp) return "";
   const date = new Date(timestamp);
   const now = new Date();
   const diff = now.getTime() - date.getTime();
 
-  if (diff < 60000) return 'just now';
+  if (diff < 60000) return "just now";
   if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
   if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
   return date.toLocaleDateString();

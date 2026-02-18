@@ -38,12 +38,29 @@ export interface UserPrompt {
 }
 
 export type FeedItem =
-  | (Observation & { itemType: 'observation' })
-  | (Summary & { itemType: 'summary' })
-  | (UserPrompt & { itemType: 'prompt' });
+  | (Observation & { itemType: "observation" })
+  | (Summary & { itemType: "summary" })
+  | (UserPrompt & { itemType: "prompt" });
+
+export interface Notification {
+  id: number;
+  type: string;
+  title: string;
+  message: string;
+  plan_path: string | null;
+  session_id: string | null;
+  is_read: number;
+  created_at: string;
+}
 
 export interface StreamEvent {
-  type: 'initial_load' | 'new_observation' | 'new_summary' | 'new_prompt' | 'processing_status';
+  type:
+    | "initial_load"
+    | "new_observation"
+    | "new_summary"
+    | "new_prompt"
+    | "processing_status"
+    | "new_notification";
   observations?: Observation[];
   summaries?: Summary[];
   prompts?: UserPrompt[];
@@ -53,6 +70,7 @@ export interface StreamEvent {
   prompt?: UserPrompt;
   isProcessing?: boolean;
   queueDepth?: number;
+  notification?: Notification;
 }
 
 export interface Settings {

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """SessionEnd hook - stops worker only when no other sessions are active.
 
-Sends notification on session end with spec completion status.
+Sends a 'Session Ended' notification. Spec-specific notifications
+(verification_complete, plan_approval) are sent by the spec skills
+via `pilot notify` to avoid duplication.
 """
 
 from __future__ import annotations
@@ -13,8 +15,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from _util import _sessions_base
-from notify import send_notification
+from _dashboard_notify import send_dashboard_notification
 
 PILOT_BIN = Path.home() / ".pilot" / "bin" / "pilot"
 
@@ -37,23 +38,6 @@ def _get_active_session_count() -> int:
     return 0
 
 
-def _is_plan_verified() -> bool:
-    """Check if active plan has VERIFIED status."""
-    session_id = os.environ.get("PILOT_SESSION_ID", "").strip() or "default"
-    session_dir = _sessions_base() / session_id
-    plan_file = session_dir / "active_plan.json"
-
-    if not plan_file.exists():
-        return False
-
-    try:
-        data = json.loads(plan_file.read_text())
-        status = data.get("status", "").upper()
-        return status == "VERIFIED"
-    except (json.JSONDecodeError, OSError):
-        return False
-
-
 def main() -> int:
     plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT", "")
     if not plugin_root:
@@ -63,18 +47,19 @@ def main() -> int:
     if count > 1:
         return 0
 
-    stop_script = Path(plugin_root) / "scripts" / "worker-service.cjs"
-    subprocess.run(
-        ["bun", str(stop_script), "stop"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    send_dashboard_notification("attention_needed", "Session Ended", "Claude session ended")
 
-    if _is_plan_verified():
-        send_notification("Pilot", "Spec complete — all checks passed")
-    else:
-        send_notification("Pilot", "Claude session ended")
+    stop_script = Path(plugin_root) / "scripts" / "worker-service.cjs"
+    try:
+        subprocess.run(
+            ["bun", str(stop_script), "stop"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=15,
+        )
+    except subprocess.TimeoutExpired:
+        pass
 
     return 0
 

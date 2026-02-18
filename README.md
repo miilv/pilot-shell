@@ -373,7 +373,7 @@ After **every single file edit**, these hooks fire:
 
 | Hook              | Type     | What it does                                                                                          |
 | ----------------- | -------- | ----------------------------------------------------------------------------------------------------- |
-| `session_end.py`  | Blocking | Stops the worker daemon when no other Pilot sessions are active. Sends OS notification on completion. |
+| `session_end.py`  | Blocking | Stops the worker daemon when no other Pilot sessions are active. Sends real-time dashboard notification. |
 
 ### Context Preservation
 
@@ -465,9 +465,21 @@ All configured via `.lsp.json` with stdio transport.
 
 ## Claude Pilot Console
 
-Access the web-based Claude Pilot Console to visualize your development workflow:
+A local web dashboard at `localhost:41777` for monitoring and managing your Pilot sessions.
 
 <img src="docs/img/console.png" alt="Claude Pilot Console" width="700">
+
+| View | What it shows |
+| ---- | ------------- |
+| **Dashboard** | Workspace status, active sessions, spec progress, git info, recent activity |
+| **Specifications** | All spec plans with task progress, phase tracking, and iteration history |
+| **Memories** | Browsable observations — decisions, discoveries, bugfixes — with type filters and search |
+| **Sessions** | Active and past sessions with observation counts and duration |
+| **Usage** | Daily token costs, model routing breakdown, and usage trends |
+| **Vault** | Shared team assets with version tracking |
+| **Settings** | Model selection per command/sub-agent, extended context toggle |
+
+**Smart Notifications** — Real-time alerts via SSE when Claude needs your input or a spec phase completes. Status transitions (COMPLETE, VERIFIED, loop-back) fire automatically from `pilot register-plan`. User-attention notifications fire before approval questions in `/spec`.
 
 ---
 

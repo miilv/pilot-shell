@@ -12,7 +12,7 @@ describe('App', () => {
   it('App source includes /settings route', async () => {
     const { readFileSync } = await import('fs');
     const src = readFileSync(new URL('../../src/ui/viewer/App.tsx', import.meta.url), 'utf-8');
-    expect(src).toContain("'/settings'");
+    expect(src).toContain("/settings");
     expect(src).toContain('SettingsView');
   });
 });

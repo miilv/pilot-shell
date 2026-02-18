@@ -4,10 +4,10 @@ import {
   FileCode2,
   Plug2,
   ShieldCheck,
-  Container,
   Infinity as InfinityIcon,
   Users,
   GitBranch,
+  Bell,
 } from "lucide-react";
 import { useInView } from "@/hooks/use-in-view";
 import ImageModal from "@/components/ImageModal";
@@ -56,11 +56,11 @@ const insideItems: InsideItem[] = [
       "Library docs, persistent memory, web search, GitHub code search, and real-time LSP diagnostics — all pre-configured and always available.",
   },
   {
-    icon: Container,
-    title: "One-Command Installer",
-    description: "Ready in minutes, auto-updates",
+    icon: Bell,
+    title: "Smart Notifications",
+    description: "Real-time alerts when you're needed",
     summary:
-      "Step-based installer with progress tracking, rollback on failure, and idempotent re-runs. Shell integration, Dev Container support, and automated updates.",
+      "Dashboard notifications fire automatically on spec status transitions and when Claude needs your input. Plan approvals, verification results, and session events appear instantly via SSE — no polling, no page refresh.",
   },
   {
     icon: Users,
@@ -83,36 +83,43 @@ const consoleSlides = [
     label: "Dashboard",
     src: "/console/dashboard.png",
     alt: "Console Dashboard — stats, workspace status, and spec progress",
+    desc: "Workspace status, active sessions, spec progress, git info, and recent activity — all at a glance.",
   },
   {
     label: "Settings",
     src: "/console/settings.png",
     alt: "Settings view — model selection per command, sub-agent, and session with defaults",
+    desc: "Choose models per command and sub-agent. Toggle extended context (1M tokens) globally.",
   },
   {
     label: "Specifications",
     src: "/console/specification.png",
     alt: "Specification view — plan details, task progress, and implementation notes",
+    desc: "All spec plans with task progress, phase tracking, and iteration history.",
   },
   {
     label: "Memories",
     src: "/console/memories.png",
     alt: "Memories view — browsable observation cards with type filters",
+    desc: "Decisions, discoveries, and bugfixes captured across sessions — searchable with type filters.",
   },
   {
     label: "Sessions",
     src: "/console/sessions.png",
     alt: "Sessions view — active sessions with observation and prompt counts",
+    desc: "Active and past sessions with observation counts, duration, and project context.",
   },
   {
     label: "Usage",
     src: "/console/usage.png",
     alt: "Usage view — daily costs, token charts, and model routing strategy",
+    desc: "Daily token costs, model routing breakdown, and usage trends over time.",
   },
   {
     label: "Vault",
     src: "/console/vault.png",
     alt: "Vault view — shared team assets with version tracking",
+    desc: "Shared team assets — rules, commands, and skills — with automatic versioning.",
   },
 ];
 
@@ -129,7 +136,7 @@ const ConsoleShowcase = ({ visible }: { visible: boolean }) => {
           Pilot Console
         </h3>
         <p className="text-muted-foreground text-sm sm:text-base">
-          Real-time observations, session management, usage analytics, and
+          Real-time notifications, session management, usage analytics, and
           semantic search
         </p>
       </div>
@@ -144,8 +151,17 @@ const ConsoleShowcase = ({ visible }: { visible: boolean }) => {
           />
         </div>
 
+        {/* Active view description */}
+        <div className="mt-3 text-center">
+          <p className="text-sm text-muted-foreground transition-all duration-200">
+            <span className="font-medium text-foreground">{slide.label}</span>
+            {" — "}
+            {slide.desc}
+          </p>
+        </div>
+
         {/* Thumbnail strip */}
-        <div className="grid grid-cols-7 gap-2 sm:gap-3 mt-4">
+        <div className="grid grid-cols-7 gap-2 sm:gap-3 mt-3">
           {consoleSlides.map((s, i) => (
             <button
               key={i}

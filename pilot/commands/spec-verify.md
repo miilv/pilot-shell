@@ -526,7 +526,11 @@ This is the THIRD user interaction point in the `/spec` workflow (first is workt
    # Returns JSON with changed files list
    ```
 
-7. **Ask user for sync decision:**
+7. **Notify and ask user for sync decision:**
+
+   ```bash
+   ~/.pilot/bin/pilot notify plan_approval "Worktree Sync" "Approve merging worktree changes back to main" --plan-path "<plan_path>" 2>/dev/null || true
+   ```
 
    ```
    AskUserQuestion:
@@ -582,7 +586,7 @@ This is the THIRD user interaction point in the `/spec` workflow (first is workt
    Edit the plan file and change the Status line:
    Status: COMPLETE  →  Status: VERIFIED
    ```
-2. **Register status change:** `~/.pilot/bin/pilot register-plan "<plan_path>" "VERIFIED" 2>/dev/null || true`
+2. **Register status change (auto-notifies dashboard):** `~/.pilot/bin/pilot register-plan "<plan_path>" "VERIFIED" 2>/dev/null || true`
 3. Read the Iterations count from the plan file
 4. Report completion:
 
@@ -606,7 +610,7 @@ This is the THIRD user interaction point in the `/spec` workflow (first is workt
    Status: COMPLETE  →  Status: PENDING
    Iterations: N     →  Iterations: N+1
    ```
-3. **Register status change:** `~/.pilot/bin/pilot register-plan "<plan_path>" "PENDING" 2>/dev/null || true`
+3. **Register status change (auto-notifies dashboard):** `~/.pilot/bin/pilot register-plan "<plan_path>" "PENDING" 2>/dev/null || true`
 4. Inform user: "🔄 Iteration N+1: Issues found, fixing and re-verifying..."
 5. **Invoke implementation phase:** `Skill(skill='spec-implement', args='<plan-path>')`
 

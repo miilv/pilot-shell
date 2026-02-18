@@ -57,9 +57,7 @@ const hooksPipeline = [
   {
     trigger: "PreCompact",
     description: "Before auto-compaction fires",
-    hooks: [
-      "Capture active plan, task list, and key context to memory",
-    ],
+    hooks: ["Capture active plan, task list, and key context to memory"],
     color: "text-violet-400",
     bgColor: "bg-violet-400/10",
     borderColor: "border-violet-400/30",
@@ -80,7 +78,7 @@ const hooksPipeline = [
     description: "When the session closes",
     hooks: [
       "Stop worker daemon if no other sessions active",
-      "Send OS notification (spec complete or session ended)",
+      "Send real-time dashboard notification (session ended)",
     ],
     color: "text-slate-400",
     bgColor: "bg-slate-400/10",
@@ -92,41 +90,85 @@ const rulesCategories = [
   {
     icon: Shield,
     category: "Core Workflow",
-    rules: ["Workflow enforcement & /spec orchestration", "TDD & test strategy", "Execution verification & completion"],
+    rules: [
+      "Workflow enforcement & /spec orchestration",
+      "TDD & test strategy",
+      "Execution verification & completion",
+    ],
   },
   {
     icon: Brain,
     category: "Development Practices",
-    rules: ["Project policies & debugging", "Auto-compaction & context management", "Persistent memory & online learning"],
+    rules: [
+      "Project policies & debugging",
+      "Auto-compaction & context management",
+      "Persistent memory & online learning",
+    ],
   },
   {
     icon: Search,
     category: "Tools",
-    rules: ["Context7 + grep-mcp + web search + GitHub CLI", "Pilot CLI + MCP-CLI + Vexor search", "Playwright CLI (E2E browser testing)"],
+    rules: [
+      "Context7 + grep-mcp + web search + GitHub CLI",
+      "Pilot CLI + MCP-CLI + Vexor search",
+      "Playwright CLI (E2E browser testing)",
+    ],
   },
   {
     icon: GitBranch,
     category: "Collaboration",
-    rules: ["Team Vault asset sharing via sx", "Custom rules, commands & skills", "Shareable across teams via Git"],
+    rules: [
+      "Team Vault asset sharing via sx",
+      "Custom rules, commands & skills",
+      "Shareable across teams via Git",
+    ],
   },
   {
     icon: Cpu,
     category: "Language Standards",
-    rules: ["Python — uv, pytest, ruff, basedpyright", "TypeScript — npm/pnpm, Jest, ESLint, Prettier", "Go — Modules, testing, formatting, error handling"],
+    rules: [
+      "Python — uv, pytest, ruff, basedpyright",
+      "TypeScript — npm/pnpm, Jest, ESLint, Prettier",
+      "Go — Modules, testing, formatting, error handling",
+    ],
   },
   {
     icon: Layers,
     category: "Architecture Standards",
-    rules: ["Frontend — Components, CSS, accessibility, responsive", "Backend — API design, data models, migrations", "Activated by file type — loaded only when needed"],
+    rules: [
+      "Frontend — Components, CSS, accessibility, responsive",
+      "Backend — API design, data models, migrations",
+      "Activated by file type — loaded only when needed",
+    ],
   },
 ];
 
 const mcpServers = [
-  { icon: BookOpen, name: "lib-docs", desc: "Library documentation lookup — get API docs for any dependency" },
-  { icon: Brain, name: "mem-search", desc: "Persistent memory search — recall context from past sessions" },
-  { icon: Globe, name: "web-search", desc: "Web search via DuckDuckGo, Bing, and Exa" },
-  { icon: Search, name: "grep-mcp", desc: "GitHub code search — find real-world usage patterns" },
-  { icon: Globe, name: "web-fetch", desc: "Web page fetching — read documentation, APIs, references" },
+  {
+    icon: BookOpen,
+    name: "lib-docs",
+    desc: "Library documentation lookup — get API docs for any dependency",
+  },
+  {
+    icon: Brain,
+    name: "mem-search",
+    desc: "Persistent memory search — recall context from past sessions",
+  },
+  {
+    icon: Globe,
+    name: "web-search",
+    desc: "Web search via DuckDuckGo, Bing, and Exa",
+  },
+  {
+    icon: Search,
+    name: "grep-mcp",
+    desc: "GitHub code search — find real-world usage patterns",
+  },
+  {
+    icon: Globe,
+    name: "web-fetch",
+    desc: "Web page fetching — read documentation, APIs, references",
+  },
 ];
 
 const DeepDiveSection = () => {
@@ -134,7 +176,6 @@ const DeepDiveSection = () => {
   const [hooksRef, hooksInView] = useInView<HTMLDivElement>();
   const [rulesRef, rulesInView] = useInView<HTMLDivElement>();
   const [mcpRef, mcpInView] = useInView<HTMLDivElement>();
-
 
   return (
     <section id="deep-dive" className="py-16 lg:py-24 px-4 sm:px-6 relative">
@@ -150,8 +191,9 @@ const DeepDiveSection = () => {
             Under the Hood
           </h2>
           <p className="text-muted-foreground text-lg sm:text-xl max-w-3xl mx-auto">
-            Pilot isn't a thin wrapper — it's a deeply engineered system with rules, hooks,
-            standards, language servers, and MCP servers working together on every edit.
+            Pilot isn't a thin wrapper — it's a deeply engineered system with
+            rules, hooks, standards, language servers, and MCP servers working
+            together on every edit.
           </p>
         </div>
 
@@ -165,8 +207,13 @@ const DeepDiveSection = () => {
               <Activity className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-foreground">Hooks Pipeline</h3>
-              <p className="text-sm text-muted-foreground">15 hooks across 6 lifecycle events — fire automatically at every stage</p>
+              <h3 className="text-2xl font-bold text-foreground">
+                Hooks Pipeline
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                15 hooks across 6 lifecycle events — fire automatically at every
+                stage
+              </p>
             </div>
           </div>
 
@@ -177,16 +224,27 @@ const DeepDiveSection = () => {
                 className={`rounded-2xl p-5 border ${stage.borderColor} bg-card/30 backdrop-blur-sm`}
               >
                 <div className="mb-3">
-                  <div className={`${stage.bgColor} px-3 py-1.5 rounded-lg inline-flex items-center gap-2 w-fit mb-2`}>
+                  <div
+                    className={`${stage.bgColor} px-3 py-1.5 rounded-lg inline-flex items-center gap-2 w-fit mb-2`}
+                  >
                     <Terminal className={`h-4 w-4 ${stage.color}`} />
-                    <code className={`text-sm font-semibold ${stage.color}`}>{stage.trigger}</code>
+                    <code className={`text-sm font-semibold ${stage.color}`}>
+                      {stage.trigger}
+                    </code>
                   </div>
-                  <p className="text-xs text-muted-foreground">{stage.description}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {stage.description}
+                  </p>
                 </div>
                 <div className="space-y-1.5">
                   {stage.hooks.map((hook) => (
-                    <div key={hook} className="flex items-start gap-2 text-xs text-muted-foreground">
-                      <CheckCircle2 className={`h-3.5 w-3.5 ${stage.color} flex-shrink-0 mt-0.5`} />
+                    <div
+                      key={hook}
+                      className="flex items-start gap-2 text-xs text-muted-foreground"
+                    >
+                      <CheckCircle2
+                        className={`h-3.5 w-3.5 ${stage.color} flex-shrink-0 mt-0.5`}
+                      />
                       <span>{hook}</span>
                     </div>
                   ))}
@@ -202,11 +260,16 @@ const DeepDiveSection = () => {
                 <RefreshCw className="h-4 w-4 text-violet-400" />
               </div>
               <div>
-                <h4 className="font-semibold text-foreground text-sm mb-1">Seamless Context Preservation</h4>
+                <h4 className="font-semibold text-foreground text-sm mb-1">
+                  Seamless Context Preservation
+                </h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  These hooks form a closed loop. When compaction fires, <span className="text-violet-400">PreCompact</span> captures
-                  your active plan, task list, and key decisions to persistent memory. <span className="text-sky-400">SessionStart</span> restores
-                  everything afterward — work continues exactly where it left off. No progress lost, no manual intervention.
+                  These hooks form a closed loop. When compaction fires,{" "}
+                  <span className="text-violet-400">PreCompact</span> captures
+                  your active plan, task list, and key decisions to persistent
+                  memory. <span className="text-sky-400">SessionStart</span>{" "}
+                  restores everything afterward — work continues exactly where
+                  it left off. No progress lost, no manual intervention.
                 </p>
               </div>
             </div>
@@ -223,8 +286,13 @@ const DeepDiveSection = () => {
               <Layers className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-foreground">Built-in Rules & Standards</h3>
-              <p className="text-sm text-muted-foreground">Loaded every session — production-tested best practices and coding standards always in context</p>
+              <h3 className="text-2xl font-bold text-foreground">
+                Built-in Rules & Standards
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Loaded every session — production-tested best practices and
+                coding standards always in context
+              </p>
             </div>
           </div>
 
@@ -238,11 +306,16 @@ const DeepDiveSection = () => {
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <Icon className="h-5 w-5 text-primary" />
-                    <h4 className="font-semibold text-foreground text-sm">{cat.category}</h4>
+                    <h4 className="font-semibold text-foreground text-sm">
+                      {cat.category}
+                    </h4>
                   </div>
                   <ul className="space-y-1.5">
                     {cat.rules.map((rule) => (
-                      <li key={rule} className="text-xs text-muted-foreground flex items-start gap-1.5">
+                      <li
+                        key={rule}
+                        className="text-xs text-muted-foreground flex items-start gap-1.5"
+                      >
                         <span className="text-primary mt-0.5">&#x25B8;</span>
                         <span>{rule}</span>
                       </li>
@@ -267,19 +340,30 @@ const DeepDiveSection = () => {
                   <Globe className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-foreground">MCP Servers</h3>
-                  <p className="text-sm text-muted-foreground">External context, always available</p>
+                  <h3 className="text-xl font-bold text-foreground">
+                    MCP Servers
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    External context, always available
+                  </p>
                 </div>
               </div>
               <div className="space-y-3">
                 {mcpServers.map((server) => {
                   const Icon = server.icon;
                   return (
-                    <div key={server.name} className="flex items-start gap-3 rounded-xl p-3 border border-border/50 bg-card/30">
+                    <div
+                      key={server.name}
+                      className="flex items-start gap-3 rounded-xl p-3 border border-border/50 bg-card/30"
+                    >
                       <Icon className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                       <div>
-                        <code className="text-sm font-medium text-foreground">{server.name}</code>
-                        <p className="text-xs text-muted-foreground mt-0.5">{server.desc}</p>
+                        <code className="text-sm font-medium text-foreground">
+                          {server.name}
+                        </code>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {server.desc}
+                        </p>
                       </div>
                     </div>
                   );
@@ -294,33 +378,54 @@ const DeepDiveSection = () => {
                   <Eye className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-foreground">Language Servers</h3>
-                  <p className="text-sm text-muted-foreground">Real-time diagnostics and go-to-definition</p>
+                  <h3 className="text-xl font-bold text-foreground">
+                    Language Servers
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Real-time diagnostics and go-to-definition
+                  </p>
                 </div>
               </div>
               <div className="space-y-3">
                 <div className="rounded-xl p-4 border border-border/50 bg-card/30">
                   <div className="flex items-center gap-2 mb-2">
                     <FileCode2 className="h-4 w-4 text-primary" />
-                    <span className="font-medium text-foreground text-sm">Python</span>
+                    <span className="font-medium text-foreground text-sm">
+                      Python
+                    </span>
                   </div>
-                  <p className="text-xs text-muted-foreground">basedpyright — strict type checking, auto-restart on crash</p>
+                  <p className="text-xs text-muted-foreground">
+                    basedpyright — strict type checking, auto-restart on crash
+                  </p>
                 </div>
                 <div className="rounded-xl p-4 border border-border/50 bg-card/30">
                   <div className="flex items-center gap-2 mb-2">
                     <FileCode2 className="h-4 w-4 text-primary" />
-                    <span className="font-medium text-foreground text-sm">TypeScript</span>
+                    <span className="font-medium text-foreground text-sm">
+                      TypeScript
+                    </span>
                   </div>
-                  <p className="text-xs text-muted-foreground">vtsls — full TypeScript support with Vue compatibility</p>
+                  <p className="text-xs text-muted-foreground">
+                    vtsls — full TypeScript support with Vue compatibility
+                  </p>
                 </div>
                 <div className="rounded-xl p-4 border border-border/50 bg-card/30">
                   <div className="flex items-center gap-2 mb-2">
                     <FileCode2 className="h-4 w-4 text-primary" />
-                    <span className="font-medium text-foreground text-sm">Go</span>
+                    <span className="font-medium text-foreground text-sm">
+                      Go
+                    </span>
                   </div>
-                  <p className="text-xs text-muted-foreground">gopls — official Go language server, auto-restart on crash</p>
+                  <p className="text-xs text-muted-foreground">
+                    gopls — official Go language server, auto-restart on crash
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-3 pl-1">Add your own language servers via <code className="text-primary bg-primary/10 px-1 py-0.5 rounded">.lsp.json</code></p>
+                <p className="text-xs text-muted-foreground mt-3 pl-1">
+                  Add your own language servers via{" "}
+                  <code className="text-primary bg-primary/10 px-1 py-0.5 rounded">
+                    .lsp.json
+                  </code>
+                </p>
               </div>
             </div>
           </div>

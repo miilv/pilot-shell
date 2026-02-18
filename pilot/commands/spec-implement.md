@@ -262,7 +262,7 @@ Update counts:
    Edit the plan file and change the Status line:
    Status: PENDING  →  Status: COMPLETE
    ```
-4. **Register status change:** `~/.pilot/bin/pilot register-plan "<plan_path>" "COMPLETE" 2>/dev/null || true`
+4. **Register status change (auto-notifies dashboard):** `~/.pilot/bin/pilot register-plan "<plan_path>" "COMPLETE" 2>/dev/null || true`
 5. **Invoke verification phase:** `Skill(skill='spec-verify', args='<plan-path>')`
 
 ---

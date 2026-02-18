@@ -63,3 +63,74 @@ describe("Dashboard project filtering", () => {
     expect(source).toContain("Workspace");
   });
 });
+
+describe("PlanStatus pulse animation", () => {
+  it("should apply animate-pulse when plan is PENDING and not approved", async () => {
+    const { PlanStatus } = await import(
+      "../../src/ui/viewer/views/Dashboard/PlanStatus.js"
+    );
+
+    const plans = [
+      {
+        name: "test-plan",
+        status: "PENDING" as const,
+        completed: 0,
+        total: 5,
+        phase: "plan" as const,
+        iterations: 0,
+        approved: false,
+        worktree: false,
+      },
+    ];
+
+    const html = renderToString(React.createElement(PlanStatus, { plans }));
+
+    expect(html).toContain("animate-pulse");
+  });
+
+  it("should NOT apply animate-pulse when plan is PENDING and approved", async () => {
+    const { PlanStatus } = await import(
+      "../../src/ui/viewer/views/Dashboard/PlanStatus.js"
+    );
+
+    const plans = [
+      {
+        name: "test-plan",
+        status: "PENDING" as const,
+        completed: 2,
+        total: 5,
+        phase: "implement" as const,
+        iterations: 0,
+        approved: true,
+        worktree: false,
+      },
+    ];
+
+    const html = renderToString(React.createElement(PlanStatus, { plans }));
+
+    expect(html).not.toContain("animate-pulse");
+  });
+
+  it("should NOT apply animate-pulse when plan is VERIFIED", async () => {
+    const { PlanStatus } = await import(
+      "../../src/ui/viewer/views/Dashboard/PlanStatus.js"
+    );
+
+    const plans = [
+      {
+        name: "done-plan",
+        status: "VERIFIED" as const,
+        completed: 5,
+        total: 5,
+        phase: "verify" as const,
+        iterations: 1,
+        approved: true,
+        worktree: false,
+      },
+    ];
+
+    const html = renderToString(React.createElement(PlanStatus, { plans }));
+
+    expect(html).not.toContain("animate-pulse");
+  });
+});

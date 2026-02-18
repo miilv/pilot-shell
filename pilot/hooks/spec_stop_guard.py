@@ -19,7 +19,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from _util import _sessions_base, get_session_plan_path, is_waiting_for_user_input, stop_block
-from notify import send_notification
 
 COOLDOWN_SECONDS = 60
 
@@ -96,7 +95,6 @@ def main() -> int:
 
     transcript_path = input_data.get("transcript_path", "")
     if transcript_path and is_waiting_for_user_input(transcript_path):
-        send_notification("Pilot", "Waiting for your input")
         return 0
 
     now = time.time()
@@ -106,7 +104,6 @@ def main() -> int:
             last_block = float(state_file.read_text().strip())
             if now - last_block < COOLDOWN_SECONDS:
                 state_file.unlink(missing_ok=True)
-                send_notification("Pilot", "Waiting for your input")
                 return 0
         except (ValueError, OSError):
             pass
