@@ -2,6 +2,14 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.8.3] - 2026-02-19
+
+### Bug Fixes
+
+- Create ~/.pilot/bin directory before writing mcp-cli script
+- Remove mcp-cli dependency, refactor console infrastructure, and add real-time notifications
+- Real-time notification system with SSE and auto-notify on plan transitions
+
 ## [6.8.2] - 2026-02-18
 
 ### Bug Fixes
