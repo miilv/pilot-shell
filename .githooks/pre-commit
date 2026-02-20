@@ -1,19 +1,27 @@
 #!/usr/bin/env bash
 # Pre-commit hook: test gates + auto-rebuild console build artifacts
 #
-# 1. Python unit tests   — when launcher/ or pilot/hooks/ changed
-# 2. Console unit tests  — when console/ changed
-# 3. Console typecheck + build + stage artifacts — when console/src/ changed
+# 1a. Python unit tests  — when launcher/ or pilot/hooks/ changed
+# 1b. Installer tests    — when installer/ changed
+# 2.  Console unit tests — when console/ changed
+# 3.  Console typecheck + build + stage artifacts — when console/src/ changed
 
 set -eo pipefail
 
 # --- 1. Python unit tests ---
-PYTHON_CHANGED=$(git diff --cached --name-only -- 'launcher/' 'pilot/hooks/' | head -1)
+LAUNCHER_CHANGED=$(git diff --cached --name-only -- 'launcher/' 'pilot/hooks/' | head -1)
+INSTALLER_CHANGED=$(git diff --cached --name-only -- 'installer/' | head -1)
 
-if [ -n "$PYTHON_CHANGED" ]; then
+if [ -n "$LAUNCHER_CHANGED" ]; then
   echo "[pre-commit] Python source changed — running unit tests..."
-  uv run pytest launcher/tests/ pilot/hooks/tests/ -q --tb=short 2>&1 | tail -5
+  uv run pytest launcher/tests/ pilot/hooks/tests/ -q --tb=short 2>&1 | tail -20
   echo "[pre-commit] Python unit tests passed."
+fi
+
+if [ -n "$INSTALLER_CHANGED" ]; then
+  echo "[pre-commit] Installer changed — running installer unit tests..."
+  uv run pytest installer/tests/unit/ -q --tb=short 2>&1 | tail -20
+  echo "[pre-commit] Installer unit tests passed."
 fi
 
 # --- 2. Console unit tests ---
@@ -27,12 +35,12 @@ if [ -n "$CONSOLE_CHANGED" ]; then
   fi
 
   echo "[pre-commit] Console source changed — running unit tests..."
-  (cd console && bun test 2>&1) | tail -5
+  (cd console && bun test 2>&1) | tail -20
   echo "[pre-commit] Console unit tests passed."
 
   # --- 3. Console typecheck + build + stage artifacts ---
   echo "[pre-commit] Running typecheck..."
-  (cd console && bun run typecheck 2>&1) | tail -5
+  (cd console && bun run typecheck 2>&1) | tail -20
   echo "[pre-commit] Console typecheck passed."
 
   echo "[pre-commit] Rebuilding console artifacts..."

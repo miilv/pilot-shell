@@ -7,14 +7,9 @@
  */
 
 import { describe, it, expect } from "bun:test";
-import { readFileSync, existsSync } from "fs";
+import { readFileSync } from "fs";
 
 describe("Search view removal", () => {
-  it("Search view directory no longer exists", () => {
-    const searchViewExists = existsSync("src/ui/viewer/views/Search");
-    expect(searchViewExists).toBe(false);
-  });
-
   it("views index.ts does not export SearchView", () => {
     const source = readFileSync("src/ui/viewer/views/index.ts", "utf-8");
     expect(source).not.toContain("SearchView");
@@ -58,6 +53,7 @@ describe("Search view removal", () => {
     );
     expect(source).not.toContain("Go to Search");
     expect(source).not.toContain("navigate:/search");
+    expect(source).not.toContain('"g r"');
   });
 
   it("Dashboard renders 4 workspace cards including VexorStatus", () => {

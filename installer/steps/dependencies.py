@@ -93,14 +93,20 @@ def install_python_tools() -> bool:
 
 
 def _get_forced_claude_version() -> str | None:
-    """Check ~/.claude/settings.json for FORCE_CLAUDE_VERSION in env section."""
-    settings_path = Path.home() / ".claude" / "settings.json"
-    if settings_path.exists():
-        try:
-            settings = json.loads(settings_path.read_text())
-            return settings.get("env", {}).get("FORCE_CLAUDE_VERSION")
-        except (json.JSONDecodeError, OSError):
-            pass
+    """Check settings files for FORCE_CLAUDE_VERSION in env section."""
+    paths = [
+        Path.home() / ".claude" / "pilot" / "settings.json",
+        Path.home() / ".claude" / "settings.json",
+    ]
+    for settings_path in paths:
+        if settings_path.exists():
+            try:
+                settings = json.loads(settings_path.read_text())
+                version = settings.get("env", {}).get("FORCE_CLAUDE_VERSION")
+                if version:
+                    return version
+            except (json.JSONDecodeError, OSError):
+                pass
     return None
 
 
@@ -369,6 +375,7 @@ def install_vexor(use_local: bool = False, ui: Any = None) -> bool:
 
     On macOS arm64, installs from fork with MLX support for Apple Silicon GPU.
     On other platforms, installs the standard CPU-based local embeddings.
+    Model pre-download is best-effort; vexor downloads it on first use if needed.
     """
     if use_local:
         if is_macos_arm64():
@@ -381,7 +388,10 @@ def install_vexor(use_local: bool = False, ui: Any = None) -> bool:
             if not _run_bash_with_retry("uv tool install 'vexor[local]'"):
                 return False
         _configure_vexor_local()
-        return _setup_vexor_local_model(ui)
+        if not _setup_vexor_local_model(ui):
+            if ui:
+                ui.info("Embedding model will download on first use")
+        return True
     else:
         if command_exists("vexor"):
             _configure_vexor_defaults()
@@ -403,7 +413,10 @@ def _install_vexor_mlx(ui: Any = None) -> bool:
         if not _run_bash_with_retry("uv tool install 'vexor[local]' --reinstall"):
             return False
         _configure_vexor_local()
-        return _setup_vexor_local_model(ui)
+        if not _setup_vexor_local_model(ui):
+            if ui:
+                ui.info("Embedding model will download on first use")
+        return True
 
     if not _install_vexor_from_local(vexor_dir, extra="local-mlx"):
         if ui:
@@ -411,10 +424,16 @@ def _install_vexor_mlx(ui: Any = None) -> bool:
         if not _run_bash_with_retry("uv tool install 'vexor[local]' --reinstall"):
             return False
         _configure_vexor_local()
-        return _setup_vexor_local_model(ui)
+        if not _setup_vexor_local_model(ui):
+            if ui:
+                ui.info("Embedding model will download on first use")
+        return True
 
     _configure_vexor_local(device="mlx")
-    return _setup_vexor_local_model(ui, device="mlx")
+    if not _setup_vexor_local_model(ui, device="mlx"):
+        if ui:
+            ui.info("Embedding model will download on first use")
+    return True
 
 
 def uninstall_mcp_cli() -> bool:
