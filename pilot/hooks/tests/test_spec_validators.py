@@ -6,6 +6,7 @@ import datetime
 import json
 import os
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -24,7 +25,7 @@ class TestSpecPlanValidator:
             plan_path.write_text("# Test Plan\n\nStatus: PENDING\n")
 
             result = subprocess.run(
-                ["uv", "run", "python", "pilot/hooks/spec_plan_validator.py"],
+                [sys.executable, "pilot/hooks/spec_plan_validator.py"],
                 input=json.dumps({"project_root": tmpdir, "stop_hook_active": False}),
                 capture_output=True,
                 text=True,
@@ -37,7 +38,7 @@ class TestSpecPlanValidator:
         """Should output block decision when no plan file exists."""
         with tempfile.TemporaryDirectory() as tmpdir:
             result = subprocess.run(
-                ["uv", "run", "python", "pilot/hooks/spec_plan_validator.py"],
+                [sys.executable, "pilot/hooks/spec_plan_validator.py"],
                 input=json.dumps({"project_root": tmpdir, "stop_hook_active": False}),
                 capture_output=True,
                 text=True,
@@ -51,7 +52,7 @@ class TestSpecPlanValidator:
         """Should allow stop when stop_hook_active is true (escape hatch)."""
         with tempfile.TemporaryDirectory() as tmpdir:
             result = subprocess.run(
-                ["uv", "run", "python", "pilot/hooks/spec_plan_validator.py"],
+                [sys.executable, "pilot/hooks/spec_plan_validator.py"],
                 input=json.dumps({"project_root": tmpdir, "stop_hook_active": True}),
                 capture_output=True,
                 text=True,
@@ -75,7 +76,7 @@ class TestSpecPlanValidator:
             transcript.write_text(json.dumps(msg) + "\n")
 
             result = subprocess.run(
-                ["uv", "run", "python", "pilot/hooks/spec_plan_validator.py"],
+                [sys.executable, "pilot/hooks/spec_plan_validator.py"],
                 input=json.dumps({
                     "project_root": tmpdir,
                     "stop_hook_active": False,
@@ -106,7 +107,7 @@ class TestSpecVerifyValidator:
         """Run spec_verify_validator with isolated PILOT_SESSION_ID."""
         env = {**os.environ, "PILOT_SESSION_ID": self.TEST_SESSION_ID}
         return subprocess.run(
-            ["uv", "run", "python", "pilot/hooks/spec_verify_validator.py"],
+            [sys.executable, "pilot/hooks/spec_verify_validator.py"],
             input=json.dumps(input_data),
             capture_output=True,
             text=True,
