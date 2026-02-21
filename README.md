@@ -135,6 +135,16 @@ export VERSION=6.9.3
 curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/main/install.sh | bash
 ```
 
+### Uninstalling
+
+To completely remove Claude Pilot:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/main/uninstall.sh | bash
+```
+
+This removes the Pilot binary, plugin files, managed commands/rules, settings and shell aliases.
+
 ---
 
 ## How It Works
