@@ -543,6 +543,27 @@ else
 	install_uv
 fi
 
+if ! command -v git >/dev/null 2>&1; then
+	case "$(uname -s)" in
+	Linux)
+		if command -v dnf >/dev/null 2>&1; then
+			echo "  [..] Installing git (required by Homebrew)..."
+			sudo dnf install -y git && echo "  [OK] git installed" ||
+				echo "  [!!] Failed to install git via dnf"
+		elif command -v yum >/dev/null 2>&1; then
+			echo "  [..] Installing git (required by Homebrew)..."
+			sudo yum install -y git && echo "  [OK] git installed" ||
+				echo "  [!!] Failed to install git via yum"
+		elif command -v apt-get >/dev/null 2>&1; then
+			echo "  [..] Installing git (required by Homebrew)..."
+			sudo apt-get update -qq && sudo apt-get install -y git &&
+				echo "  [OK] git installed" ||
+				echo "  [!!] Failed to install git via apt"
+		fi
+		;;
+	esac
+fi
+
 if [ "$USE_LOCAL_INSTALLER" = true ]; then
 	if [ -d "installer" ] && [ -f "pyproject.toml" ]; then
 		echo "  [OK] Using local installer from current directory"

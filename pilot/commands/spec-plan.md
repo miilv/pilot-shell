@@ -391,6 +391,17 @@ Split a task if it has multiple unrelated DoD criteria. Merge tasks if one can't
 - List integration points
 - Reference similar patterns in codebase
 
+### Step 1.5.1: Derive Goal Verification Criteria
+
+**After creating tasks, derive goal verification criteria for the `## Goal Verification` section in the plan:**
+
+1. State the goal (from Summary section)
+2. Derive 3-7 observable truths — falsifiable statements from the user's perspective (e.g., "Users can filter observations by project")
+3. For each truth, identify supporting artifacts — specific files that must exist with real implementation (not stubs)
+4. Identify 2-5 key links — critical connections between components that must be wired (e.g., "FilterComponent onChange → API call with `?project=` parameter")
+
+This section is NOT optional for new plans. Fill it in every time.
+
 ### Step 1.6: Write Full Plan
 
 **Save plan to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
@@ -531,6 +542,25 @@ Worktree: No
 
 ✅ Good: "If selected project not in available list, reset to null (All Projects)"
 ❌ Bad: "Handle edge cases appropriately"
+
+## Goal Verification
+
+> Derived from the plan's goal using goal-backward methodology. The spec-reviewer-goal agent verifies these criteria during verification.
+
+### Truths (what must be TRUE for the goal to be achieved)
+
+- [Observable, falsifiable statement from user's perspective]
+- [e.g., "Users can filter observations by project"]
+
+### Artifacts (what must EXIST to support those truths)
+
+- [Specific file path or component that must exist with real implementation]
+- [e.g., "`src/components/ProjectFilter.tsx` — renders filter dropdown"]
+
+### Key Links (critical connections that must be WIRED)
+
+- [Connection between two components that must work]
+- [e.g., "ProjectFilter onChange → API call with `?project=` parameter"]
 
 ## Open Questions
 

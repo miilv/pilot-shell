@@ -40,11 +40,15 @@ function scanArticles(blogDir: string): ArticleMeta[] {
     .filter((a): a is ArticleMeta => a !== null);
 }
 
-function buildSitemap(articles: ArticleMeta[]): string {
+function buildSitemap(articles: ArticleMeta[]): {
+  xml: string;
+  totalUrls: number;
+} {
   const today = new Date().toISOString().split("T")[0];
 
   const staticPages = [
     { loc: "/", lastmod: today, changefreq: "weekly", priority: "1.0" },
+    { loc: "/docs", lastmod: today, changefreq: "weekly", priority: "0.9" },
     { loc: "/blog", lastmod: today, changefreq: "weekly", priority: "0.8" },
   ];
 
@@ -64,15 +68,18 @@ function buildSitemap(articles: ArticleMeta[]): string {
     <lastmod>${p.lastmod}</lastmod>
     <changefreq>${p.changefreq}</changefreq>
     <priority>${p.priority}</priority>
-  </url>`
+  </url>`,
     )
     .join("\n");
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
+  return {
+    xml: `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls}
 </urlset>
-`;
+`,
+    totalUrls: allPages.length,
+  };
 }
 
 export default function sitemapPlugin(): Plugin {
@@ -89,12 +96,12 @@ export default function sitemapPlugin(): Plugin {
     closeBundle() {
       const blogDir = path.resolve(__dirname, "src/content/blog");
       const articles = scanArticles(blogDir);
-      const sitemap = buildSitemap(articles);
+      const { xml, totalUrls } = buildSitemap(articles);
       const dest = path.resolve(outDir, "sitemap.xml");
 
-      fs.writeFileSync(dest, sitemap);
+      fs.writeFileSync(dest, xml);
       console.log(
-        `\x1b[32m✓\x1b[0m sitemap.xml generated (${articles.length} articles, ${articles.length + 2} URLs total)`
+        `\x1b[32m✓\x1b[0m sitemap.xml generated (${articles.length} articles, ${totalUrls} URLs total)`,
       );
     },
   };

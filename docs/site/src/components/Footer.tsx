@@ -30,7 +30,13 @@ const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <button
-                  onClick={() => navigateToSection('installation', location.pathname, navigate)}
+                  onClick={() =>
+                    navigateToSection(
+                      "installation",
+                      location.pathname,
+                      navigate,
+                    )
+                  }
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
                   Getting Started
@@ -38,15 +44,27 @@ const Footer = () => {
               </li>
               <li>
                 <button
-                  onClick={() => navigateToSection('features', location.pathname, navigate)}
+                  onClick={() =>
+                    navigateToSection("features", location.pathname, navigate)
+                  }
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
                   Features
                 </button>
               </li>
               <li>
+                <Link
+                  to="/docs"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Docs
+                </Link>
+              </li>
+              <li>
                 <button
-                  onClick={() => navigateToSection('pricing', location.pathname, navigate)}
+                  onClick={() =>
+                    navigateToSection("pricing", location.pathname, navigate)
+                  }
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
                   Pricing
@@ -54,7 +72,9 @@ const Footer = () => {
               </li>
               <li>
                 <button
-                  onClick={() => navigateToSection('faq', location.pathname, navigate)}
+                  onClick={() =>
+                    navigateToSection("faq", location.pathname, navigate)
+                  }
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
                   FAQ
@@ -84,7 +104,9 @@ const Footer = () => {
 
           <div className="flex flex-col items-start gap-4">
             <h3 className="text-sm font-medium">Connect</h3>
-            <p className="text-xs text-muted-foreground">Follow on LinkedIn for updates</p>
+            <p className="text-xs text-muted-foreground">
+              Follow on LinkedIn for updates
+            </p>
             <nav className="flex gap-3" aria-label="Social media links">
               <Button
                 size="icon"
@@ -92,7 +114,12 @@ const Footer = () => {
                 className="border-primary/50 hover:bg-primary/10 transition-all duration-300 hover:scale-110 hover:border-primary"
                 asChild
               >
-                <a href="https://github.com/maxritter/claude-pilot" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                <a
+                  href="https://github.com/maxritter/claude-pilot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="GitHub"
+                >
                   <Github className="h-5 w-5" />
                 </a>
               </Button>
@@ -102,7 +129,12 @@ const Footer = () => {
                 className="border-primary/50 hover:bg-primary/10 transition-all duration-300 hover:scale-110 hover:border-primary"
                 asChild
               >
-                <a href="https://www.linkedin.com/in/rittermax/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                <a
+                  href="https://www.linkedin.com/in/rittermax/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="LinkedIn"
+                >
                   <Linkedin className="h-5 w-5" />
                 </a>
               </Button>

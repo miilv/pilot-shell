@@ -73,11 +73,11 @@ The Task tool spawns verification sub-agents at two points:
 | Phase | Agents (parallel, run in background) | `subagent_type` |
 |-------|--------------------------------------|-----------------|
 | `spec-plan` Step 1.7 | plan-verifier + plan-challenger | `pilot:plan-verifier` + `pilot:plan-challenger` |
-| `spec-verify` Step 3.0, 3.5 | spec-reviewer-compliance + spec-reviewer-quality | `pilot:spec-reviewer-compliance` + `pilot:spec-reviewer-quality` |
+| `spec-verify` Step 3.0, 3.7 | spec-reviewer-compliance + spec-reviewer-quality + spec-reviewer-goal | `pilot:spec-reviewer-compliance` + `pilot:spec-reviewer-quality` + `pilot:spec-reviewer-goal` |
 
 All verification agents have `background: true` in their agent definitions, so they run in the background automatically. **As a fallback**, also pass `run_in_background=true` in the Task() call.
 
-**Launch with TWO `Task()` calls in a SINGLE message.** If sent in separate messages, the first blocks and the second waits.
+**Launch all `Task()` calls in a SINGLE message.** If sent in separate messages, the first blocks and the second waits.
 
 **⛔ NEVER skip verification. ⛔ NEVER use `TaskOutput` to retrieve results** (dumps full transcript, wastes tokens). Agents write findings to JSON files — poll with Read tool, `sleep 10` between attempts.
 

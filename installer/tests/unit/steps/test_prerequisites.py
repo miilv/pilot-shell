@@ -332,9 +332,10 @@ class TestEnsureGitInstalled:
 
         assert _ensure_git_installed() is True
         call_args = mock_run.call_args_list[0][0][0]
+        assert "sudo" in call_args
+        assert "-n" not in call_args
         assert "dnf" in call_args
         assert "git" in call_args
-        assert mock_run.call_args_list[0][1].get("stdin") == subprocess.DEVNULL
 
     @patch("subprocess.run")
     @patch("installer.steps.prerequisites.is_dnf_available")

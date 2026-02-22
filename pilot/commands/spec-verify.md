@@ -23,7 +23,7 @@ hooks:
 
 | #   | Rule                                                                                                                                                                                                                                                           |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **NEVER SKIP verification** - Code review (Step 3.0/3.5) launches `spec-reviewer-compliance` + `spec-reviewer-quality` via the **Task tool** (`subagent_type="pilot:spec-reviewer-compliance"` and `"pilot:spec-reviewer-quality"`). Mandatory. No exceptions. |
+| 1   | **NEVER SKIP verification** - Code review (Step 3.0/3.7) launches `spec-reviewer-compliance` + `spec-reviewer-quality` + `spec-reviewer-goal` via the **Task tool** (`subagent_type="pilot:spec-reviewer-compliance"`, `"pilot:spec-reviewer-quality"`, and `"pilot:spec-reviewer-goal"`). Mandatory. No exceptions. |
 | 2   | **NO stopping** - Everything is automatic. Never ask "Should I fix these?"                                                                                                                                                                                     |
 | 3   | **Fix ALL findings automatically** - must_fix AND should_fix. No permission needed.                                                                                                                                                                            |
 | 4   | **Quality over speed** - Never rush due to context pressure                                                                                                                                                                                                    |
@@ -39,13 +39,13 @@ The verification process is split into two phases. All code changes (from review
 
 ```
 Phase A — Finalize the code:
-  Launch Reviewers (parallel) → Tests → Process Compliance → Feature Parity → Call Chain → Collect Review Results → Fix → Re-verify loop
+  Launch Reviewers (3 parallel) → Tests → Process Compliance → Plan Verify Commands → Artifact Existence Check → Feature Parity → Call Chain → Collect Review Results → Fix → Re-verify loop
 
 Phase B — Verify the running program:
-  Build → Deploy → Code Identity Check → Program Execution → DoD Audit → E2E → Edge Cases
+  Build → Deploy → Code Identity Check → Program Execution → Per-Task DoD Audit → E2E → Edge Cases
 
 Final:
-  Regression check → Update plan status
+  Regression check → Worktree sync → Post-merge verification (if worktree) → Update plan status
 ```
 
 **Why this order:** Code review findings change the code. If you run E2E before code review, you test unfixed code and must re-test after fixes. By finishing all code changes first, E2E tests the final product exactly once.
@@ -60,7 +60,7 @@ Final:
 
 **⛔ CRITICAL: Launch review agents IMMEDIATELY at the start of Phase A, before any other verification steps.**
 
-This early-launch pattern maximizes efficiency: agents begin reading the plan and reviewing code while the main session continues with automated checks (tests, lint, feature parity, call chain). By the time Step 3.5 collects results, agents are done or nearly done.
+This early-launch pattern maximizes efficiency: agents begin reading the plan and reviewing code while the main session continues with automated checks (tests, lint, feature parity, call chain). By the time Step 3.7 collects results, agents are done or nearly done.
 
 #### 3.0a: Identify Changed Files
 
@@ -94,10 +94,11 @@ Define output paths (replace `<session-id>` with the resolved value):
 
 - **Compliance findings:** `~/.pilot/sessions/<session-id>/findings-compliance.json`
 - **Quality findings:** `~/.pilot/sessions/<session-id>/findings-quality.json`
+- **Goal findings:** `~/.pilot/sessions/<session-id>/findings-goal.json`
 
-#### 3.0d: Launch Both Reviewers in Parallel
+#### 3.0d: Launch All Three Reviewers in Parallel
 
-Spawn 2 agents in parallel using TWO Task tool calls in a SINGLE message. Both agents have `background: true` in their definitions, so they run in the background automatically. As a fallback, also set `run_in_background=true` on both.
+Spawn 3 agents in parallel using THREE Task tool calls in a SINGLE message. All agents have `background: true` in their definitions, so they run in the background automatically. As a fallback, also set `run_in_background=true` on all three.
 
 **Agent 1: spec-reviewer-compliance** (plan alignment, DoD, risk mitigations)
 
@@ -145,16 +146,46 @@ Task(
 )
 ```
 
+**Agent 3: spec-reviewer-goal** (goal achievement, artifact completeness, wiring)
+
+```
+Task(
+  subagent_type="pilot:spec-reviewer-goal",
+  run_in_background=true,
+  prompt="""
+  **Plan file:** <plan-path>
+  **Changed files:** [file list from git status]
+  **Output path:** <absolute path to findings-goal.json>
+
+  Verify this implementation achieves the plan's goal. Read the plan file first.
+
+  The plan may contain a `## Goal Verification` section with explicit `### Truths`,
+  `### Artifacts`, and `### Key Links` subsections. If present, use those as your
+  starting point for truth derivation (preferred over self-derivation). You may
+  supplement with additional truths if the section is incomplete.
+
+  If no `## Goal Verification` section exists, derive truths from the plan's
+  Summary/Goal using goal-backward methodology.
+
+  Check artifacts exist and are substantive (not stubs), and verify components
+  are wired together.
+
+  **IMPORTANT:** Write your final findings JSON to the output_path using the Write tool.
+  """
+)
+```
+
 The reviewers work in parallel:
 
 - **spec-reviewer-compliance**: Verifies implementation matches plan, DoD criteria met, risk mitigations implemented
 - **spec-reviewer-quality**: Verifies code quality, security, testing, performance, error handling
+- **spec-reviewer-goal**: Verifies goal achievement, artifact completeness (exists/substantive/wired), stub detection, anti-patterns
 
-Both agents start immediately and work in the background while Steps 3.1-3.4 proceed.
+All three agents start immediately and work in the background while Steps 3.1-3.6 proceed.
 
 #### 3.0e: Continue with Automated Checks
 
-**Do NOT wait for agent results.** Proceed immediately to Step 3.1. The agents work in the background while you run tests, linters, feature parity, and call chain analysis.
+**Do NOT wait for agent results.** Proceed immediately to Step 3.1. The agents work in the background while you run tests, linters, verify commands, artifact checks, feature parity, and call chain analysis.
 
 ### Step 3.1: Run & Fix Tests
 
@@ -177,9 +208,45 @@ Run mechanical verification tools. These check process adherence that the code r
 
 **Fix all errors before proceeding.** Warnings are acceptable; errors are blockers.
 
-**Note:** The review agents (launched in Step 3.0) handle code quality, spec compliance, and rules enforcement. This step only covers mechanical tool checks that produce binary pass/fail results.
+**Note:** The review agents (launched in Step 3.0) handle code quality, spec compliance, rules enforcement, and goal achievement. This step only covers mechanical tool checks that produce binary pass/fail results.
 
-### Step 3.3: Feature Parity Check (if applicable)
+### Step 3.3: Run Plan Verify Commands
+
+**Re-run each task's verification commands to catch regressions.**
+
+For each task in the plan, read its `Verify:` section and run each command:
+
+1. **Wrap each command in a timeout:** `timeout 30 <cmd> || echo 'TIMEOUT'`
+2. **If a command fails** → fix immediately (same as Step 3.1 test failure handling)
+3. **If a command times out** (30s) → log `TIMEOUT: <command> — deferred to Phase B` and continue
+
+**Skip heuristic for server-dependent commands:** If the command contains `curl`, `wget`, `http://`, `localhost`, `integration`, or `playwright-cli`, defer to Phase B. Log: `DEFERRED to Phase B: <command>`
+
+This re-validates task-specific acceptance criteria that were checked during implementation but might have regressed due to later tasks.
+
+### Step 3.4: Artifact Existence & Quick Wiring Scan
+
+**Verify all planned files exist and are connected.**
+
+1. **Artifact existence:** Read the plan's task `Files:` sections. For each `Create:` file, verify it exists:
+   ```bash
+   test -f <path> && echo "OK: <path>" || echo "MISSING: <path>"
+   ```
+
+2. **Quick wiring scan:** For each changed file, check it's imported by at least one other file:
+   ```bash
+   grep -r "import.*<filename-without-ext>" --include="*.ts" --include="*.tsx" --include="*.py" | grep -v "<the-file-itself>"
+   ```
+
+3. **Entry points are exempt from import checks:** route files, main files, test files, CLI entry points, hook scripts, config files.
+
+4. **If any file is MISSING** → this is a serious issue. Check if the file was accidentally deleted or never created. Fix immediately.
+
+5. **If any file appears orphaned** (no imports) → note it for cross-reference with the goal agent's deeper wiring analysis in Step 3.7.
+
+This is a fast sanity check (~30 seconds) that catches obvious issues before the goal agent's deeper analysis arrives.
+
+### Step 3.5: Feature Parity Check (if applicable)
 
 **For refactoring/migration tasks only:** Verify ALL original functionality is preserved.
 
@@ -225,7 +292,7 @@ This is a serious issue - the implementation is incomplete.
 
 5. **Invoke implementation phase:** `Skill(skill='spec-implement', args='<plan-path>')`
 
-### Step 3.4: Call Chain Analysis
+### Step 3.6: Call Chain Analysis
 
 **Perform deep impact analysis for all changes:**
 
@@ -245,7 +312,7 @@ This is a serious issue - the implementation is incomplete.
    - External system impacts
    - Global state modifications
 
-### Step 3.5: Collect Review Results
+### Step 3.7: Collect Review Results
 
 **⛔ THIS STEP IS NON-NEGOTIABLE. You MUST collect and process review findings.**
 
@@ -258,9 +325,9 @@ This is a serious issue - the implementation is incomplete.
 
 **None of these are valid reasons to skip. ALWAYS COLLECT AND PROCESS RESULTS.**
 
-#### 3.5a: Retrieve and Fix Findings Progressively
+#### 3.7a: Retrieve and Fix Findings Progressively
 
-The two review agents (launched in Step 3.0) should be done or nearly done by now. Their findings are persisted to files in the session directory.
+The three review agents (launched in Step 3.0) should be done or nearly done by now. Their findings are persisted to files in the session directory.
 
 **⛔ NEVER use `TaskOutput` to retrieve agent results.** TaskOutput dumps the full verbose agent transcript (all JSON messages, hook progress, tool calls) into context, wasting thousands of tokens. Instead, poll the output files with the Read tool.
 
@@ -268,28 +335,33 @@ The two review agents (launched in Step 3.0) should be done or nearly done by no
 
 **⚠️ IMPORTANT: Wait between polling attempts.** Run `sleep 10` via Bash before each Read attempt. Agents typically take 3-7 minutes. Rapid-fire Read calls waste context and produce dozens of "file not found" errors.
 
-1. **Wait 10 seconds, then attempt to read BOTH findings files** using the Read tool on the paths defined in Step 3.0c:
+1. **Wait 10 seconds, then attempt to read ALL THREE findings files** using the Read tool on the paths defined in Step 3.0c:
    - `~/.pilot/sessions/<session-id>/findings-compliance.json`
    - `~/.pilot/sessions/<session-id>/findings-quality.json`
-2. **If neither file exists yet** → run `sleep 10` and retry. Repeat up to 30 times (5 minutes total) before considering the agents failed.
-3. **If one file exists but the other doesn't** → start fixing findings from the ready agent immediately (by severity: must_fix → should_fix → suggestion). Track which findings you fixed.
-4. After fixing the first batch, **wait 10 seconds and poll for the second file** (retry with `sleep 10` between attempts)
-5. When the second file is ready, **skip findings that overlap** with already-fixed items from the first batch (same file + same issue), then fix the remaining findings
-6. **If both files are ready simultaneously**, deduplicate first (keep higher severity for duplicates on same file + line), then fix all
+   - `~/.pilot/sessions/<session-id>/findings-goal.json`
+2. **If no files exist yet** → run `sleep 10` and retry. Repeat up to 50 times before considering the agents failed.
+3. **As each file appears**, start fixing findings from that agent immediately (by severity: must_fix → should_fix → suggestion). Track which findings you fixed.
+4. After fixing a batch, **wait 10 seconds and poll for remaining files** (retry with `sleep 10` between attempts)
+5. When additional files are ready, **skip findings that overlap** with already-fixed items (same file + same issue), then fix the remaining findings
+6. **If all files are ready simultaneously**, deduplicate first, then fix all
 
-**If a findings file is still missing after 30 retries** (agent failed to write):
+**Deduplication across three agents:** When the same file + same issue appears in multiple agents' findings, keep the highest severity and merge all unique suggested_fixes. Priority for conflicting fix strategies: quality agent > compliance agent > goal agent (code correctness takes precedence over structural wiring).
+
+**Goal agent's `truths` array** is reported separately (not deduplicated — it's a different data structure). Include goal achievement status in the report.
+
+**If a findings file is still missing after 50 retries** (agent failed to write):
 
 1. Re-launch that specific agent synchronously (without `run_in_background`) with the same prompt
-2. If the synchronous re-launch also fails, log the failure and continue with findings from the other agent only
+2. If the synchronous re-launch also fails, log the failure and continue with findings from the other agents only
 
 **Expected timeline:**
 
-- Agents were launched before Step 3.1 (tests, lint, feature parity, call chain)
-- Steps 3.1-3.4 typically take 2-5 minutes
+- Agents were launched before Step 3.1 (tests, lint, verify commands, artifact checks, feature parity, call chain)
+- Steps 3.1-3.6 typically take 3-7 minutes
 - Agents typically complete in 3-7 minutes
-- Net result: Agents finish around the same time as Step 3.4, minimal or zero wait time
+- Net result: Agents finish around the same time as Step 3.6, minimal or zero wait time
 
-#### 3.5b: Report Findings
+#### 3.7b: Report Findings
 
 As you collect and fix findings, present them briefly:
 
@@ -298,12 +370,13 @@ As you collect and fix findings, present them briefly:
 
 **Issues Found:** X
 
+### Goal Achievement: N/M truths verified
 ### Must Fix (N) | Should Fix (N) | Suggestions (N)
 
 Implementing fixes automatically...
 ```
 
-#### 3.5c: Fix Severity Order
+#### 3.7c: Fix Severity Order
 
 **⛔ DO NOT ask user for permission. Fix everything automatically.**
 
@@ -321,7 +394,7 @@ This is part of the automated /spec workflow. The user approved the plan - verif
 2. Run relevant tests to verify
 3. Log: "✅ Fixed: [issue title]"
 
-### Step 3.6: Re-verification (Only When Looping Back to Implementation)
+### Step 3.8: Re-verification (Only When Looping Back to Implementation)
 
 Re-verification is **only required when fixes are structural enough to warrant looping back to the implementation phase** (e.g., adding new plan tasks, architectural changes, major logic rewrites).
 
@@ -329,7 +402,7 @@ Re-verification is **only required when fixes are structural enough to warrant l
 
 **Re-verify when:** Fixes required new functionality, changed APIs, modified hook behavior, or added significant new code paths. In this case:
 
-1. Re-run BOTH review agents in parallel (same as Step 3.0d)
+1. Re-run ALL THREE review agents in parallel (same as Step 3.0d)
 2. Fix any new must_fix or should_fix findings
 3. Maximum 2 iterations before adding remaining issues to plan
 
@@ -341,15 +414,15 @@ If issues require going back to implementation, add tasks to plan. Then invoke `
 
 All code is now finalized. No more code changes should happen in this phase (except critical bugs found during execution).
 
-### Step 3.7: Build, Deploy, and Verify Code Identity
+### Step 3.9: Build, Deploy, and Verify Code Identity
 
 **⚠️ CRITICAL: Tests passing ≠ Program works. And building ≠ running your build.**
 
-#### 3.7a: Build
+#### 3.9a: Build
 
 Build/compile the project. Verify zero errors.
 
-#### 3.7b: Deploy (if applicable)
+#### 3.9b: Deploy (if applicable)
 
 If the project builds artifacts that are deployed separately from source (e.g., bundled JS, compiled binaries, Docker images):
 
@@ -357,11 +430,11 @@ If the project builds artifacts that are deployed separately from source (e.g., 
 2. Copy new builds to the installed location
 3. Restart any running services that use the old artifacts
 
-**⚠️ Parallel spec warning:** Deploy paths are shared OS resources. If another `/spec` session deploys to the same path, Code Identity Verification (3.7c) becomes unreliable. Check `ps aux | grep <service>` before restarting shared services.
+**⚠️ Parallel spec warning:** Deploy paths are shared OS resources. If another `/spec` session deploys to the same path, Code Identity Verification (3.9c) becomes unreliable. Check `ps aux | grep <service>` before restarting shared services.
 
-**If no separate deployment is needed, skip to 3.7c.**
+**If no separate deployment is needed, skip to 3.9c.**
 
-#### 3.7c: Code Identity Verification (MANDATORY)
+#### 3.9c: Code Identity Verification (MANDATORY)
 
 **Before testing ANY endpoint or behavior, prove the running instance uses your newly built code.**
 
@@ -378,7 +451,7 @@ If the project builds artifacts that are deployed separately from source (e.g., 
 
 **⛔ DO NOT proceed to program execution testing until code identity is confirmed.**
 
-### Step 3.8: Program Execution Verification
+### Step 3.10: Program Execution Verification
 
 Run the actual program and verify real output.
 
@@ -405,23 +478,11 @@ If code processes external data, ALWAYS verify by fetching source data independe
 | Bug Type                                                       | Action                                                                                                                      |
 | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | **Minor** (typo, off-by-one, missing import)                   | Fix immediately, re-run, continue verification                                                                              |
-| **Major** (logic error, missing function, architectural issue) | Add task to plan, set PENDING, **⛔ Context Guard** (spec.md 0.3), then `Skill(skill='spec-implement', args='<plan-path>')` |
+| **Major** (logic error, missing function, architectural issue) | Add task to plan, set PENDING, then `Skill(skill='spec-implement', args='<plan-path>')` |
 
-### Step 3.9: Goal Verification and DoD Audit
+### Step 3.11: Per-Task DoD Audit
 
-**Task completion ≠ Goal achievement.** A task can be marked "done" (file created, test passes) while the plan's actual goal remains unmet. Verify both levels.
-
-#### 3.9a: Goal-Backward Verification
-
-Read the plan's **Summary/Goal** section. Work backwards from the intended outcome:
-
-1. **What must be TRUE** for the goal to be achieved? (e.g., "users can filter by project")
-2. **What must EXIST** for those truths to hold? (e.g., filter component, API parameter, query logic)
-3. **What must be WIRED** for those artifacts to function? (e.g., component imported, route registered, state connected)
-
-Verify each level against the actual codebase and running program. If any level fails, the goal is not achieved regardless of task completion status.
-
-#### 3.9b: Per-Task DoD Audit
+**Task completion ≠ Goal achievement.** The `spec-reviewer-goal` agent (Step 3.0) already performed static goal-backward verification (truths → artifacts → wiring) in Phase A. Its `truths` array provides evidence of structural completeness. This step focuses on **runtime DoD verification** — checking each task's acceptance criteria against the running program.
 
 **For EACH task in the plan**, read its Definition of Done criteria and verify each criterion is met with evidence from the running program.
 
@@ -438,11 +499,11 @@ Verify each level against the actual codebase and running program. If any level 
 - If fixable inline → fix immediately
 - If structural → add task to plan and loop back to implementation
 
-### Step 3.10: E2E Verification (MANDATORY for apps with UI/API)
+### Step 3.12: E2E Verification (MANDATORY for apps with UI/API)
 
 **⚠️ Unit + Integration tests are NOT enough. You MUST also run E2E tests.**
 
-#### 3.10.0: Resolve Playwright Session (MANDATORY before any playwright-cli usage)
+#### 3.12.0: Resolve Playwright Session (MANDATORY before any playwright-cli usage)
 
 **⛔ Parallel `/spec` sessions WILL interfere if you use bare `playwright-cli` commands.** Always use a session-scoped browser instance.
 
@@ -459,13 +520,13 @@ playwright-cli -s="$PW_SESSION" click e1
 # ... etc
 ```
 
-**Cleanup at the end of E2E testing (after Step 3.10b):**
+**Cleanup at the end of E2E testing (after Step 3.12b):**
 
 ```bash
 playwright-cli -s="$PW_SESSION" close
 ```
 
-#### 3.10a: Happy Path Testing
+#### 3.12a: Happy Path Testing
 
 Test the primary user workflow end-to-end.
 
@@ -475,7 +536,7 @@ Test the primary user workflow end-to-end.
 
 Walk through the main user scenario described in the plan. Every view, every interaction, every state transition.
 
-#### 3.10b: Edge Case and Negative Testing
+#### 3.12b: Edge Case and Negative Testing
 
 After the happy path passes, test failure modes. **This is not optional.**
 
@@ -499,7 +560,7 @@ For each edge case:
 playwright-cli -s="$PW_SESSION" close
 ```
 
-### Step 3.11: Final Regression Check
+### Step 3.13: Final Regression Check
 
 Run the test suite and type checker one final time to catch any regressions from Phase B fixes (if any code changed during execution/E2E testing):
 
@@ -509,7 +570,7 @@ Run the test suite and type checker one final time to catch any regressions from
 
 **If no code changed during Phase B** (no bugs found during execution/E2E), this confirms the same green state from Phase A. Still run it — it's cheap insurance.
 
-### Step 3.11b: Worktree Sync (if worktree is active)
+### Step 3.13b: Worktree Sync (if worktree is active)
 
 **After all verification passes, sync worktree changes back to the original branch with user approval.**
 
@@ -525,7 +586,7 @@ This is the THIRD user interaction point in the `/spec` workflow (first is workt
    # Returns: {"found": true, "path": "...", "branch": "...", "base_branch": "..."} or {"found": false}
    ```
 
-3. **If no worktree is active** (`"found": false`): Skip to Step 3.12 (this is a non-worktree spec run or worktree was already synced).
+3. **If no worktree is active** (`"found": false`): Skip to Step 3.14 (this is a non-worktree spec run or worktree was already synced).
 
 4. **Pre-sync: Check working tree is clean (MANDATORY)**
 
@@ -537,7 +598,7 @@ This is the THIRD user interaction point in the `/spec` workflow (first is workt
 
    **If output is non-empty (dirty working tree):**
    - Report to user: "Cannot sync: the main branch has uncommitted changes. Please commit or `git stash` them first, then re-run `/spec <plan_path>` to resume verification."
-   - Do NOT proceed with sync. Step 3.12 will loop back to implementation.
+   - Do NOT proceed with sync. Step 3.14 will loop back to implementation.
 
 5. **Save plan file to project root (MANDATORY)**
 
@@ -608,7 +669,44 @@ This is the THIRD user interaction point in the `/spec` workflow (first is workt
 
    Report: "Worktree and branch discarded."
 
-### Step 3.12: Update Plan Status
+### Step 3.13c: Post-Merge Verification (worktree sync only)
+
+**After a successful worktree sync, verify the merged code on the base branch before marking VERIFIED.**
+
+Verification in the worktree confirmed the code works in isolation. But the squash merge onto the base branch can introduce breakage:
+
+- **Other worktrees merged first** — the base branch diverged, and the squash merge produced semantic conflicts (code merges cleanly but logic is broken)
+- **Merge conflict resolution** — if conflicts were resolved (manually or automatically), the resolution itself may introduce bugs
+- **Interface drift** — dependencies, shared utilities, or APIs changed on the base branch since the worktree branched off
+
+**⛔ This step is MANDATORY after a successful "Yes, squash merge" in Step 3.13b.** Skip only if:
+
+- No worktree was active (non-worktree spec run)
+- User chose "No, keep worktree" or "Discard all changes"
+
+**Post-merge checks (run on base branch after sync + cleanup):**
+
+1. **Run full test suite** — All tests must pass. This is the single most important check — tests written in the worktree now run against the merged codebase which includes all other changes.
+
+2. **Run type checker / linter** — Zero errors. Type mismatches from interface drift are common after merges.
+
+3. **Build verification** — Clean build with no errors.
+
+4. **Program launch smoke test** — Start the program and verify it launches without errors. Check logs for stack traces, panics, or unhandled exceptions. If the program exposes an API or UI, verify at least one endpoint/page responds correctly. This catches runtime issues that static analysis and unit tests miss (missing config, broken imports from renamed modules, incompatible state migrations, etc.).
+
+**If any check fails:**
+
+The merge introduced a regression. Fix it on the base branch directly:
+
+1. Report the specific failure clearly
+2. Fix the issue immediately (you are now on the base branch, not in a worktree)
+3. Re-run the failing check to confirm the fix
+4. Re-run the full test suite to catch cascading failures
+5. Commit the fix separately (with a descriptive message referencing the merge, e.g. `fix: resolve post-merge regression from spec/<slug>`)
+
+**⛔ Do NOT proceed to Step 3.14 (VERIFIED) until all post-merge checks pass.**
+
+### Step 3.14: Update Plan Status
 
 **Status Lifecycle:** `PENDING` → `COMPLETE` → `VERIFIED`
 
@@ -644,8 +742,22 @@ This is the THIRD user interaction point in the `/spec` workflow (first is workt
    Iterations: N     →  Iterations: N+1
    ```
 3. **Register status change (auto-notifies dashboard):** `~/.pilot/bin/pilot register-plan "<plan_path>" "PENDING" 2>/dev/null || true`
-4. Inform user: "🔄 Iteration N+1: Issues found, fixing and re-verifying..."
-5. **Invoke implementation phase:** `Skill(skill='spec-implement', args='<plan-path>')`
+4. **Write structured gap table** to the plan file under a `## Verification Gaps` section. If the section already exists, overwrite it entirely (to avoid accumulating stale gaps across iterations):
+
+   ```markdown
+   ## Verification Gaps
+
+   | Gap | Type | Severity | Affected Files | Fix Description |
+   |-----|------|----------|---------------|-----------------|
+   | [truth that failed] | goal_gap | must_fix | [files] | [what needs to happen] |
+   | [stub found] | stub | should_fix | [file:line] | [implement real logic] |
+   | [orphaned module] | wiring | should_fix | [file] | [wire into consumer] |
+   ```
+
+   This supplements the new tasks — tasks describe what to build, the gap table provides diagnostic context.
+
+5. Inform user: "🔄 Iteration N+1: Issues found, fixing and re-verifying..."
+6. **Invoke implementation phase:** `Skill(skill='spec-implement', args='<plan-path>')`
 
 ---
 

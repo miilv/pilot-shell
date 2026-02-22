@@ -227,7 +227,7 @@ Discuss  →  Plan  →  Approve  →  Implement  →  Verify  →  Done
 1. Runs full test suite — unit, integration, and E2E
 2. Type checking and linting across the entire project
 3. Executes actual program to verify real-world behavior (not just tests)
-4. **Spec-verifier sub-agent** performs independent code review against the plan
+4. **Three review sub-agents** run in parallel: compliance (plan alignment), quality (code standards), and goal (verifies the implementation achieves its intended outcome)
 5. Auto-fixes all findings, then re-verifies until clean
 6. Loops back to implementation if structural issues remain
 7. On success, shows diff summary and offers to squash merge worktree back to main branch

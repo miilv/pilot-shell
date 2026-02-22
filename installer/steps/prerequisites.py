@@ -58,13 +58,13 @@ def _ensure_git_installed() -> bool:
 
     pkg_cmds: list[list[str]] = []
     if is_dnf_available():
-        pkg_cmds = [["sudo", "-n", "dnf", "install", "-y", "git"]]
+        pkg_cmds = [["sudo", "dnf", "install", "-y", "git"]]
     elif is_yum_available():
-        pkg_cmds = [["sudo", "-n", "yum", "install", "-y", "git"]]
+        pkg_cmds = [["sudo", "yum", "install", "-y", "git"]]
     elif is_apt_available():
         pkg_cmds = [
-            ["sudo", "-n", "apt-get", "update", "-qq"],
-            ["sudo", "-n", "apt-get", "install", "-y", "git"],
+            ["sudo", "apt-get", "update", "-qq"],
+            ["sudo", "apt-get", "install", "-y", "git"],
         ]
     else:
         return False
@@ -73,9 +73,7 @@ def _ensure_git_installed() -> bool:
         for cmd in pkg_cmds:
             result = subprocess.run(
                 cmd,
-                capture_output=True,
                 check=False,
-                stdin=subprocess.DEVNULL,
                 timeout=120,
             )
             if result.returncode != 0:

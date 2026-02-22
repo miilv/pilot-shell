@@ -59,6 +59,14 @@ const NavBar = () => {
             size="sm"
             className="hidden sm:inline-flex"
           >
+            <Link to="/docs">Docs</Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="hidden sm:inline-flex"
+          >
             <Link to="/blog">Blog</Link>
           </Button>
           <a
@@ -111,6 +119,13 @@ const NavBar = () => {
               {link.label}
             </button>
           ))}
+          <Link
+            to="/docs"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block w-full text-left py-3 text-muted-foreground hover:text-foreground border-b border-border transition-colors"
+          >
+            Docs
+          </Link>
           <Link
             to="/blog"
             onClick={() => setMobileMenuOpen(false)}

@@ -87,10 +87,11 @@ Every file edit gets linted immediately. Errors are caught in real-time rather t
 
 ## Read-Only Validator Agents
 
-For complex validation, Pilot uses dedicated review agents that run in parallel:
+For complex validation, Pilot uses three dedicated review agents that run in parallel:
 
 - **Compliance reviewer** — Checks implementation matches the plan
 - **Quality reviewer** — Checks code quality, testing, security
+- **Goal reviewer** — Verifies the implementation achieves its intended outcome, not just that tasks were completed
 
 These agents have read-only access — they can analyze code but can't modify it. Their findings are collected and the main agent fixes issues automatically.
 
