@@ -42,8 +42,8 @@ const DemoSection = () => {
             See It In Action
           </h2>
           <p className="text-muted-foreground text-lg sm:text-xl max-w-3xl mx-auto">
-            A full-stack project — created from scratch, then extended with
-            3 features in parallel. Every line of code planned, tested, and
+            A full-stack project — created from scratch, then extended with 3
+            features in parallel. Every line of code planned, tested, and
             verified entirely by AI.
           </p>
         </div>
@@ -51,7 +51,7 @@ const DemoSection = () => {
         {/* YouTube Embed */}
         <div
           ref={videoRef}
-          className={`${videoInView ? "animate-fade-in-up" : "opacity-0"}`}
+          className={`max-w-4xl mx-auto ${videoInView ? "animate-fade-in-up" : "opacity-0"}`}
         >
           <div className="relative rounded-2xl overflow-hidden border border-border/50 shadow-2xl shadow-primary/10">
             <div
