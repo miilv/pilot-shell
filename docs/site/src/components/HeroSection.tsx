@@ -129,11 +129,11 @@ const HeroSection = () => {
         </div>
 
         {/* CTA Buttons */}
-        <div className="flex flex-col xs:flex-row items-center justify-center gap-2 xs:gap-3 sm:gap-4 animate-fade-in-up animation-delay-400 px-2">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 animate-fade-in-up animation-delay-400 px-2">
           <Button
             size="lg"
             asChild
-            className="w-full xs:w-auto text-sm xs:text-base"
+            className="w-full sm:w-auto text-sm xs:text-base"
           >
             <a
               href="https://github.com/maxritter/claude-pilot"
@@ -148,7 +148,7 @@ const HeroSection = () => {
             variant="outline"
             size="lg"
             asChild
-            className="w-full xs:w-auto text-sm xs:text-base"
+            className="w-full sm:w-auto text-sm xs:text-base"
           >
             <a href="/docs">
               <BookOpen className="mr-1.5 xs:mr-2 h-3.5 w-3.5 xs:h-4 xs:w-4" />

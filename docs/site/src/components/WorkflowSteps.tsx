@@ -163,9 +163,12 @@ const WorkflowSteps = () => {
           <h3 className="text-base font-semibold text-foreground mb-6 text-center">
             <code className="text-primary">/spec</code> Workflow
           </h3>
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-center justify-center gap-4 sm:gap-6">
             {specSteps.map((step, i) => (
-              <div key={i} className="flex items-center gap-3 sm:gap-6">
+              <div
+                key={i}
+                className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6"
+              >
                 <div className="flex flex-col items-center">
                   <div
                     className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center
@@ -181,13 +184,13 @@ const WorkflowSteps = () => {
                   </span>
                 </div>
                 {i < specSteps.length - 1 && (
-                  <span className="text-primary text-xl sm:text-2xl font-light">
+                  <span className="hidden sm:block text-primary text-2xl font-light">
                     &rarr;
                   </span>
                 )}
               </div>
             ))}
-            <span className="text-muted-foreground text-sm ml-4 flex items-center gap-1">
+            <span className="text-muted-foreground text-sm sm:ml-4 flex items-center gap-1">
               <RefreshCw className="h-4 w-4" /> Loop
             </span>
           </div>
