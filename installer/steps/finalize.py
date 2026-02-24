@@ -24,7 +24,7 @@ def _get_pilot_version() -> str:
                 timeout=5,
             )
             if result.returncode == 0:
-                match = re.search(r"Pilot v(.+)$", result.stdout.strip())
+                match = re.search(r" v(\S+)$", result.stdout.strip())
                 if match:
                     return match.group(1)
         except Exception:
@@ -88,14 +88,14 @@ class FinalizeStep(BaseStep):
         steps.append(("📋 /spec", "Plan, implement & verify features and bug fixes with TDD and code review"))
         steps.append(("🧠 /learn", "Extract reusable knowledge into skills from sessions"))
         steps.append(("🏦 /vault", "Optional: Pull shared rules and skills from your team"))
-        steps.append(("🔵 Pilot Console", "Open in your browser at: http://localhost:41777"))
+        steps.append(("🔵 Pilot Shell Console", "Open in your browser at: http://localhost:41777"))
 
         ui.next_steps(steps)
 
         if not ui.quiet:
             ui.rule()
             ui.print()
-            ui.print("  [bold yellow]⭐ Star this repo:[/bold yellow] https://github.com/maxritter/claude-pilot")
+            ui.print("  [bold yellow]⭐ Star this repo:[/bold yellow] https://github.com/maxritter/pilot-shell")
             ui.print()
             ui.print(f"  [dim]Installed version: {_get_pilot_version()}[/dim]")
             ui.print()

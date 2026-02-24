@@ -21,7 +21,7 @@ const Footer = () => {
           <div className="flex flex-col gap-3">
             <Logo variant="footer" />
             <p className="text-sm text-muted-foreground max-w-xs">
-              Claude Code is powerful. Pilot makes it reliable.
+              Claude Code is powerful. Pilot Shell makes it reliable.
             </p>
           </div>
 
@@ -115,7 +115,7 @@ const Footer = () => {
                 asChild
               >
                 <a
-                  href="https://github.com/maxritter/claude-pilot"
+                  href="https://github.com/maxritter/pilot-shell"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="GitHub"
@@ -156,12 +156,12 @@ const Footer = () => {
           <p className="text-sm text-muted-foreground text-center">
             © {new Date().getFullYear()}{" "}
             <a
-              href="https://claude-pilot.com/"
+              href="https://pilot-shell.com/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline"
             >
-              Claude Pilot
+              Pilot Shell
             </a>
             . Created by{" "}
             <a
@@ -175,7 +175,7 @@ const Footer = () => {
             . All rights reserved.
             {" · "}
             <a
-              href="https://github.com/maxritter/claude-pilot/blob/main/LICENSE"
+              href="https://github.com/maxritter/pilot-shell/blob/main/LICENSE"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline"
