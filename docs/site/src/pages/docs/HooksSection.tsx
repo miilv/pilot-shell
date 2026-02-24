@@ -12,12 +12,12 @@ const hookGroups = [
       {
         name: "Memory loader",
         type: "Blocking",
-        desc: "Loads persistent context from Pilot Shell Console memory into the session",
+        desc: "Loads persistent context from Console memory into the session",
       },
       {
         name: "post_compact_restore.py",
         type: "Blocking",
-        desc: "Re-injects active plan, task state, and key context after auto-compaction",
+        desc: "Re-injects active plan, task state, and key context after compaction",
       },
       {
         name: "Session tracker",
@@ -36,7 +36,7 @@ const hookGroups = [
       {
         name: "Session initializer",
         type: "Async",
-        desc: "Initializes and registers the session with the Pilot Shell Console worker daemon on first user message.",
+        desc: "Registers the session with the Console worker daemon on first message",
       },
     ],
   },
@@ -50,7 +50,7 @@ const hookGroups = [
       {
         name: "tool_redirect.py",
         type: "Blocking",
-        desc: "Blocks WebSearch/WebFetch (MCP alternatives exist), blocks EnterPlanMode/ExitPlanMode (/spec conflict). Hints vexor for semantic Grep patterns.",
+        desc: "Redirects to MCP alternatives, blocks plan mode conflicts, hints vexor for search",
       },
     ],
   },
@@ -64,22 +64,22 @@ const hookGroups = [
       {
         name: "file_checker.py",
         type: "Blocking",
-        desc: "Language-specific quality checks: Python (ruff + basedpyright), TypeScript (Prettier + ESLint + tsc), Go (gofmt + golangci-lint). Auto-fixes formatting.",
+        desc: "Python (ruff + basedpyright), TypeScript (Prettier + ESLint + tsc), Go (gofmt + golangci-lint). Auto-fixes formatting.",
       },
       {
         name: "tdd_enforcer.py",
         type: "Non-blocking",
-        desc: "Checks if implementation files were edited without a failing test existing first. Reminds to write tests. Excludes test files, docs, config, TSX, infrastructure.",
+        desc: "Warns when implementation files are edited without a failing test first",
       },
       {
         name: "context_monitor.py",
         type: "Non-blocking",
-        desc: "Monitors context usage on an effective 0–100% scale. Warns at ~80% (informational) and ~90%+ (caution). Prompts /learn at key thresholds.",
+        desc: "Tracks context usage 0–100%. Warns at ~80%, caution at ~90%+",
       },
       {
         name: "Memory observer",
         type: "Async",
-        desc: "Captures development observations (decisions, discoveries, bugfixes) to persistent memory for future sessions.",
+        desc: "Captures decisions, discoveries, and bugfixes to persistent memory",
       },
     ],
   },
@@ -93,7 +93,7 @@ const hookGroups = [
       {
         name: "pre_compact.py",
         type: "Blocking",
-        desc: "Captures Pilot state (active plan, task list, key context, decisions) to persistent memory before context compaction fires.",
+        desc: "Snapshots active plan, task list, and key decisions to memory",
       },
     ],
   },
@@ -107,22 +107,22 @@ const hookGroups = [
       {
         name: "spec_stop_guard.py",
         type: "Blocking",
-        desc: "If an active spec exists with PENDING or COMPLETE status, blocks stopping. Forces verification to complete before the session can end.",
+        desc: "Blocks stopping if an active spec hasn't completed verification",
       },
       {
         name: "spec_plan_validator.py",
         type: "Blocking",
-        desc: "During /spec planning, verifies the plan file was created and contains required sections before allowing the session to end.",
+        desc: "Verifies plan file was created with required sections",
       },
       {
         name: "spec_verify_validator.py",
         type: "Blocking",
-        desc: "During /spec verification, verifies the plan status was updated to VERIFIED before allowing the session to end.",
+        desc: "Verifies plan status was updated to VERIFIED",
       },
       {
         name: "Session summarizer",
         type: "Async",
-        desc: "Saves session observations to persistent memory so future sessions benefit from this session's work.",
+        desc: "Saves session observations to memory for future sessions",
       },
     ],
   },
@@ -136,7 +136,7 @@ const hookGroups = [
       {
         name: "session_end.py",
         type: "Blocking",
-        desc: "Stops the worker daemon when no other Pilot sessions are active. Sends real-time dashboard notification.",
+        desc: "Stops worker daemon if no other sessions active. Sends dashboard notification.",
       },
     ],
   },

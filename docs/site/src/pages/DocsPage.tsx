@@ -30,23 +30,50 @@ import ConsoleSection from "./docs/ConsoleSection";
 import CliSection from "./docs/CliSection";
 import ModelRoutingSection from "./docs/ModelRoutingSection";
 
-const tocItems = [
-  { id: "prerequisites", label: "Prerequisites" },
-  { id: "installation", label: "Installation" },
-  { id: "sync", label: "/sync — Codebase Sync" },
-  { id: "spec", label: "/spec — Spec-Driven Dev" },
-  { id: "quick-mode", label: "Quick Mode" },
-  { id: "learn", label: "/learn — Online Learning" },
-  { id: "vault", label: "/vault — Team Vault" },
-  { id: "hooks", label: "Hooks Pipeline" },
-  { id: "context-preservation", label: "Context Preservation" },
-  { id: "rules", label: "Rules & Standards" },
-  { id: "mcp-servers", label: "MCP Servers" },
-  { id: "language-servers", label: "Language Servers" },
-  { id: "console", label: "Pilot Shell Console" },
-  { id: "cli", label: "Pilot CLI" },
-  { id: "model-routing", label: "Smart Model Routing" },
+interface TocGroup {
+  title: string;
+  items: { id: string; label: string }[];
+}
+
+const tocGroups: TocGroup[] = [
+  {
+    title: "Getting Started",
+    items: [
+      { id: "prerequisites", label: "Prerequisites" },
+      { id: "installation", label: "Installation" },
+    ],
+  },
+  {
+    title: "Commands",
+    items: [
+      { id: "sync", label: "/sync — Codebase Sync" },
+      { id: "spec", label: "/spec — Spec-Driven Dev" },
+      { id: "quick-mode", label: "Quick Mode" },
+      { id: "learn", label: "/learn — Online Learning" },
+      { id: "vault", label: "/vault — Team Vault" },
+    ],
+  },
+  {
+    title: "System",
+    items: [
+      { id: "hooks", label: "Hooks Pipeline" },
+      { id: "context-preservation", label: "Context Preservation" },
+      { id: "rules", label: "Rules & Standards" },
+      { id: "model-routing", label: "Smart Model Routing" },
+    ],
+  },
+  {
+    title: "Tools",
+    items: [
+      { id: "mcp-servers", label: "MCP Servers" },
+      { id: "language-servers", label: "Language Servers" },
+      { id: "console", label: "Pilot Shell Console" },
+      { id: "cli", label: "Pilot CLI" },
+    ],
+  },
 ];
+
+const tocItems = tocGroups.flatMap((g) => g.items);
 
 const sectionIds = tocItems.map((item) => item.id);
 
@@ -76,28 +103,37 @@ const TocList = ({
   activeId: string;
   onItemClick?: () => void;
 }) => (
-  <ul className="space-y-0.5">
-    {tocItems.map((item) => (
-      <li key={item.id}>
-        <a
-          href={`#${item.id}`}
-          onClick={onItemClick}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-150 ${
-            activeId === item.id
-              ? "bg-primary/10 text-primary font-medium"
-              : "text-muted-foreground hover:text-foreground hover:bg-card/50"
-          }`}
-        >
-          {activeId === item.id && (
-            <ChevronRight className="h-3 w-3 flex-shrink-0" />
-          )}
-          <span className={activeId === item.id ? "" : "ml-5"}>
-            {item.label}
-          </span>
-        </a>
-      </li>
+  <nav className="space-y-4">
+    {tocGroups.map((group) => (
+      <div key={group.title}>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 px-3 mb-1">
+          {group.title}
+        </p>
+        <ul className="space-y-0.5">
+          {group.items.map((item) => (
+            <li key={item.id}>
+              <a
+                href={`#${item.id}`}
+                onClick={onItemClick}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all duration-150 ${
+                  activeId === item.id
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-card/50"
+                }`}
+              >
+                {activeId === item.id && (
+                  <ChevronRight className="h-3 w-3 flex-shrink-0" />
+                )}
+                <span className={activeId === item.id ? "" : "ml-5"}>
+                  {item.label}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
     ))}
-  </ul>
+  </nav>
 );
 
 const DocsPage = () => {
@@ -171,9 +207,6 @@ const DocsPage = () => {
             {/* Sidebar — desktop only */}
             <aside className="hidden lg:block">
               <div className="sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto pr-2">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-3">
-                  On this page
-                </p>
                 <TocList activeId={activeId} />
               </div>
             </aside>
@@ -190,11 +223,11 @@ const DocsPage = () => {
               <HooksSection />
               <ContextSection />
               <RulesSection />
+              <ModelRoutingSection />
               <McpServersSection />
               <LanguageServersSection />
               <ConsoleSection />
               <CliSection />
-              <ModelRoutingSection />
             </div>
           </div>
         </div>
