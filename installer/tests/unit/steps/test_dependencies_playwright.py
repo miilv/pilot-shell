@@ -88,8 +88,9 @@ class TestInstallPlaywrightSystemDeps:
             timeout=300,
         )
 
+    @patch("installer.steps.dependencies.time.sleep")
     @patch("installer.steps.dependencies.subprocess")
-    def test_returns_false_on_failure(self, mock_subprocess):
+    def test_returns_false_on_failure(self, mock_subprocess, _mock_sleep):
         """Returns False when install-deps fails."""
         from installer.steps.dependencies import _install_playwright_system_deps
 
@@ -98,8 +99,9 @@ class TestInstallPlaywrightSystemDeps:
         mock_subprocess.run.return_value = mock_result
         assert _install_playwright_system_deps() is False
 
+    @patch("installer.steps.dependencies.time.sleep")
     @patch("installer.steps.dependencies.subprocess")
-    def test_returns_false_on_exception(self, mock_subprocess):
+    def test_returns_false_on_exception(self, mock_subprocess, _mock_sleep):
         """Returns False when subprocess raises exception."""
         from installer.steps.dependencies import _install_playwright_system_deps
 
@@ -204,11 +206,12 @@ class TestInstallPlaywrightCli:
         ui.spinner.assert_called_once_with("Downloading Chromium browser...")
         mock_deps.assert_called_once_with(ui)
 
+    @patch("installer.steps.dependencies.time.sleep")
     @patch("installer.steps.dependencies._install_playwright_system_deps")
     @patch("installer.steps.dependencies.subprocess")
     @patch("installer.steps.dependencies._is_playwright_cli_ready")
     @patch("installer.steps.dependencies._run_bash_with_retry")
-    def test_returns_false_when_browser_install_fails(self, mock_run, mock_ready, mock_subprocess, mock_deps):
+    def test_returns_false_when_browser_install_fails(self, mock_run, mock_ready, mock_subprocess, mock_deps, _mock_sleep):
         """Returns False when playwright-cli install fails."""
         from installer.steps.dependencies import install_playwright_cli
 
