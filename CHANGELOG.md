@@ -2,6 +2,12 @@
 
 All notable changes to Pilot Shell will be documented in this file.
 
+## [7.0.0] - 2026-02-24
+
+### Features
+
+- Rename Claude Pilot to Pilot Shell
+
 ## [6.11.0] - 2026-02-24
 
 ### Features
