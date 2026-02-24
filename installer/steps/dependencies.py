@@ -258,6 +258,44 @@ def _is_vexor_local_model_installed() -> bool:
     return False
 
 
+def _get_uv_tool_vexor_bin() -> Path | None:
+    """Get the vexor binary from the uv tool environment (ignores PATH shadows)."""
+    try:
+        result = subprocess.run(["uv", "tool", "dir"], capture_output=True, text=True, timeout=10)
+        if result.returncode != 0:
+            return None
+        vexor_bin = Path(result.stdout.strip()) / "vexor" / "bin" / "vexor"
+        return vexor_bin if vexor_bin.exists() else None
+    except Exception:
+        return None
+
+
+def _is_vexor_local_functional() -> bool:
+    """Runtime check: can vexor actually use local embeddings?
+
+    Uses the uv tool binary directly to avoid PATH shadows from project .venv.
+    Detects the broken state where vexor is installed but local model
+    dependencies are missing (e.g. 'Local model support is not installed').
+    """
+    vexor_bin = _get_uv_tool_vexor_bin()
+    if vexor_bin is None:
+        return False
+
+    try:
+        result = subprocess.run(
+            [str(vexor_bin), "index", "--help"],
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+        combined = result.stdout + result.stderr
+        if "Local model support is not installed" in combined:
+            return False
+        return True
+    except Exception:
+        return False
+
+
 def _is_vexor_mlx_installed() -> bool:
     """Check if vexor is installed with MLX support (not the CPU-only version).
 
@@ -375,11 +413,11 @@ def install_vexor(use_local: bool = False, ui: Any = None) -> bool:
         if is_macos_arm64():
             return _install_vexor_mlx(ui)
 
-        if command_exists("vexor") and _is_vexor_local_model_installed():
+        if command_exists("vexor") and _is_vexor_local_model_installed() and _is_vexor_local_functional():
             _configure_vexor_local()
             return True
-        if not command_exists("vexor"):
-            if not _run_bash_with_retry("uv tool install 'vexor[local]'"):
+        if not command_exists("vexor") or not _is_vexor_local_functional():
+            if not _run_bash_with_retry("uv tool install 'vexor[local]' --reinstall"):
                 return False
         _configure_vexor_local()
         if not _setup_vexor_local_model(ui):
@@ -396,7 +434,7 @@ def install_vexor(use_local: bool = False, ui: Any = None) -> bool:
 
 def _install_vexor_mlx(ui: Any = None) -> bool:
     """Install Vexor with MLX support from fork for macOS Apple Silicon."""
-    if _is_vexor_mlx_installed() and _is_vexor_local_model_installed():
+    if _is_vexor_mlx_installed() and _is_vexor_local_model_installed() and _is_vexor_local_functional():
         _configure_vexor_local(device="mlx")
         return True
 
