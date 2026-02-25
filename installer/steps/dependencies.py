@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import time
 from pathlib import Path
@@ -70,7 +71,18 @@ def install_nodejs() -> bool:
             return False
 
     nvm_src = _get_nvm_source_cmd()
-    return _run_bash_with_retry(f"{nvm_src}nvm install 22 && nvm use 22")
+    if not _run_bash_with_retry(f"{nvm_src}nvm install 22 && nvm use 22"):
+        return False
+
+    nvm_versions = Path.home() / ".nvm" / "versions" / "node"
+    if nvm_versions.exists():
+        node_bins = sorted(nvm_versions.glob("*/bin"), reverse=True)
+        if node_bins:
+            node_bin = str(node_bins[0])
+            if node_bin not in os.environ.get("PATH", ""):
+                os.environ["PATH"] = f"{node_bin}:{os.environ.get('PATH', '')}"
+
+    return True
 
 
 def install_uv() -> bool:
@@ -754,13 +766,13 @@ def _install_plugin_dependencies(_project_dir: Path, ui: Any = None) -> bool:
             ui.warning("No package.json in plugin directory - skipping")
         return False
 
-    success = False
-
     if command_exists("bun"):
-        if _run_bash_with_retry("bun install", cwd=plugin_dir):
-            success = True
+        return _run_bash_with_retry("bun install", cwd=plugin_dir)
 
-    return success
+    if command_exists("npm"):
+        return _run_bash_with_retry("npm install", cwd=plugin_dir)
+
+    return False
 
 
 def _setup_pilot_memory(ui: Any) -> bool:

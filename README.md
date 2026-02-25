@@ -2,6 +2,8 @@
 
 <img src="docs/img/logo.png" alt="Pilot Shell" width="400">
 
+**The professional development environment for [Claude Code](https://docs.anthropic.com/en/docs/claude-code)**
+
 ### Claude Code is powerful. Pilot Shell makes it reliable.
 
 Start a task, grab a coffee, come back to production-grade code.</br>
@@ -22,19 +24,21 @@ curl -fsSL https://raw.githubusercontent.com/maxritter/pilot-shell/main/install.
 
 **Works on macOS, Linux, and Windows (WSL2).**
 
+<br>
+
+<img src="docs/img/demo.gif" alt="Pilot Shell Demo" width="700">
+
 </div>
 
 ---
 
 ## Why I Built This
 
-I'm Max, a senior IT freelancer from Germany. My clients hire me to ship production-quality code — tested, typed, formatted, and reviewed.
-
 Claude Code writes code fast. But without structure, it skips tests, loses context, and produces inconsistent results — especially on complex, established codebases where there are real conventions to follow and real regressions to catch. I tried other frameworks. Most of them add complexity — dozens of agents, elaborate scaffolding, thousands of lines of instruction files — but the output doesn't get better. You just burn more tokens, wait longer, and deal with more things breaking.
 
-So I built Pilot Shell. Instead of adding process on top, it bakes quality into every interaction. Linting, formatting, and type checking run as enforced hooks on every edit. TDD is mandatory, not suggested. Context is preserved across sessions. Every rule exists because I hit a real problem: a bug that slipped through, a regression that shouldn't have happened, a session where Claude cut corners and nobody caught it.
+**So I built Pilot Shell**. Instead of adding process on top, it bakes quality into every interaction. Linting, formatting, and type checking run as enforced hooks on every edit. TDD is mandatory, not suggested. Context is preserved across sessions. Every rule exists because I hit a real problem: a bug that slipped through, a regression that shouldn't have happened, a session where Claude cut corners and nobody caught it.
 
-This isn't a vibe coding tool, it's true agentic engineering, made simple. You install it in any existing project, run `pilot`, then `/sync` to learn your codebase. The guardrails are just there. The end result is that you can walk away — start a `/spec` task, approve the plan, go grab a coffee. When you come back, the work is tested, verified, formatted, and ready to ship.
+This isn't a vibe coding tool, it's true agentic engineering, but without the added complexity. You install it in any existing project, run `pilot`, then `/sync` to learn your codebase. The guardrails are just there. The end result is that you can walk away — start a `/spec` task, approve the plan, go grab a coffee. When you come back, the work is tested, verified, formatted, and ready to ship.
 
 ---
 
@@ -99,11 +103,12 @@ curl -fsSL https://raw.githubusercontent.com/maxritter/pilot-shell/main/uninstal
 
 ### /spec — Spec-Driven Development
 
-Features, bug fixes, refactoring — describe it and `/spec` handles the rest. Auto-detects the task type and adapts the flow.
+Features, bug fixes, refactoring — describe it and `/spec` handles the rest. Auto-detects whether it's a feature or a bugfix and adapts the workflow.
 
 ```bash
 pilot
-> /spec "Add user authentication with OAuth and JWT tokens"
+> /spec "Add user authentication with OAuth and JWT tokens"   # → feature mode
+> /spec "Fix the crash when deleting nodes with two children"  # → bugfix mode (auto-detected)
 ```
 
 ```
@@ -113,34 +118,30 @@ Plan  →  Approve  →  Implement (TDD)  →  Verify  →  Done
 ```
 
 <details>
-<summary><b>Plan Phase</b></summary>
+<summary><b>Feature Mode</b></summary>
 
-1. Explores entire codebase with semantic search (Vexor)
-2. Asks clarifying questions before committing to a design
-3. Writes detailed spec to `docs/plans/` with scope, tasks, and definition of done
-4. **Plan-verifier sub-agent** independently validates completeness
-5. Waits for your approval — you can edit the plan first
+Full exploration workflow for new functionality, refactoring, or architectural changes.
 
-</details>
+**Plan:** Explores codebase with semantic search → asks clarifying questions → writes detailed spec with scope, tasks, and definition of done → **plan-verifier sub-agent** validates completeness → waits for your approval.
 
-<details>
-<summary><b>Implement Phase</b></summary>
+**Implement:** Creates an isolated git worktree → implements each task with strict TDD (RED → GREEN → REFACTOR) → quality hooks auto-lint, format, and type-check every edit → full test suite after each task.
 
-1. Creates an isolated git worktree — main branch stays clean
-2. Implements each task with strict TDD (RED → GREEN → REFACTOR)
-3. Quality hooks auto-lint, format, and type-check every edit
-4. Runs full test suite after each task to catch regressions early
+**Verify:** Full test suite + actual program execution → **three review sub-agents** in parallel (compliance, quality, goal) → auto-fixes findings → squash merges to main on success.
 
 </details>
 
 <details>
-<summary><b>Verify Phase</b></summary>
+<summary><b>Bugfix Mode</b></summary>
 
-1. Runs full test suite — unit, integration, and E2E
-2. Executes actual program to verify real-world behavior (not just tests)
-3. **Three review sub-agents** in parallel: compliance, quality, and goal verification
-4. Auto-fixes all findings, re-verifies until clean
-5. Squash merges worktree back to main branch on success
+Lighter, property-aware workflow for targeted fixes. Defines the bug precisely before touching any code.
+
+**Analysis:** Traces the bug to a specific `file:line` root cause → formalizes the Bug Condition (C) and Postcondition (P) → creates a **Behavior Contract** defining what must change and what must NOT change.
+
+**Test-Before-Fix:** Writes a bug-condition test that FAILS on current code → writes preservation tests that PASS on current code → implements the minimal fix → verifies all tests pass.
+
+**Verify:** Lightweight verification — **Behavior Contract audit** (explicitly verifies Fix Property and Preservation Property) → full test suite → lint + type check → process compliance. No review sub-agents — the Behavior Contract mathematically proves correctness through tests.
+
+**Why this matters:** The Behavior Contract prevents regressions. The bug test proves the fix works. The preservation tests prove nothing else broke. No guessing, no "fix one thing, break another."
 
 </details>
 
@@ -165,6 +166,27 @@ Create your own rules, commands, and skills in `.claude/` — all plain markdown
 | **Rules**    | Every session, or conditionally by file type | Guidelines Claude should always follow |
 | **Commands** | On demand via `/command`                     | Specific workflows or multi-step tasks |
 | **Skills**   | On demand, created via `/learn`              | Reusable knowledge from past sessions  |
+
+### Pilot Shell Console
+
+A local web dashboard with 7 views and real-time notifications when Claude needs your input:
+
+<img src="docs/img/dashboard.png" alt="Pilot Shell Console — Dashboard" width="700">
+
+<details>
+<summary><b>All views</b></summary>
+
+| View               | What it shows                                                                            |
+| ------------------ | ---------------------------------------------------------------------------------------- |
+| **Dashboard**      | Workspace status, active sessions, spec progress, git info, recent activity              |
+| **Specifications** | All spec plans with task progress, phase tracking, and iteration history                 |
+| **Memories**       | Browsable observations — decisions, discoveries, bugfixes — with type filters and search |
+| **Sessions**       | Active and past sessions with observation counts and duration                            |
+| **Usage**          | Daily token costs, model routing breakdown, and usage trends                             |
+| **Vault**          | Shared team assets with version tracking                                                 |
+| **Settings**       | Model selection per command/sub-agent, extended context toggle                           |
+
+</details>
 
 ---
 
@@ -327,25 +349,6 @@ MCP servers provide external context in every session — library docs, persiste
 ### Language Servers (LSP)
 
 Real-time diagnostics and go-to-definition for Python (basedpyright), TypeScript (vtsls), and Go (gopls). Auto-installed, auto-configured via `.lsp.json`, and auto-restart on crash.
-
-### Pilot Shell Console
-
-A local web dashboard at `localhost:41777` with 7 views: workspace dashboard, spec progress tracking, browsable memory, session history, token usage analytics, team vault, and per-component model settings. Real-time notifications via SSE when Claude needs your input or a spec phase completes.
-
-<details>
-<summary><b>All views</b></summary>
-
-| View               | What it shows                                                                            |
-| ------------------ | ---------------------------------------------------------------------------------------- |
-| **Dashboard**      | Workspace status, active sessions, spec progress, git info, recent activity              |
-| **Specifications** | All spec plans with task progress, phase tracking, and iteration history                 |
-| **Memories**       | Browsable observations — decisions, discoveries, bugfixes — with type filters and search |
-| **Sessions**       | Active and past sessions with observation counts and duration                            |
-| **Usage**          | Daily token costs, model routing breakdown, and usage trends                             |
-| **Vault**          | Shared team assets with version tracking                                                 |
-| **Settings**       | Model selection per command/sub-agent, extended context toggle                           |
-
-</details>
 
 ### Pilot Shell CLI
 

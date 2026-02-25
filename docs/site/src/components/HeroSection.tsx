@@ -22,19 +22,16 @@ const HeroSection = () => {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,hsl(var(--background))_70%)]" />
 
       <div className="relative z-10 text-center max-w-4xl mx-auto w-full">
-        {/* Status indicator */}
+        {/* Claude Code callout */}
         <div className="animate-fade-in-up mb-3 xs:mb-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/5 border border-primary/20 font-mono text-[10px] xs:text-xs text-primary/80">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/60 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-            </span>
-            PILOT ONLINE
+          <div className="inline-flex items-center gap-2 xs:gap-2.5 px-3 xs:px-4 py-1.5 xs:py-2 rounded-full bg-primary/5 border border-primary/20 text-[10px] xs:text-xs sm:text-sm">
+            <span className="text-muted-foreground">Built exclusively for</span>
+            <span className="font-semibold text-primary">Claude Code</span>
           </div>
         </div>
 
-        {/* Badge */}
-        <div className="animate-fade-in-up mb-4 xs:mb-6">
+        {/* Tagline badge */}
+        <div className="animate-fade-in-up animation-delay-100 mb-4 xs:mb-6">
           <Badge
             variant="outline"
             className="px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 text-[10px] xs:text-xs sm:text-sm border-primary/50 text-primary"
@@ -47,12 +44,12 @@ const HeroSection = () => {
         </div>
 
         {/* Logo */}
-        <div className="animate-fade-in-up animation-delay-100 flex justify-center my-2 xs:my-4 sm:my-6">
+        <div className="animate-fade-in-up animation-delay-200 flex justify-center my-2 xs:my-4 sm:my-6">
           <Logo variant="hero" />
         </div>
 
         {/* Subtitle */}
-        <div className="animate-fade-in-up animation-delay-200 mb-6 xs:mb-8 px-1">
+        <div className="animate-fade-in-up animation-delay-300 mb-6 xs:mb-8 px-1">
           <p className="text-muted-foreground text-[11px] xs:text-xs sm:text-sm md:text-base lg:text-lg max-w-[90%] xs:max-w-xl sm:max-w-2xl mx-auto leading-relaxed">
             Start a task, grab a coffee, come back to production-grade code.
           </p>
@@ -62,7 +59,7 @@ const HeroSection = () => {
         </div>
 
         {/* Feature highlights */}
-        <div className="flex flex-wrap justify-center gap-3 xs:gap-4 sm:gap-6 mb-6 xs:mb-8 animate-fade-in-up animation-delay-300 px-2">
+        <div className="flex flex-wrap justify-center gap-3 xs:gap-4 sm:gap-6 mb-6 xs:mb-8 animate-fade-in-up animation-delay-400 px-2">
           <div className="text-center">
             <div className="text-lg xs:text-xl sm:text-2xl font-bold text-primary">
               Rules
@@ -110,7 +107,7 @@ const HeroSection = () => {
         </div>
 
         {/* Feature badges */}
-        <div className="flex flex-wrap justify-center gap-1.5 xs:gap-2 mb-6 xs:mb-8 animate-fade-in-up animation-delay-300 px-2">
+        <div className="flex flex-wrap justify-center gap-1.5 xs:gap-2 mb-6 xs:mb-8 animate-fade-in-up animation-delay-400 px-2">
           <Badge variant="secondary" className="text-[10px] xs:text-xs">
             TDD Enforced
           </Badge>
@@ -129,7 +126,7 @@ const HeroSection = () => {
         </div>
 
         {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 animate-fade-in-up animation-delay-400 px-2">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 animate-fade-in-up animation-delay-500 px-2">
           <Button
             size="lg"
             asChild

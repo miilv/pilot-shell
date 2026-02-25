@@ -77,7 +77,7 @@ const FAQSection = () => {
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
             FAQ
           </h2>
-          <p className="text-muted-foreground text-lg sm:text-xl max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-lg sm:text-xl max-w-3xl mx-auto">
             Common questions about Pilot Shell, data privacy, and compatibility.
           </p>
         </div>

@@ -557,7 +557,6 @@ class TestDirectoryClearing:
             assert (global_pilot / "hooks" / "hook.py").exists()
 
 
-
 class TestMergeAppConfig:
     """Test merging pilot/claude.json app preferences into ~/.claude.json."""
 

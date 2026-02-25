@@ -26,9 +26,16 @@ const ComparisonSection = () => {
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
             The Problem
           </h2>
-          <p className="text-muted-foreground text-lg sm:text-xl max-w-2xl mx-auto">
-            Without structure, Claude Code skips tests, loses context, and
-            produces inconsistent results.
+          <p className="text-muted-foreground text-lg sm:text-xl max-w-3xl mx-auto">
+            Claude Code without structure skips tests, loses context, and ships
+            inconsistent results.
+          </p>
+          <p className="text-muted-foreground/70 text-sm sm:text-base max-w-3xl mx-auto mt-3">
+            Pilot Shell turns it into{" "}
+            <span className="text-foreground font-medium">
+              true agentic engineering
+            </span>{" "}
+            — no vibe coding, no added complexity.
           </p>
         </div>
 

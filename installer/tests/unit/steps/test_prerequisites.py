@@ -361,9 +361,7 @@ class TestEnsureGitInstalled:
     @patch("installer.steps.prerequisites.is_apt_available")
     @patch("installer.steps.prerequisites.is_linux")
     @patch("installer.steps.prerequisites.command_exists")
-    def test_returns_false_when_no_package_manager(
-        self, mock_cmd, mock_linux, mock_apt, mock_yum, mock_dnf, mock_run
-    ):
+    def test_returns_false_when_no_package_manager(self, mock_cmd, mock_linux, mock_apt, mock_yum, mock_dnf, mock_run):
         from installer.steps.prerequisites import _ensure_git_installed
 
         mock_cmd.return_value = False
@@ -390,6 +388,131 @@ class TestEnsureGitInstalled:
         assert _ensure_git_installed() is False
 
 
+class TestPrerequisitesStepRunLinuxFallback:
+    """Test that PrerequisitesStep.run continues on Linux when Homebrew fails."""
+
+    @patch("installer.steps.prerequisites._install_ripgrep_via_apt")
+    @patch("installer.steps.prerequisites.is_apt_available")
+    @patch("installer.steps.prerequisites._install_homebrew_package")
+    @patch("installer.steps.prerequisites._add_bun_tap")
+    @patch("installer.steps.prerequisites._install_homebrew")
+    @patch("installer.steps.prerequisites._ensure_git_installed")
+    @patch("installer.steps.prerequisites.command_exists")
+    @patch("installer.steps.prerequisites.is_linux")
+    @patch("installer.steps.prerequisites.is_homebrew_available")
+    def test_run_continues_after_homebrew_failure_on_linux(
+        self,
+        mock_brew_avail,
+        mock_linux,
+        mock_cmd_exists,
+        _mock_git,
+        mock_install_brew,
+        _mock_tap,
+        _mock_pkg_install,
+        mock_apt,
+        mock_ripgrep,
+    ):
+        """On Linux, PrerequisitesStep.run does not return early when Homebrew fails."""
+        from installer.context import InstallContext
+        from installer.steps.prerequisites import PrerequisitesStep
+        from installer.ui import Console
+
+        mock_brew_avail.return_value = False
+        mock_linux.return_value = True
+        mock_cmd_exists.return_value = False
+        mock_install_brew.return_value = False
+        mock_apt.return_value = True
+        mock_ripgrep.return_value = True
+
+        step = PrerequisitesStep()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ctx = InstallContext(
+                project_dir=Path(tmpdir),
+                is_local_install=True,
+                ui=Console(non_interactive=True),
+            )
+            step.run(ctx)
+
+        mock_ripgrep.assert_called_once()
+
+    @patch("installer.steps.prerequisites._install_ripgrep_via_apt")
+    @patch("installer.steps.prerequisites.is_apt_available")
+    @patch("installer.steps.prerequisites._install_homebrew")
+    @patch("installer.steps.prerequisites.command_exists")
+    @patch("installer.steps.prerequisites.is_linux")
+    @patch("installer.steps.prerequisites.is_homebrew_available")
+    def test_run_returns_early_on_macos_homebrew_failure(
+        self,
+        mock_brew_avail,
+        mock_linux,
+        mock_cmd_exists,
+        mock_install_brew,
+        mock_apt,
+        mock_ripgrep,
+    ):
+        """On macOS, PrerequisitesStep.run still returns early when Homebrew fails (unchanged)."""
+        from installer.context import InstallContext
+        from installer.steps.prerequisites import PrerequisitesStep
+        from installer.ui import Console
+
+        mock_brew_avail.return_value = False
+        mock_linux.return_value = False
+        mock_cmd_exists.return_value = True
+        mock_install_brew.return_value = False
+        mock_apt.return_value = True
+        mock_ripgrep.return_value = True
+
+        step = PrerequisitesStep()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ctx = InstallContext(
+                project_dir=Path(tmpdir),
+                is_local_install=True,
+                ui=Console(non_interactive=True),
+            )
+            step.run(ctx)
+
+        mock_ripgrep.assert_not_called()
+
+    @patch("installer.steps.prerequisites._install_ripgrep_via_apt")
+    @patch("installer.steps.prerequisites.is_apt_available")
+    @patch("installer.steps.prerequisites._install_homebrew")
+    @patch("installer.steps.prerequisites._ensure_git_installed")
+    @patch("installer.steps.prerequisites.command_exists")
+    @patch("installer.steps.prerequisites.is_linux")
+    @patch("installer.steps.prerequisites.is_homebrew_available")
+    def test_run_continues_after_homebrew_failure_on_linux_without_ui(
+        self,
+        mock_brew_avail,
+        mock_linux,
+        mock_cmd_exists,
+        _mock_git,
+        mock_install_brew,
+        mock_apt,
+        mock_ripgrep,
+    ):
+        """On Linux without UI, PrerequisitesStep.run does not return early when Homebrew fails."""
+        from installer.context import InstallContext
+        from installer.steps.prerequisites import PrerequisitesStep
+
+        mock_brew_avail.return_value = False
+        mock_linux.return_value = True
+        mock_cmd_exists.return_value = False
+        mock_install_brew.return_value = False
+        mock_apt.return_value = True
+        mock_ripgrep.return_value = True
+
+        step = PrerequisitesStep()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ctx = InstallContext(
+                project_dir=Path(tmpdir),
+                is_local_install=True,
+                ui=None,
+            )
+            step.run(ctx)
+
+        mock_ripgrep.assert_called_once()
+
+
 class TestPrerequisitesStepRunGitInstall:
     """Test that PrerequisitesStep.run installs git before Homebrew."""
 
@@ -397,9 +520,7 @@ class TestPrerequisitesStepRunGitInstall:
     @patch("installer.steps.prerequisites._ensure_git_installed")
     @patch("installer.steps.prerequisites.command_exists")
     @patch("installer.steps.prerequisites.is_homebrew_available")
-    def test_run_installs_git_before_homebrew_when_missing(
-        self, mock_brew, mock_cmd, mock_git, mock_homebrew_install
-    ):
+    def test_run_installs_git_before_homebrew_when_missing(self, mock_brew, mock_cmd, mock_git, mock_homebrew_install):
         from installer.context import InstallContext
         from installer.steps.prerequisites import PrerequisitesStep
         from installer.ui import Console
@@ -424,9 +545,7 @@ class TestPrerequisitesStepRunGitInstall:
     @patch("installer.steps.prerequisites._ensure_git_installed")
     @patch("installer.steps.prerequisites.command_exists")
     @patch("installer.steps.prerequisites.is_homebrew_available")
-    def test_run_skips_git_install_when_already_present(
-        self, mock_brew, mock_cmd, mock_git, mock_homebrew_install
-    ):
+    def test_run_skips_git_install_when_already_present(self, mock_brew, mock_cmd, mock_git, mock_homebrew_install):
         from installer.context import InstallContext
         from installer.steps.prerequisites import PrerequisitesStep
         from installer.ui import Console

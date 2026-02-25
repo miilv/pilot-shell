@@ -6,6 +6,7 @@ import {
   useSettings,
 } from "../../hooks/useSettings.js";
 import { ModelSelect } from "./ModelSelect.js";
+import { ExtendedContextToggle } from "./ExtendedContextToggle.js";
 
 const GENERAL_ROWS: { key: string; label: string; sub?: string }[] = [
   { key: "main", label: "Main session", sub: "Quick Mode / direct chat" },
@@ -107,7 +108,9 @@ export function SettingsView() {
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-base-content/60 text-sm">
-          Model selection for Pilot Shell. Restart Pilot after saving.
+          Model selection for Pilot Shell. Sonnet 4.6 costs $3 input / $15
+          output per million tokens (MTok). Opus 4.6 costs $5 input / $25 output
+          per MTok.
         </p>
       </div>
 
@@ -117,27 +120,27 @@ export function SettingsView() {
         </div>
       )}
 
-      {/* Extended Context toggle — compact inline */}
-      <div className="flex items-start gap-3 bg-base-200 rounded-lg px-4 py-3">
-        <input
-          type="checkbox"
-          className="toggle toggle-primary toggle-sm mt-0.5"
-          checked={settings.extendedContext}
-          onChange={(e) => updateExtendedContext(e.target.checked)}
-        />
-        <div className="min-w-0">
-          <div className="text-sm font-semibold leading-tight">
-            Extended Context (1M)
-          </div>
-          <div className="text-xs text-base-content/50 mt-0.5">
-            Enables 1M token context for all models, commands, and sub-agents.
-          </div>
-          <div className="text-xs text-warning/80 mt-0.5">
-            Requires Max (20x) or Enterprise subscription — only enable if you
-            have confirmed access.
-          </div>
+      {/* Restart banner — shown after save */}
+      {saved && (
+        <div className="alert alert-warning shadow-md">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="stroke-current shrink-0 h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          <span className="font-medium">
+            Settings saved. Restart Pilot for changes to take effect.
+          </span>
         </div>
-      </div>
+      )}
 
       {/* Single unified table */}
       <div className="card bg-base-200">
@@ -248,26 +251,10 @@ export function SettingsView() {
         </div>
       </div>
 
-      {/* Pricing reference — collapsible */}
-      <details className="collapse collapse-arrow bg-base-200 rounded-lg">
-        <summary className="collapse-title text-sm font-medium py-2 min-h-0">
-          Pricing reference
-        </summary>
-        <div className="collapse-content text-xs text-base-content/50">
-          <div className="grid grid-cols-2 gap-x-6 gap-y-0.5 mb-1">
-            <span>
-              <span className="font-mono">Sonnet 4.6</span> — $3 / $15 per MTok
-            </span>
-            <span>
-              <span className="font-mono">Opus 4.6</span> — $5 / $25 per MTok
-            </span>
-          </div>
-          <p className="text-base-content/40 mt-1">
-            With Extended Context (1M), standard rates apply up to 200K tokens,
-            then 2x input / 1.5x output above.
-          </p>
-        </div>
-      </details>
+      <ExtendedContextToggle
+        enabled={settings.extendedContext}
+        onChange={updateExtendedContext}
+      />
 
       {/* Sticky save bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-base-100 border-t border-base-300 px-6 py-2 flex items-center gap-4 z-50">
@@ -282,9 +269,7 @@ export function SettingsView() {
           <span className="text-sm text-base-content/50">Unsaved changes</span>
         )}
         {saved && (
-          <span className="text-sm text-success">
-            Saved — restart Pilot to apply
-          </span>
+          <span className="text-sm text-warning">Restart Pilot to apply</span>
         )}
       </div>
     </div>

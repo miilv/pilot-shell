@@ -40,16 +40,18 @@ This command is a **dispatcher** that determines which phase to run and invokes 
 ```
 /spec → Dispatcher → Detect type (LLM intent) → Feature: Skill('spec-plan') → Plan, verify, approve
                                                 → Bugfix:  Skill('spec-bugfix-plan') → Bug analysis, verify, approve
-                   → Skill('spec-implement')   → TDD loop for each task
-                   → Skill('spec-verify')      → Tests, execution, code review
+                   → Skill('spec-implement')   → TDD loop for each task (both types)
+                   → Feature: Skill('spec-verify')        → Tests, execution, code review, 3 sub-agents
+                   → Bugfix:  Skill('spec-bugfix-verify') → Behavior Contract audit, tests, process compliance
 ```
 
-| Phase              | Skill                | What Happens                                               |
-| ------------------ | -------------------- | ---------------------------------------------------------- |
-| **Feature Planning**| `spec-plan`         | Explore → Design → Plan → Verify → Approve                |
-| **Bugfix Planning**| `spec-bugfix-plan`   | Bug analysis → Behavior Contract → Tasks → Approve           |
-| **Implementation** | `spec-implement`     | TDD loop for each task                                     |
-| **Verification**   | `spec-verify`        | Tests → Execution → Rules → Code Review → E2E             |
+| Phase                   | Skill                  | What Happens                                                    |
+| ----------------------- | ---------------------- | --------------------------------------------------------------- |
+| **Feature Planning**    | `spec-plan`            | Explore → Design → Plan → Verify → Approve                     |
+| **Bugfix Planning**     | `spec-bugfix-plan`     | Bug analysis → Behavior Contract → Tasks → Approve              |
+| **Implementation**      | `spec-implement`       | TDD loop for each task (both types)                             |
+| **Feature Verification**| `spec-verify`          | Tests → Execution → 3 Review Agents → Code Review → E2E        |
+| **Bugfix Verification** | `spec-bugfix-verify`   | Behavior Contract Audit → Tests → Process Compliance            |
 
 ### Status-Based Flow
 
@@ -182,7 +184,8 @@ Read the plan file and dispatch based on Status, Approved, and Type fields:
 | PENDING  | No       | Feature (or absent) | `Skill(skill='spec-plan', args='<plan-path>')`                              |
 | PENDING  | No       | Bugfix  | `Skill(skill='spec-bugfix-plan', args='<plan-path>')`                                     |
 | PENDING  | Yes      | \*      | `Skill(skill='spec-implement', args='<plan-path>')` (worktree if `Worktree: Yes` in plan) |
-| COMPLETE | \*       | \*      | `Skill(skill='spec-verify', args='<plan-path>')`                                          |
+| COMPLETE | \*       | Feature (or absent) | `Skill(skill='spec-verify', args='<plan-path>')`                                |
+| COMPLETE | \*       | Bugfix  | `Skill(skill='spec-bugfix-verify', args='<plan-path>')`                                   |
 | VERIFIED | \*       | \*      | Report completion, workflow done                                                          |
 
 **Type: absent or Feature → `spec-plan`. Type: Bugfix → `spec-bugfix-plan`. Default to Feature when Type: header is missing (backward compatible with existing plans).**

@@ -64,7 +64,7 @@ When resuming same session (same `CLAUDE_CODE_TASK_LIST_ID`): run `TaskList` fir
 
 **Search fallback chain:** `vexor` → `Grep`/`Glob` (exact patterns only) → `Task/Explore` (multi-step reasoning, last resort)
 
-**⛔ NEVER spawn Task/Explore agents for search.** All search goes through vexor (synchronous, `timeout: 60000`) or Grep/Glob directly. Task agents are for multi-step *reasoning*, not finding files or references.
+**⛔ NEVER spawn Task/Explore agents for search.** All search goes through vexor (synchronous, `timeout: 180000`) or Grep/Glob directly. Task agents are for multi-step *reasoning*, not finding files or references.
 
 ### /spec Verification Agents (MANDATORY)
 
@@ -73,9 +73,9 @@ The Task tool spawns verification sub-agents at two points:
 | Phase | Agents (parallel, run in background) | `subagent_type` |
 |-------|--------------------------------------|-----------------|
 | `spec-plan` Step 1.7 (features only) | plan-verifier + plan-challenger | `pilot:plan-verifier` + `pilot:plan-challenger` |
-| `spec-verify` Step 3.0, 3.7 | spec-reviewer-compliance + spec-reviewer-quality + spec-reviewer-goal | `pilot:spec-reviewer-compliance` + `pilot:spec-reviewer-quality` + `pilot:spec-reviewer-goal` |
+| `spec-verify` Step 3.0, 3.7 (features only) | spec-reviewer-compliance + spec-reviewer-quality + spec-reviewer-goal | `pilot:spec-reviewer-compliance` + `pilot:spec-reviewer-quality` + `pilot:spec-reviewer-goal` |
 
-**Note:** `spec-bugfix-plan` skips plan verification agents — bugfix plans are tight enough (fixed task structure, behavior contract) that the user approval gate is sufficient.
+**Note:** Bugfixes skip sub-agents in both planning and verification. `spec-bugfix-plan` skips plan verification agents — bugfix plans are tight enough (fixed task structure, behavior contract) that the user approval gate is sufficient. `spec-bugfix-verify` skips the three review agents — the Behavior Contract (Fix Property + Preservation Property) mathematically proves correctness through tests, making the agents redundant for bugfixes.
 
 All verification agents have `background: true` in their agent definitions, so they run in the background automatically. **As a fallback**, also pass `run_in_background=true` in the Task() call.
 
@@ -120,7 +120,8 @@ Call after creating plan header, reading existing plan, and after status changes
 /spec → Dispatcher → Detect type (LLM intent) → Feature: Skill('spec-plan') → Plan, verify, approve
                                                 → Bugfix:  Skill('spec-bugfix-plan') → Bug analysis, verify, approve
                    → Skill('spec-implement')   → TDD loop for each task (both types)
-                   → Skill('spec-verify')      → Tests, execution, code review (both types)
+                   → Feature: Skill('spec-verify')        → Tests, execution, code review, 3 sub-agents
+                   → Bugfix:  Skill('spec-bugfix-verify') → Behavior Contract audit, tests, process compliance
 ```
 
 ### ⛔ Dispatcher Integrity
@@ -145,15 +146,16 @@ Call after creating plan header, reading existing plan, and after status changes
 | PENDING | No | Feature (or absent) | `Skill(skill='spec-plan', args='<plan-path>')` |
 | PENDING | No | Bugfix | `Skill(skill='spec-bugfix-plan', args='<plan-path>')` |
 | PENDING | Yes | * | `Skill(skill='spec-implement', args='<plan-path>')` |
-| COMPLETE | * | * | `Skill(skill='spec-verify', args='<plan-path>')` |
+| COMPLETE | * | Feature (or absent) | `Skill(skill='spec-verify', args='<plan-path>')` |
+| COMPLETE | * | Bugfix | `Skill(skill='spec-bugfix-verify', args='<plan-path>')` |
 | VERIFIED | * | * | Report completion, done |
 
-**`spec-implement` and `spec-verify` work identically for both plan types** — the plan file is the interface.
+**`spec-implement` works identically for both plan types** — the plan file is the interface. **Verification dispatches by type:** features → `spec-verify` (3 review agents, E2E, full pipeline), bugfixes → `spec-bugfix-verify` (Behavior Contract audit, tests, process compliance — no sub-agents).
 
 ### Feedback Loop
 
 ```
-spec-verify finds issues → Status: PENDING → spec-implement fixes → COMPLETE → spec-verify → ... → VERIFIED
+spec-verify (or spec-bugfix-verify) finds issues → Status: PENDING → spec-implement fixes → COMPLETE → verify → ... → VERIFIED
 ```
 
 ### ⛔ Only THREE User Interaction Points

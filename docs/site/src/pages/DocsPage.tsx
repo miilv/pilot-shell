@@ -144,7 +144,7 @@ const DocsPage = () => {
     <>
       <SEO
         title="Documentation - Pilot Shell"
-        description="Complete technical reference for Pilot Shell — installation, /sync, /spec, hooks pipeline, MCP servers, language servers, Pilot Shell Console, and CLI commands."
+        description="Complete technical reference for Pilot Shell, the professional development environment for Claude Code — installation, /sync, /spec, hooks pipeline, MCP servers, language servers, Pilot Shell Console, and CLI commands."
         keywords="Pilot Shell documentation, install Pilot Shell, spec-driven development, hooks pipeline, MCP servers, language servers, Pilot Shell Console, Claude Code enhancement"
         canonicalUrl="https://pilot-shell.com/docs"
         structuredData={docsStructuredData}

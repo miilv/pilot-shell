@@ -89,7 +89,6 @@ class TestShellConfigStep:
             assert CLAUDE_ALIAS_MARKER in content
             assert "alias pilot=" in content
 
-
     @patch("installer.steps.shell_config.get_shell_config_files")
     def test_shell_config_upgrades_old_bun_only_path(self, mock_get_files):
         """ShellConfigStep upgrades old config with only .bun/bin to include .pilot/bin."""

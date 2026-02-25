@@ -14,7 +14,7 @@
     "DISABLE_INSTALLATION_CHECKS": "true",
     "DISABLE_ERROR_REPORTING": "true",
     "DISABLE_AUTOUPDATER": "true",
-    "DISABLE_TELEMETRY": "true"
+    "DISABLE_TELEMETRY": "false"
   },
   "permissions": {
     "allow": [
@@ -59,6 +59,8 @@
       "Skill(spec-plan)",
       "Skill(spec-implement)",
       "Skill(spec-verify)",
+      "Skill(spec-bugfix-plan)",
+      "Skill(spec-bugfix-verify)",
       "Skill(sync)",
       "Skill(learn)",
       "Task(spec-reviewer-compliance:*)",

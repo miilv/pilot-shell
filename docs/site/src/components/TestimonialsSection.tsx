@@ -3,15 +3,18 @@ import { useInView } from "@/hooks/use-in-view";
 
 const testimonials = [
   {
-    quote: "Pilot turned Claude Code from a fast prototype tool into something I trust for production code. The TDD enforcement alone saved me from shipping broken features twice in the first week.",
+    quote:
+      "Pilot turned Claude Code from a fast prototype tool into something I trust for production code. The TDD enforcement alone saved me from shipping broken features twice in the first week.",
     role: "Senior Developer",
   },
   {
-    quote: "The persistent memory is what sold me. I can pick up a project after a week and Claude already knows my architecture decisions, the bugs we fixed, and why we chose certain patterns. No more re-explaining everything.",
+    quote:
+      "The persistent memory is what sold me. I can pick up a project after a week and Claude already knows my architecture decisions, the bugs we fixed, and why we chose certain patterns. No more re-explaining everything.",
     role: "Full-Stack Engineer",
   },
   {
-    quote: "The /spec workflow forces me to think before I code. The plan verification catches gaps I would have missed, and the automated code review is better than most human reviews I've gotten.",
+    quote:
+      "The /spec workflow forces me to think before I code. The plan verification catches gaps I would have missed, and the automated code review is better than most human reviews I've gotten.",
     role: "Tech Lead",
   },
 ];
@@ -31,12 +34,14 @@ const TestimonialsSection = () => {
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
             What Users Say
           </h2>
-          <p className="text-muted-foreground text-lg sm:text-xl max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-lg sm:text-xl max-w-3xl mx-auto">
             Real feedback from developers using Pilot in production
           </p>
         </div>
 
-        <div className={`grid md:grid-cols-3 gap-6 ${inView ? "animate-fade-in-up animation-delay-200" : "opacity-0"}`}>
+        <div
+          className={`grid md:grid-cols-3 gap-6 ${inView ? "animate-fade-in-up animation-delay-200" : "opacity-0"}`}
+        >
           {testimonials.map((t, i) => (
             <div
               key={i}

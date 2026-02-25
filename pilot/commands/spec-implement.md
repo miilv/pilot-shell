@@ -11,7 +11,7 @@ model: sonnet
 
 **Input:** Path to an approved plan file (`Approved: Yes`)
 **Output:** All plan tasks completed, status set to COMPLETE
-**Next phase:** On completion → `Skill(skill='spec-verify', args='<plan-path>')`
+**Next phase:** On completion → verify phase (type-aware dispatch: `spec-verify` for features, `spec-bugfix-verify` for bugfixes)
 
 ---
 
@@ -268,7 +268,7 @@ Update counts:
    Status: PENDING  →  Status: COMPLETE
    ```
 4. **Register status change (auto-notifies dashboard):** `~/.pilot/bin/pilot register-plan "<plan_path>" "COMPLETE" 2>/dev/null || true`
-5. **Invoke verification phase:** `Skill(skill='spec-verify', args='<plan-path>')`
+5. **Invoke verification phase:** Read the `Type:` field from the plan header. If `Bugfix` → `Skill(skill='spec-bugfix-verify', args='<plan-path>')`. Otherwise → `Skill(skill='spec-verify', args='<plan-path>')`.
 
 ---
 

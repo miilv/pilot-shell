@@ -26,7 +26,7 @@ const InstallSection = () => {
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">
             Getting Started
           </h2>
-          <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-base sm:text-lg max-w-3xl mx-auto">
             Works with any existing project — no matter how complex.{" "}
             <code className="text-primary">cd</code> into your project folder,
             then run:
@@ -107,6 +107,16 @@ const InstallSection = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Demo GIF */}
+        <div className="mt-10 rounded-xl overflow-hidden border border-border/50 shadow-2xl shadow-primary/10">
+          <img
+            src="/demo.gif"
+            alt="Pilot Shell in action — spec-driven development with Claude Code"
+            className="w-full"
+            loading="eager"
+          />
         </div>
       </div>
     </section>

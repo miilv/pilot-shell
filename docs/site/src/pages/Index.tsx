@@ -5,6 +5,7 @@ import ComparisonSection from "@/components/ComparisonSection";
 import AgentRoster from "@/components/AgentRoster";
 import WorkflowSteps from "@/components/WorkflowSteps";
 import WhatsInside from "@/components/WhatsInside";
+import ConsoleSection from "@/components/ConsoleSection";
 import TechStack from "@/components/TechStack";
 import DeepDiveSection from "@/components/DeepDiveSection";
 import DemoSection from "@/components/DemoSection";
@@ -22,7 +23,7 @@ const Index = () => {
     name: "Pilot Shell",
     url: "https://pilot-shell.com",
     description:
-      "Start a task, grab a coffee, come back to production-grade code. Tests enforced, context preserved, quality automated.",
+      "The professional development environment for Claude Code. Start a task, grab a coffee, come back to production-grade code. Tests enforced, context preserved, quality automated.",
     publisher: {
       "@type": "Organization",
       name: "Pilot Shell",
@@ -53,7 +54,7 @@ const Index = () => {
     "@type": "SoftwareApplication",
     name: "Pilot Shell",
     description:
-      "Start a task, grab a coffee, come back to production-grade code. Rules, automated hooks, coding standards, language servers, and MCP servers.",
+      "The professional development environment for Claude Code. Rules, automated hooks, coding standards, language servers, and MCP servers.",
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Linux, macOS, Windows",
     offers: {
@@ -75,7 +76,7 @@ const Index = () => {
     <>
       <SEO
         title="Pilot Shell - Claude Code is powerful. Pilot Shell makes it reliable."
-        description="Start a task, grab a coffee, come back to production-grade code. Tests enforced, context preserved, quality automated."
+        description="The professional development environment for Claude Code. Start a task, grab a coffee, come back to production-grade code. Tests enforced, context preserved, quality automated."
         structuredData={[
           websiteStructuredData,
           breadcrumbStructuredData,
@@ -90,6 +91,7 @@ const Index = () => {
         <AgentRoster />
         <WorkflowSteps />
         <WhatsInside />
+        <ConsoleSection />
         <TechStack />
         <DeepDiveSection />
         <DemoSection />

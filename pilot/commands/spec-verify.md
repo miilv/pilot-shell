@@ -10,7 +10,7 @@ hooks:
 
 # /spec-verify - Verification Phase
 
-**Phase 3 of the /spec workflow.** Runs comprehensive verification: tests, process compliance, code review, program execution, E2E tests, and edge case testing.
+**Phase 3 of the /spec workflow (features).** Runs comprehensive verification: tests, process compliance, code review, program execution, E2E tests, and edge case testing. For bugfix plans, use `spec-bugfix-verify` instead — it runs a lighter pipeline focused on Behavior Contract audit without sub-agents.
 
 **Input:** Path to a plan file with `Status: COMPLETE`
 **Output:** Plan status set to VERIFIED (success) or looped back to implementation (failure)

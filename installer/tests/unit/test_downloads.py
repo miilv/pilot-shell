@@ -193,11 +193,13 @@ class TestTreeCaching:
         with tempfile.TemporaryDirectory() as tmpdir:
             cache_path = Path(tmpdir) / "cache.json"
             cache_path.parent.mkdir(parents=True, exist_ok=True)
-            cache_path.write_text('{"main": {"etag": "\\"cached-etag\\"", "files": [{"path": "pilot/test.py", "sha": "abc123"}]}}')
+            cache_path.write_text(
+                '{"main": {"etag": "\\"cached-etag\\"", "files": [{"path": "pilot/test.py", "sha": "abc123"}]}}'
+            )
 
             def side_effect(request, *_args, **_kwargs):
-                url = request.full_url if hasattr(request, 'full_url') else str(request)
-                if 'tree.json' in url:
+                url = request.full_url if hasattr(request, "full_url") else str(request)
+                if "tree.json" in url:
                     raise urllib.error.HTTPError(url, 404, "Not Found", {}, None)  # type: ignore[arg-type]
                 raise urllib.error.HTTPError(url, 304, "Not Modified", {}, None)  # type: ignore[arg-type]
 
@@ -439,7 +441,9 @@ class TestTreeJsonFallback:
 
         assert mock_urlopen.call_count == 1, "Should only call urlopen once (tree.json), not fall through to API"
         first_call_request = mock_urlopen.call_args_list[0][0][0]
-        first_call_url = first_call_request.full_url if hasattr(first_call_request, 'full_url') else str(first_call_request)
+        first_call_url = (
+            first_call_request.full_url if hasattr(first_call_request, "full_url") else str(first_call_request)
+        )
         assert "releases/download/v6.6.0/tree.json" in first_call_url
 
         assert len(files) == 1
@@ -464,7 +468,7 @@ class TestTreeJsonFallback:
         }
 
         def side_effect(request, *_args, **_kwargs):
-            url = request.full_url if hasattr(request, 'full_url') else str(request)
+            url = request.full_url if hasattr(request, "full_url") else str(request)
             if "tree.json" in url:
                 raise urllib.error.HTTPError(url, 404, "Not Found", {}, None)  # type: ignore[arg-type]
             else:

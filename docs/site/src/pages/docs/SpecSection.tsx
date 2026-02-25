@@ -44,10 +44,10 @@ const phases = [
     bgColor: "bg-violet-400/10",
     borderColor: "border-violet-400/30",
     steps: [
-      "Full test suite + type checking + actual program execution",
-      "Three review sub-agents in parallel: compliance, quality, goal",
-      "Auto-fixes findings, loops back if structural issues remain",
-      "On success, shows diff and offers to squash merge to main",
+      "Full test suite + type checking + lint + build verification",
+      "Features: three review sub-agents (compliance, quality, goal)",
+      "Bugfixes: Behavior Contract audit — no sub-agents needed",
+      "Auto-fixes findings, loops back until all checks pass",
     ],
   },
 ];
@@ -192,9 +192,9 @@ const SpecSection = () => {
             <div className="space-y-1.5">
               {[
                 "Bug Condition (C): exact broken state description",
-                "Postcondition (P): what must be true after the fix",
                 "Behavior Contract: Must Change / Must NOT Change",
                 "Test-before-fix: bug test FAILS → preservation tests PASS → fix",
+                "Lightweight verify: Contract audit replaces review agents",
               ].map((item) => (
                 <div
                   key={item}

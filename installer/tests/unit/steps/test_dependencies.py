@@ -123,7 +123,7 @@ class TestClaudeCodeInstall:
         """install_claude_code cleans stale npm temp directories before install."""
         from installer.steps.dependencies import install_claude_code
 
-        with tempfile.TemporaryDirectory() as tmpdir:
+        with tempfile.TemporaryDirectory():
             install_claude_code()
 
         mock_clean.assert_called_once()
@@ -134,7 +134,7 @@ class TestClaudeCodeInstall:
         """install_claude_code uses npm install -g."""
         from installer.steps.dependencies import install_claude_code
 
-        with tempfile.TemporaryDirectory() as tmpdir:
+        with tempfile.TemporaryDirectory():
             success, version = install_claude_code()
 
         assert success is True
@@ -149,7 +149,7 @@ class TestClaudeCodeInstall:
         """install_claude_code uses npm version tag for pinned version."""
         from installer.steps.dependencies import install_claude_code
 
-        with tempfile.TemporaryDirectory() as tmpdir:
+        with tempfile.TemporaryDirectory():
             success, version = install_claude_code()
 
         assert success is True
@@ -168,18 +168,15 @@ class TestClaudeCodeInstall:
         """install_claude_code returns success when npm fails but claude already exists."""
         from installer.steps.dependencies import install_claude_code
 
-        with tempfile.TemporaryDirectory() as tmpdir:
+        with tempfile.TemporaryDirectory():
             success, version = install_claude_code()
 
         assert success is True, "Should succeed when claude is already installed"
         assert version == "1.0.0", "Should return actual installed version"
 
-
     @patch("installer.steps.dependencies._get_forced_claude_version", return_value="2.1.19")
     @patch("installer.steps.dependencies._run_bash_with_retry", return_value=True)
-    def test_install_claude_code_with_ui_shows_pinned_version_info(
-        self, _mock_run, _mock_version
-    ):
+    def test_install_claude_code_with_ui_shows_pinned_version_info(self, _mock_run, _mock_version):
         """_install_claude_code_with_ui shows info about pinned version."""
         from installer.steps.dependencies import _install_claude_code_with_ui
         from installer.ui import Console
@@ -189,13 +186,12 @@ class TestClaudeCodeInstall:
         _original_info = ui.info  # noqa: F841 - stored for potential restoration
         ui.info = lambda message: info_calls.append(message)
 
-        with tempfile.TemporaryDirectory() as tmpdir:
+        with tempfile.TemporaryDirectory():
             result = _install_claude_code_with_ui(ui)
 
         assert result is True
         assert any("last stable release" in call for call in info_calls)
         assert any("FORCE_CLAUDE_VERSION" in call for call in info_calls)
-
 
 
 class TestCleanNpmStaleDirs:
@@ -337,7 +333,6 @@ class TestVexorInstall:
                 assert config["custom_key"] == "custom_value"
                 assert config["model"] == "text-embedding-3-small"
 
-
     @patch("installer.steps.dependencies._setup_vexor_local_model")
     @patch("installer.steps.dependencies._configure_vexor_local")
     @patch("installer.steps.dependencies._run_bash_with_retry")
@@ -439,6 +434,102 @@ class TestInstallPluginDependencies:
 
             assert result is True
             mock_run.assert_called_with("bun install", cwd=plugin_dir)
+
+    @patch("installer.steps.dependencies._run_bash_with_retry")
+    @patch("installer.steps.dependencies.command_exists")
+    @patch("installer.steps.dependencies.Path")
+    def test_install_plugin_dependencies_falls_back_to_npm(self, mock_path, mock_cmd_exists, mock_run):
+        """_install_plugin_dependencies falls back to npm install when bun is unavailable."""
+        from installer.steps.dependencies import _install_plugin_dependencies
+
+        mock_cmd_exists.side_effect = lambda cmd: cmd == "npm"
+        mock_run.return_value = True
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plugin_dir = Path(tmpdir) / ".claude" / "pilot"
+            plugin_dir.mkdir(parents=True)
+            (plugin_dir / "package.json").write_text('{"name": "test"}')
+
+            mock_path.home.return_value = Path(tmpdir)
+            result = _install_plugin_dependencies(Path(tmpdir), ui=None)
+
+        assert result is True
+        npm_calls = [c for c in mock_run.call_args_list if "npm" in str(c)]
+        assert len(npm_calls) > 0, "npm install should be called when bun is unavailable"
+
+    @patch("installer.steps.dependencies.command_exists")
+    @patch("installer.steps.dependencies.Path")
+    def test_install_plugin_dependencies_returns_false_when_no_package_manager(self, mock_path, mock_cmd_exists):
+        """_install_plugin_dependencies returns False when neither bun nor npm is available."""
+        from installer.steps.dependencies import _install_plugin_dependencies
+
+        mock_cmd_exists.return_value = False
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plugin_dir = Path(tmpdir) / ".claude" / "pilot"
+            plugin_dir.mkdir(parents=True)
+            (plugin_dir / "package.json").write_text('{"name": "test"}')
+
+            mock_path.home.return_value = Path(tmpdir)
+            result = _install_plugin_dependencies(Path(tmpdir), ui=None)
+
+        assert result is False
+
+
+class TestInstallNodejsPathUpdate:
+    """Test that install_nodejs updates PATH after NVM installation."""
+
+    @patch("installer.steps.dependencies.command_exists")
+    def test_install_nodejs_returns_true_when_already_installed(self, mock_cmd_exists):
+        """install_nodejs returns True without modifying PATH when node is already installed."""
+        import os
+
+        from installer.steps.dependencies import install_nodejs
+
+        mock_cmd_exists.return_value = True
+        original_path = os.environ.get("PATH", "")
+
+        result = install_nodejs()
+
+        assert result is True
+        assert os.environ.get("PATH", "") == original_path, "PATH should not be modified when node already installed"
+
+    @patch("installer.steps.dependencies._run_bash_with_retry")
+    @patch("installer.steps.dependencies.command_exists")
+    def test_install_nodejs_updates_path_after_nvm_install(self, mock_cmd_exists, mock_run):
+        """install_nodejs updates os.environ[PATH] after NVM successfully installs Node.js."""
+        import os
+
+        from installer.steps.dependencies import install_nodejs
+
+        mock_cmd_exists.return_value = False
+        mock_run.return_value = True
+
+        original_path = os.environ.get("PATH", "")
+        nvm_node_bin = None
+        try:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                home_dir = Path(tmpdir)
+                nvm_dir = home_dir / ".nvm"
+                nvm_dir.mkdir()
+                (nvm_dir / "nvm.sh").touch()
+                nvm_node_bin = nvm_dir / "versions" / "node" / "v22.0.0" / "bin"
+                nvm_node_bin.mkdir(parents=True)
+
+                with patch.object(Path, "home", return_value=home_dir):
+                    result = install_nodejs()
+
+            assert result is True
+            assert str(nvm_node_bin) in os.environ.get("PATH", ""), (
+                "NVM node bin dir should be added to PATH after successful install"
+            )
+        finally:
+            current_path = os.environ.get("PATH", "")
+            if nvm_node_bin and str(nvm_node_bin) in current_path:
+                paths = [p for p in current_path.split(":") if p != str(nvm_node_bin)]
+                os.environ["PATH"] = ":".join(paths)
+            elif current_path != original_path:
+                os.environ["PATH"] = original_path
 
 
 class TestPrecacheNpxMcpServers:
@@ -940,9 +1031,7 @@ class TestVexorLocalFunctional:
         from installer.steps.dependencies import _is_vexor_local_functional
 
         mock_bin.return_value = Path("/fake/vexor")
-        mock_run.return_value = MagicMock(
-            returncode=1, stdout="", stderr="Local model support is not installed"
-        )
+        mock_run.return_value = MagicMock(returncode=1, stdout="", stderr="Local model support is not installed")
         assert _is_vexor_local_functional() is False
 
     @patch("installer.steps.dependencies.subprocess.run")

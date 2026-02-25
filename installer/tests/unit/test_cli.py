@@ -236,8 +236,12 @@ class TestLicenseFlowTrialFallback:
 
         console = Console(non_interactive=False, quiet=True)
         result = _handle_license_flow(
-            console, tmp_path, local_mode=False, local_repo_dir=None,
-            license_info=None, license_acknowledged=False,
+            console,
+            tmp_path,
+            local_mode=False,
+            local_repo_dir=None,
+            license_info=None,
+            license_acknowledged=False,
         )
 
         mock_prompt.assert_called_once()
@@ -255,8 +259,12 @@ class TestLicenseFlowTrialFallback:
 
         console = Console(non_interactive=False, quiet=True)
         result = _handle_license_flow(
-            console, tmp_path, local_mode=False, local_repo_dir=None,
-            license_info=None, license_acknowledged=False,
+            console,
+            tmp_path,
+            local_mode=False,
+            local_repo_dir=None,
+            license_info=None,
+            license_acknowledged=False,
         )
 
         mock_prompt.assert_called_once()
@@ -264,9 +272,7 @@ class TestLicenseFlowTrialFallback:
 
     @patch("installer.cli._start_trial", return_value=7)
     @patch("installer.cli._check_trial_used", return_value=(False, False))
-    def test_trial_success_does_not_prompt_for_license(
-        self, mock_check_trial, mock_start_trial, tmp_path: Path
-    ):
+    def test_trial_success_does_not_prompt_for_license(self, mock_check_trial, mock_start_trial, tmp_path: Path):
         """When trial succeeds, no license prompt is shown."""
         from installer.cli import _handle_license_flow
         from installer.ui import Console
@@ -274,8 +280,12 @@ class TestLicenseFlowTrialFallback:
         console = Console(non_interactive=False, quiet=True)
         with patch("installer.cli._prompt_license_key") as mock_prompt:
             result = _handle_license_flow(
-                console, tmp_path, local_mode=False, local_repo_dir=None,
-                license_info=None, license_acknowledged=False,
+                console,
+                tmp_path,
+                local_mode=False,
+                local_repo_dir=None,
+                license_info=None,
+                license_acknowledged=False,
             )
 
         mock_prompt.assert_not_called()

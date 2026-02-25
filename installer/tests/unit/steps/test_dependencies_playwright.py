@@ -211,7 +211,9 @@ class TestInstallPlaywrightCli:
     @patch("installer.steps.dependencies.subprocess")
     @patch("installer.steps.dependencies._is_playwright_cli_ready")
     @patch("installer.steps.dependencies._run_bash_with_retry")
-    def test_returns_false_when_browser_install_fails(self, mock_run, mock_ready, mock_subprocess, mock_deps, _mock_sleep):
+    def test_returns_false_when_browser_install_fails(
+        self, mock_run, mock_ready, mock_subprocess, mock_deps, _mock_sleep
+    ):
         """Returns False when playwright-cli install fails."""
         from installer.steps.dependencies import install_playwright_cli
 

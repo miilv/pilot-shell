@@ -261,16 +261,24 @@ class PrerequisitesStep(BaseStep):
                 if success:
                     ui.success("Homebrew installed")
                 else:
-                    ui.error("Failed to install Homebrew")
-                    ui.info("Please install Homebrew manually: https://brew.sh")
-                    return
+                    if is_linux():
+                        ui.warning(
+                            "Could not install Homebrew - Node.js and tools will be installed via alternative methods"
+                        )
+                    else:
+                        ui.error("Failed to install Homebrew")
+                        ui.info("Please install Homebrew manually: https://brew.sh")
+                        return
             else:
-                if not _install_homebrew():
+                if not _install_homebrew() and not is_linux():
                     return
 
-        _add_bun_tap()
+        if is_homebrew_available():
+            _add_bun_tap()
 
         for package in HOMEBREW_PACKAGES:
+            if not is_homebrew_available():
+                break
             if package == "nvm":
                 is_installed = _is_nvm_installed()
             else:

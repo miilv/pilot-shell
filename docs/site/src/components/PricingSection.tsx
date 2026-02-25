@@ -47,7 +47,7 @@ const PricingSection = () => {
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
             Pricing
           </h2>
-          <p className="text-muted-foreground text-lg sm:text-xl max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-lg sm:text-xl max-w-3xl mx-auto">
             Get instant access to best practices from daily production usage — a
             shortcut to state-of-the-art Claude Code development.
           </p>
