@@ -25,7 +25,6 @@ class TestCheckGoVetCounting:
         )
 
         with (
-            patch("_checkers.go.strip_go_comments"),
             patch("_checkers.go.check_file_length", return_value=""),
             patch("_checkers.go.shutil.which", side_effect=lambda name: f"/usr/bin/{name}" if name == "go" else None),
             patch("_checkers.go.subprocess.run", return_value=mock_result),
@@ -50,7 +49,6 @@ class TestCheckGoVetCounting:
         )
 
         with (
-            patch("_checkers.go.strip_go_comments"),
             patch("_checkers.go.check_file_length", return_value=""),
             patch("_checkers.go.shutil.which", side_effect=lambda name: f"/usr/bin/{name}" if name == "go" else None),
             patch("_checkers.go.subprocess.run", return_value=mock_result),
@@ -71,7 +69,6 @@ class TestCheckGoVetCounting:
         mock_vet.stderr = "# command-line-arguments\n"
 
         with (
-            patch("_checkers.go.strip_go_comments"),
             patch("_checkers.go.check_file_length", return_value=""),
             patch("_checkers.go.shutil.which", side_effect=lambda name: f"/usr/bin/{name}" if name == "go" else None),
             patch("_checkers.go.subprocess.run", return_value=mock_vet),
@@ -79,6 +76,23 @@ class TestCheckGoVetCounting:
             _, reason = check_go(go_file)
 
         assert reason == "", f"Expected no issues but got: {reason}"
+
+
+class TestCheckGoCommentsPreserved:
+    """Regression test: check_go must not strip comments from user files."""
+
+    def test_regular_comment_survives_check(self, tmp_path: Path) -> None:
+        """Regular comments are preserved after check_go runs."""
+        go_file = tmp_path / "main.go"
+        go_file.write_text("package main // important doc comment\n")
+
+        with (
+            patch("_checkers.go.check_file_length", return_value=""),
+            patch("_checkers.go.shutil.which", return_value=None),
+        ):
+            check_go(go_file)
+
+        assert "// important doc comment" in go_file.read_text()
 
 
 class TestCheckGoTestFileSkip:
@@ -89,8 +103,7 @@ class TestCheckGoTestFileSkip:
         go_file = tmp_path / "main_test.go"
         go_file.write_text("package main\n")
 
-        with patch("_checkers.go.strip_go_comments"):
-            exit_code, reason = check_go(go_file)
+        exit_code, reason = check_go(go_file)
 
         assert exit_code == 0
         assert reason == ""
@@ -110,7 +123,6 @@ class TestCheckGoCleanFile:
         mock_result.stderr = ""
 
         with (
-            patch("_checkers.go.strip_go_comments"),
             patch("_checkers.go.check_file_length", return_value=""),
             patch("_checkers.go.shutil.which", side_effect=lambda name: f"/usr/bin/{name}" if name == "go" else None),
             patch("_checkers.go.subprocess.run", return_value=mock_result),

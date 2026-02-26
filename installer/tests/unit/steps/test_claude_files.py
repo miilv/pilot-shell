@@ -952,6 +952,47 @@ class TestMergeAppConfigWithBaseline:
         assert result["autoCompactEnabled"] is True
 
 
+class TestMergePermissionsNonListKeys:
+    """Regression test: non-list keys in permissions dict survive merge."""
+
+    def test_user_default_mode_preserved_through_update(self):
+        """User's defaultMode: bypassPermissions survives a Pilot update."""
+        from installer.steps.settings_merge import merge_settings
+
+        baseline = {"permissions": {"allow": ["Bash", "Edit"], "deny": []}}
+        current = {"permissions": {"allow": ["Bash", "Edit"], "deny": [], "defaultMode": "bypassPermissions"}}
+        incoming = {"permissions": {"allow": ["Bash", "Edit", "LSP"], "deny": []}}
+
+        result = merge_settings(baseline, current, incoming)
+
+        assert result["permissions"]["defaultMode"] == "bypassPermissions"
+        assert "LSP" in result["permissions"]["allow"]
+
+    def test_default_mode_in_incoming_is_applied(self):
+        """defaultMode from Pilot's incoming settings is applied when user hasn't set it."""
+        from installer.steps.settings_merge import merge_settings
+
+        baseline = {"permissions": {"allow": ["Bash"], "deny": []}}
+        current = {"permissions": {"allow": ["Bash"], "deny": []}}
+        incoming = {"permissions": {"defaultMode": "bypassPermissions"}}
+
+        result = merge_settings(baseline, current, incoming)
+
+        assert result["permissions"]["defaultMode"] == "bypassPermissions"
+
+    def test_user_changed_default_mode_preserved(self):
+        """User's manually changed defaultMode is preserved even if Pilot updates it."""
+        from installer.steps.settings_merge import merge_settings
+
+        baseline = {"permissions": {"defaultMode": "bypassPermissions"}}
+        current = {"permissions": {"defaultMode": "default"}}
+        incoming = {"permissions": {"defaultMode": "bypassPermissions"}}
+
+        result = merge_settings(baseline, current, incoming)
+
+        assert result["permissions"]["defaultMode"] == "default"
+
+
 class TestResolveRepoUrl:
     """Tests for _resolve_repo_url method."""
 

@@ -11,7 +11,6 @@ from _checkers.typescript import (
     check_typescript,
     find_project_root,
     find_tool,
-    strip_typescript_comments,
 )
 
 
@@ -22,100 +21,6 @@ class TestTsExtensions:
         """All common TS/JS extensions are supported."""
         for ext in (".ts", ".tsx", ".js", ".jsx", ".mjs", ".mts"):
             assert ext in TS_EXTENSIONS
-
-
-class TestStripTypescriptComments:
-    """Comment stripping preserves directives and removes regular comments."""
-
-    def test_strips_inline_comment(self, tmp_path: Path) -> None:
-        """Regular inline comments are removed."""
-        ts_file = tmp_path / "app.ts"
-        ts_file.write_text("const x = 1; // set x\n")
-
-        result = strip_typescript_comments(ts_file)
-
-        assert result is True
-        assert ts_file.read_text() == "const x = 1;\n"
-
-    def test_strips_full_line_comment(self, tmp_path: Path) -> None:
-        """Full-line comments are deleted entirely."""
-        ts_file = tmp_path / "app.ts"
-        ts_file.write_text("// this is a comment\nconst x = 1;\n")
-
-        result = strip_typescript_comments(ts_file)
-
-        assert result is True
-        assert ts_file.read_text() == "const x = 1;\n"
-
-    def test_preserves_ts_directives(self, tmp_path: Path) -> None:
-        """TypeScript directives like @ts-ignore are preserved."""
-        ts_file = tmp_path / "app.ts"
-        ts_file.write_text("// @ts-ignore\nconst x = 1;\n")
-
-        result = strip_typescript_comments(ts_file)
-
-        assert result is False
-
-    def test_preserves_eslint_directives(self, tmp_path: Path) -> None:
-        """ESLint directives are preserved."""
-        ts_file = tmp_path / "app.ts"
-        ts_file.write_text("// eslint-disable-next-line\nconst x = 1;\n")
-
-        result = strip_typescript_comments(ts_file)
-
-        assert result is False
-
-    def test_preserves_prettier_directives(self, tmp_path: Path) -> None:
-        """Prettier directives are preserved."""
-        ts_file = tmp_path / "app.ts"
-        ts_file.write_text("// prettier-ignore\nconst x = 1;\n")
-
-        result = strip_typescript_comments(ts_file)
-
-        assert result is False
-
-    def test_preserves_todo(self, tmp_path: Path) -> None:
-        """TODO comments are preserved."""
-        ts_file = tmp_path / "app.ts"
-        ts_file.write_text("const x = 1; // TODO: fix this\n")
-
-        result = strip_typescript_comments(ts_file)
-
-        assert result is False
-
-    def test_preserves_jsdoc_type_annotations(self, tmp_path: Path) -> None:
-        """JSDoc type annotations are preserved."""
-        ts_file = tmp_path / "app.ts"
-        ts_file.write_text("// @type {string}\nconst x = 'hi';\n")
-
-        result = strip_typescript_comments(ts_file)
-
-        assert result is False
-
-    def test_preserves_url_in_string(self, tmp_path: Path) -> None:
-        """URLs in strings are not treated as comments."""
-        ts_file = tmp_path / "app.ts"
-        ts_file.write_text('const url = "https://example.com";\n')
-
-        result = strip_typescript_comments(ts_file)
-
-        assert result is False
-        assert "https://example.com" in ts_file.read_text()
-
-    def test_no_comments_returns_false(self, tmp_path: Path) -> None:
-        """Files without comments return False."""
-        ts_file = tmp_path / "app.ts"
-        ts_file.write_text("const x = 1;\n")
-
-        result = strip_typescript_comments(ts_file)
-
-        assert result is False
-
-    def test_nonexistent_file_returns_false(self, tmp_path: Path) -> None:
-        """Nonexistent file returns False."""
-        result = strip_typescript_comments(tmp_path / "missing.ts")
-
-        assert result is False
 
 
 class TestFindProjectRoot:
@@ -186,8 +91,7 @@ class TestCheckTypescriptTestFileSkip:
         ts_file = tmp_path / "app.test.ts"
         ts_file.write_text("const x: string = 123;\n")
 
-        with patch("_checkers.typescript.strip_typescript_comments"):
-            exit_code, reason = check_typescript(ts_file)
+        exit_code, reason = check_typescript(ts_file)
 
         assert exit_code == 0
         assert reason == ""
@@ -197,8 +101,7 @@ class TestCheckTypescriptTestFileSkip:
         ts_file = tmp_path / "app.spec.tsx"
         ts_file.write_text("const x: string = 123;\n")
 
-        with patch("_checkers.typescript.strip_typescript_comments"):
-            exit_code, reason = check_typescript(ts_file)
+        exit_code, reason = check_typescript(ts_file)
 
         assert exit_code == 0
         assert reason == ""
@@ -213,7 +116,6 @@ class TestCheckTypescriptNoTools:
         ts_file.write_text("const x = 1;\n")
 
         with (
-            patch("_checkers.typescript.strip_typescript_comments"),
             patch("_checkers.typescript.check_file_length", return_value=""),
             patch("_checkers.typescript.find_project_root", return_value=None),
             patch("_checkers.typescript.find_tool", return_value=None),
@@ -246,13 +148,12 @@ class TestCheckTypescriptEslintIssues:
         mock_prettier = MagicMock(returncode=0, stdout="", stderr="")
         mock_eslint = MagicMock(returncode=1, stdout=eslint_json, stderr="")
 
-        def run_side_effect(cmd, **kwargs):
+        def run_side_effect(cmd, **_kwargs):
             if "eslint" in cmd[0]:
                 return mock_eslint
             return mock_prettier
 
         with (
-            patch("_checkers.typescript.strip_typescript_comments"),
             patch("_checkers.typescript.check_file_length", return_value=""),
             patch("_checkers.typescript.find_project_root", return_value=None),
             patch("_checkers.typescript.find_tool", side_effect=lambda name, _: f"/usr/bin/{name}" if name in ("prettier", "eslint") else None),
@@ -283,7 +184,6 @@ class TestCheckTypescriptCleanFile:
             return mock_prettier
 
         with (
-            patch("_checkers.typescript.strip_typescript_comments"),
             patch("_checkers.typescript.check_file_length", return_value=""),
             patch("_checkers.typescript.find_project_root", return_value=None),
             patch("_checkers.typescript.find_tool", side_effect=lambda name, _: f"/usr/bin/{name}" if name in ("prettier", "eslint") else None),
@@ -293,6 +193,24 @@ class TestCheckTypescriptCleanFile:
 
         assert exit_code == 0
         assert reason == ""
+
+
+class TestCheckTypescriptCommentsPreserved:
+    """Regression test: check_typescript must not strip comments from user files."""
+
+    def test_regular_comment_survives_check(self, tmp_path: Path) -> None:
+        """Regular comments are preserved after check_typescript runs."""
+        ts_file = tmp_path / "app.ts"
+        ts_file.write_text("const x = 1; // important doc comment\n")
+
+        with (
+            patch("_checkers.typescript.check_file_length", return_value=""),
+            patch("_checkers.typescript.find_project_root", return_value=None),
+            patch("_checkers.typescript.find_tool", return_value=None),
+        ):
+            check_typescript(ts_file)
+
+        assert "// important doc comment" in ts_file.read_text()
 
 
 class TestCheckTypescriptTscNotCalled:
@@ -316,7 +234,6 @@ class TestCheckTypescriptTscNotCalled:
             return mock_prettier
 
         with (
-            patch("_checkers.typescript.strip_typescript_comments"),
             patch("_checkers.typescript.check_file_length", return_value=""),
             patch("_checkers.typescript.find_project_root", return_value=None),
             patch("_checkers.typescript.find_tool", side_effect=lambda name, _: f"/usr/bin/{name}"),

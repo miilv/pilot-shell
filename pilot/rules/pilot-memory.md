@@ -1,25 +1,8 @@
 ## Pilot Memory & Learning
 
-### Persistent Memory (MCP)
+### Memory Tools
 
-Search past work, decisions, and context across sessions. **3-layer workflow for token efficiency:**
-
-```
-1. search(query) → Index with IDs (~50-100 tokens/result)
-2. timeline(anchor=ID) → Chronological context around results
-3. get_observations([IDs]) → Full details ONLY for filtered IDs
-```
-
-**Never fetch full details without filtering first.**
-
-| Tool | Purpose | Key Params |
-|------|---------|------------|
-| `search` | Find observations | `query`, `limit`, `type`, `project`, `dateStart`, `dateEnd` |
-| `timeline` | Context around result | `anchor` (ID), `depth_before`, `depth_after` |
-| `get_observations` | Full details | `ids` (array) |
-| `save_memory` | Save manually | `text`, `title`, `project` |
-
-**Types:** `bugfix`, `feature`, `refactor`, `discovery`, `decision`, `change`
+See `mcp-servers.md` → mem-search for the 3-step search workflow and tool reference.
 
 Use `<private>` tags to exclude content from storage. Web viewer at `http://localhost:41777`.
 

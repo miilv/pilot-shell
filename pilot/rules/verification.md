@@ -15,22 +15,9 @@ Unit tests with mocks prove nothing about real-world behavior. After tests pass:
 
 ### ⛔ Frontend Changes Require playwright-cli Verification
 
-**Unit tests and typechecks are NOT sufficient for frontend/UI changes.** After tests pass, you MUST verify with `playwright-cli` that the change works in the actual running application.
+**Unit tests and typechecks are NOT sufficient.** After tests pass, verify with `playwright-cli` (with session isolation) that the change works in the running app: build → open → snapshot/interact → close.
 
-| Step | Command |
-|------|---------|
-| Build | Build the viewer/bundle and deploy to the served location |
-| Open | `playwright-cli -s="$PW_SESSION" open <url>` |
-| Verify | `snapshot`, `click`, `run-code` — confirm the UI behaves correctly |
-| Close | `playwright-cli -s="$PW_SESSION" close` |
-
-**Common pitfalls to verify against:**
-- Built bundle not deployed to the location the server actually reads from
-- Server/worker caching stale bundles (check DOM classes match source)
-- CSS layout issues invisible to unit tests (scroll containers, overflow, z-index)
-- Elements present in DOM but not visible/interactive at runtime
-
-**If you skip this step, you WILL ship broken UI.** A passing `renderToString` test does not prove the feature works.
+**Common pitfalls:** stale cached bundles, bundle not deployed to served location, CSS layout issues invisible to tests, elements in DOM but not visible/interactive.
 
 ### Output Correctness
 

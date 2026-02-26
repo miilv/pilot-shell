@@ -71,8 +71,10 @@ def _merge_permissions(
     current: dict[str, Any],
     incoming: dict[str, Any],
 ) -> dict[str, Any]:
-    """Merge permissions with set-union for allow/deny lists.
+    """Merge permissions with set-union for allow/deny lists, scalar merge for other keys.
 
+    - allow/deny lists: union of incoming + user-added, minus user-removed.
+    - Other keys (e.g., defaultMode): scalar merge — user changes win over Pilot defaults.
     - Entries in incoming are always included (Pilot-managed).
     - User-added entries (in current but not in baseline) are preserved.
     - Entries the user explicitly removed (in baseline but not in current) stay removed.
@@ -92,6 +94,19 @@ def _merge_permissions(
             merged = (incoming_set | user_added) - user_removed
 
         result[list_key] = sorted(merged)
+
+    all_keys = set(incoming.keys()) | set(current.keys())
+    for key in all_keys - {"allow", "deny"}:
+        if key not in incoming:
+            result[key] = current[key]
+        elif key not in current:
+            result[key] = incoming[key]
+        elif baseline is None or key not in baseline:
+            result[key] = incoming[key]
+        elif current[key] == baseline[key]:
+            result[key] = incoming[key]
+        else:
+            result[key] = current[key]
 
     return result
 

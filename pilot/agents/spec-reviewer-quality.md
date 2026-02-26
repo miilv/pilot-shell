@@ -35,7 +35,7 @@ ls .claude/rules/*.md
 
 Rules to SKIP (not relevant to code review):
 
-- `context-continuation.md` — session management
+- `context-management.md` — session management
 - `cli-tools.md` — CLI references (Pilot, Vexor)
 - `research-tools.md` — Context7, grep-mcp, web search, gh CLI
 - `pilot-memory.md` — memory and learning systems

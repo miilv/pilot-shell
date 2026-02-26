@@ -1,8 +1,7 @@
-"""Go file checker — comment stripping, gofmt, go vet, golangci-lint."""
+"""Go file checker — gofmt, go vet, golangci-lint."""
 
 from __future__ import annotations
 
-import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -10,46 +9,8 @@ from pathlib import Path
 from _util import check_file_length
 
 
-def strip_go_comments(file_path: Path) -> bool:
-    """Remove inline // comments from Go file."""
-    preserve_patterns = re.compile(r"//\s*nolint|//\s*TODO|//\s*FIXME|//\s*XXX|//\s*NOTE|//\s*go:", re.IGNORECASE)
-
-    try:
-        content = file_path.read_text()
-        lines = content.splitlines(keepends=True)
-    except Exception:
-        return False
-
-    new_lines = []
-    modified = False
-
-    for line in lines:
-        if "//" not in line or '"//' in line or "'//" in line or "`//" in line or "://" in line:
-            new_lines.append(line)
-            continue
-
-        match = re.search(r"//.*$", line)
-        if not match or preserve_patterns.search(match.group(0)):
-            new_lines.append(line)
-            continue
-
-        before_comment = line[: match.start()].rstrip()
-        if before_comment:
-            new_lines.append(before_comment + "\n")
-            modified = True
-        else:
-            modified = True
-
-    if modified:
-        file_path.write_text("".join(new_lines))
-        return True
-    return False
-
-
 def check_go(file_path: Path) -> tuple[int, str]:
     """Check Go file with gofmt, go vet, and golangci-lint. Returns (0, reason)."""
-    strip_go_comments(file_path)
-
     if file_path.name.endswith("_test.go"):
         return 0, ""
 

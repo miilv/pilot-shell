@@ -31,12 +31,12 @@ const ruleCategories = [
         desc: "Project policies, systematic debugging, git rules",
       },
       {
-        file: "context-continuation.md",
-        desc: "Auto-compaction and context management protocol",
+        file: "context-management.md",
+        desc: "Auto-compaction and context preservation",
       },
       {
         file: "pilot-memory.md",
-        desc: "Persistent memory workflow, online learning triggers",
+        desc: "Online learning triggers",
       },
     ],
   },
@@ -47,7 +47,7 @@ const ruleCategories = [
     rules: [
       {
         file: "research-tools.md",
-        desc: "Context7, grep-mcp, web search, GitHub CLI",
+        desc: "Search priority and tool selection guide",
       },
       { file: "cli-tools.md", desc: "Pilot CLI, Vexor semantic search" },
       {

@@ -295,15 +295,15 @@ Production-tested best practices loaded into every session. Core rules cover wor
 <summary><b>Development Practices</b></summary>
 
 - `development-practices.md` — Project policies, debugging methodology, git rules
-- `context-continuation.md` — Auto-compaction and context management protocol
-- `pilot-memory.md` — Persistent memory workflow, online learning triggers
+- `context-management.md` — Auto-compaction and context preservation
+- `pilot-memory.md` — Online learning triggers
 
 </details>
 
 <details>
 <summary><b>Tools</b></summary>
 
-- `research-tools.md` — Context7, grep-mcp, web search, GitHub CLI
+- `research-tools.md` — Search priority and tool selection guide
 - `cli-tools.md` — Pilot CLI, Vexor semantic search
 - `playwright-cli.md` — Browser automation for E2E UI testing
 

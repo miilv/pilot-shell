@@ -7,7 +7,6 @@ from io import StringIO
 from unittest.mock import patch
 
 import pytest
-
 from tool_redirect import block, hint, is_semantic_pattern, run_tool_redirect
 
 

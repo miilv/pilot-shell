@@ -1,10 +1,9 @@
-"""TypeScript/JavaScript file checker — comment stripping, prettier, eslint."""
+"""TypeScript/JavaScript file checker — prettier, eslint."""
 
 from __future__ import annotations
 
 import json
 import os
-import re
 import shutil
 import subprocess
 import sys
@@ -20,45 +19,6 @@ def debug_log(message: str) -> None:
     """Print debug message if enabled."""
     if DEBUG:
         print(f"{BLUE}[DEBUG]{NC} {message}", file=sys.stderr)
-
-
-def strip_typescript_comments(file_path: Path) -> bool:
-    """Remove inline // comments from TypeScript/JavaScript file."""
-    preserve_patterns = re.compile(
-        r"//\s*@ts-|//\s*eslint-|//\s*prettier-|//\s*TODO|//\s*FIXME|//\s*XXX|//\s*NOTE|//\s*@type|//\s*@param|//\s*@returns",
-        re.IGNORECASE,
-    )
-
-    try:
-        content = file_path.read_text()
-        lines = content.splitlines(keepends=True)
-    except Exception:
-        return False
-
-    new_lines = []
-    modified = False
-
-    for line in lines:
-        if "//" not in line or '"//' in line or "'//" in line or "`//" in line or "://" in line:
-            new_lines.append(line)
-            continue
-
-        match = re.search(r"//.*$", line)
-        if not match or preserve_patterns.search(match.group(0)):
-            new_lines.append(line)
-            continue
-
-        before_comment = line[: match.start()].rstrip()
-        if before_comment:
-            new_lines.append(before_comment + "\n")
-            modified = True
-        else:
-            modified = True
-
-    if modified:
-        file_path.write_text("".join(new_lines))
-        return True
-    return False
 
 
 def find_project_root(file_path: Path) -> Path | None:
@@ -86,8 +46,6 @@ def find_tool(tool_name: str, project_root: Path | None) -> str | None:
 
 def check_typescript(file_path: Path) -> tuple[int, str]:
     """Check TypeScript file with prettier and eslint. Returns (0, reason)."""
-    strip_typescript_comments(file_path)
-
     if ".test." in file_path.name or ".spec." in file_path.name:
         return 0, ""
 

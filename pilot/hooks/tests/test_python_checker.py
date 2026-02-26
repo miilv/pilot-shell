@@ -5,104 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from _checkers.python import check_python, strip_python_comments
-
-
-class TestStripPythonComments:
-    """Comment stripping preserves directives and removes regular comments."""
-
-    def test_strips_inline_comment(self, tmp_path: Path) -> None:
-        """Regular inline comments are removed."""
-        py_file = tmp_path / "app.py"
-        py_file.write_text("x = 1  # set x\n")
-
-        result = strip_python_comments(py_file)
-
-        assert result is True
-        assert py_file.read_text() == "x = 1\n"
-
-    def test_strips_full_line_comment(self, tmp_path: Path) -> None:
-        """Full-line comments are deleted entirely."""
-        py_file = tmp_path / "app.py"
-        py_file.write_text("# this is a comment\nx = 1\n")
-
-        result = strip_python_comments(py_file)
-
-        assert result is True
-        assert py_file.read_text() == "x = 1\n"
-
-    def test_preserves_type_comments(self, tmp_path: Path) -> None:
-        """Type hints in comments are preserved."""
-        py_file = tmp_path / "app.py"
-        py_file.write_text("x = 1  # type: ignore\n")
-
-        result = strip_python_comments(py_file)
-
-        assert result is False
-        assert "# type: ignore" in py_file.read_text()
-
-    def test_preserves_noqa(self, tmp_path: Path) -> None:
-        """noqa directives are preserved."""
-        py_file = tmp_path / "app.py"
-        py_file.write_text("x = 1  # noqa: E501\n")
-
-        result = strip_python_comments(py_file)
-
-        assert result is False
-
-    def test_preserves_todo(self, tmp_path: Path) -> None:
-        """TODO comments are preserved."""
-        py_file = tmp_path / "app.py"
-        py_file.write_text("x = 1  # TODO: fix this\n")
-
-        result = strip_python_comments(py_file)
-
-        assert result is False
-
-    def test_preserves_shebang(self, tmp_path: Path) -> None:
-        """Shebang lines are preserved."""
-        py_file = tmp_path / "app.py"
-        py_file.write_text("#!/usr/bin/env python\nx = 1\n")
-
-        result = strip_python_comments(py_file)
-
-        assert result is False
-        assert "#!/usr/bin/env python" in py_file.read_text()
-
-    def test_preserves_pyright_directive(self, tmp_path: Path) -> None:
-        """Pyright directives are preserved."""
-        py_file = tmp_path / "app.py"
-        py_file.write_text("x = 1  # pyright: ignore\n")
-
-        result = strip_python_comments(py_file)
-
-        assert result is False
-
-    def test_preserves_ruff_directive(self, tmp_path: Path) -> None:
-        """Ruff directives are preserved."""
-        py_file = tmp_path / "app.py"
-        py_file.write_text("x = 1  # ruff: noqa\n")
-
-        result = strip_python_comments(py_file)
-
-        assert result is False
-
-    def test_no_comments_returns_false(self, tmp_path: Path) -> None:
-        """Files without comments return False (no modification)."""
-        py_file = tmp_path / "app.py"
-        py_file.write_text("x = 1\n")
-
-        result = strip_python_comments(py_file)
-
-        assert result is False
-
-    def test_nonexistent_file_returns_false(self, tmp_path: Path) -> None:
-        """Nonexistent file returns False."""
-        py_file = tmp_path / "missing.py"
-
-        result = strip_python_comments(py_file)
-
-        assert result is False
+from _checkers.python import check_python
 
 
 class TestCheckPythonTestFileSkip:
@@ -113,8 +16,7 @@ class TestCheckPythonTestFileSkip:
         py_file = tmp_path / "test_app.py"
         py_file.write_text("x = undefined\n")
 
-        with patch("_checkers.python.strip_python_comments"):
-            exit_code, reason = check_python(py_file)
+        exit_code, reason = check_python(py_file)
 
         assert exit_code == 0
         assert reason == ""
@@ -124,8 +26,7 @@ class TestCheckPythonTestFileSkip:
         py_file = tmp_path / "app_spec.py"
         py_file.write_text("x = undefined\n")
 
-        with patch("_checkers.python.strip_python_comments"):
-            exit_code, reason = check_python(py_file)
+        exit_code, reason = check_python(py_file)
 
         assert exit_code == 0
         assert reason == ""
@@ -140,7 +41,6 @@ class TestCheckPythonNoTools:
         py_file.write_text("x = 1\n")
 
         with (
-            patch("_checkers.python.strip_python_comments"),
             patch("_checkers.python.check_file_length", return_value=""),
             patch("_checkers.python.shutil.which", return_value=None),
         ):
@@ -166,7 +66,7 @@ class TestCheckPythonRuffIssues:
             stderr="",
         )
 
-        def run_side_effect(cmd, **kwargs):
+        def run_side_effect(cmd, **_kwargs):
             if "format" in cmd:
                 return mock_format
             if "--select" in cmd:
@@ -179,7 +79,6 @@ class TestCheckPythonRuffIssues:
             return None
 
         with (
-            patch("_checkers.python.strip_python_comments"),
             patch("_checkers.python.check_file_length", return_value=""),
             patch("_checkers.python.shutil.which", side_effect=which_side_effect),
             patch("_checkers.python.subprocess.run", side_effect=run_side_effect),
@@ -202,7 +101,6 @@ class TestCheckPythonRuffIssues:
             return None
 
         with (
-            patch("_checkers.python.strip_python_comments"),
             patch("_checkers.python.check_file_length", return_value=""),
             patch("_checkers.python.shutil.which", side_effect=which_side_effect),
             patch("_checkers.python.subprocess.run", return_value=mock_result),
@@ -211,6 +109,23 @@ class TestCheckPythonRuffIssues:
 
         assert exit_code == 0
         assert reason == ""
+
+
+class TestCheckPythonCommentsPreserved:
+    """Regression test: check_python must not strip comments from user files."""
+
+    def test_regular_comment_survives_check(self, tmp_path: Path) -> None:
+        """Regular comments are preserved after check_python runs."""
+        py_file = tmp_path / "app.py"
+        py_file.write_text("x = 1  # important doc comment\n")
+
+        with (
+            patch("_checkers.python.check_file_length", return_value=""),
+            patch("_checkers.python.shutil.which", return_value=None),
+        ):
+            check_python(py_file)
+
+        assert "# important doc comment" in py_file.read_text()
 
 
 class TestCheckPythonRuffOnly:
@@ -232,7 +147,6 @@ class TestCheckPythonRuffOnly:
             return f"/usr/bin/{name}" if name in ("ruff", "basedpyright") else None
 
         with (
-            patch("_checkers.python.strip_python_comments"),
             patch("_checkers.python.check_file_length", return_value=""),
             patch("_checkers.python.shutil.which", side_effect=which_side_effect),
             patch("_checkers.python.subprocess.run", side_effect=run_side_effect),

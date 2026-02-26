@@ -9,8 +9,6 @@ from unittest.mock import patch
 from context_monitor import _is_throttled, _resolve_context, run_context_monitor
 
 
-
-
 class TestContextMonitorAutocompact:
     @patch("context_monitor.save_cache")
     @patch("context_monitor._get_pilot_session_id", return_value="test-sess")

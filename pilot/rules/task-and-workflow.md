@@ -60,30 +60,21 @@ When resuming same session (same `CLAUDE_CODE_TASK_LIST_ID`): run `TaskList` fir
 
 ## Sub-Agent and Tool Usage
 
-**⛔ ALWAYS try vexor before any other codebase search tool.** Vexor finds files by intent via semantic search, scales to any codebase size, and costs zero context until you read results. It outperforms Explore sub-agents — no token waste from sub-agent transcripts.
-
-**Search fallback chain:** `vexor` → `Grep`/`Glob` (exact patterns only) → `Task/Explore` (multi-step reasoning, last resort)
-
-**⛔ NEVER spawn Task/Explore agents for search.** All search goes through vexor (synchronous, `timeout: 180000`) or Grep/Glob directly. Task agents are for multi-step *reasoning*, not finding files or references.
+**Search:** See `research-tools.md` for the priority chain (Vexor → Grep/Glob → Explore). Task agents are for multi-step *reasoning*, not search.
 
 ### /spec Verification Agents (MANDATORY)
 
-The Task tool spawns verification sub-agents at two points:
+| Phase | Agents (parallel, background) | `subagent_type` |
+|-------|-------------------------------|-----------------|
+| `spec-plan` 1.7 (features only) | plan-verifier + plan-challenger | `pilot:plan-verifier` + `pilot:plan-challenger` |
+| `spec-verify` 3.0, 3.7 (features only) | spec-reviewer-compliance + quality + goal | `pilot:spec-reviewer-compliance` + `pilot:spec-reviewer-quality` + `pilot:spec-reviewer-goal` |
 
-| Phase | Agents (parallel, run in background) | `subagent_type` |
-|-------|--------------------------------------|-----------------|
-| `spec-plan` Step 1.7 (features only) | plan-verifier + plan-challenger | `pilot:plan-verifier` + `pilot:plan-challenger` |
-| `spec-verify` Step 3.0, 3.7 (features only) | spec-reviewer-compliance + spec-reviewer-quality + spec-reviewer-goal | `pilot:spec-reviewer-compliance` + `pilot:spec-reviewer-quality` + `pilot:spec-reviewer-goal` |
+**Bugfixes skip sub-agents** in both planning and verification — the Behavior Contract proves correctness through tests.
 
-**Note:** Bugfixes skip sub-agents in both planning and verification. `spec-bugfix-plan` skips plan verification agents — bugfix plans are right-sized (Compact 2-task default, Full 3-task for complex bugs, Behavior Contract) and the user approval gate is sufficient. `spec-bugfix-verify` skips the three review agents — the Behavior Contract (Fix Property + Preservation Property) mathematically proves correctness through tests, making the agents redundant for bugfixes.
-
-All verification agents have `background: true` in their agent definitions, so they run in the background automatically. **As a fallback**, also pass `run_in_background=true` in the Task() call.
-
-**Launch all `Task()` calls in a SINGLE message.** If sent in separate messages, the first blocks and the second waits.
-
-**⛔ NEVER skip verification. ⛔ NEVER use `TaskOutput` to retrieve results** (dumps full transcript, wastes tokens). Agents write findings to JSON files — poll with Read tool, `sleep 10` between attempts.
-
-**Sub-agents do NOT inherit rules.** Verifier agents have key rules embedded and can read from `~/.claude/rules/*.md` and `.claude/rules/*.md`.
+**Rules:**
+- Launch all `Task()` calls in a SINGLE message (parallel, `run_in_background=true`)
+- ⛔ NEVER skip verification or use `TaskOutput` (wastes tokens) — agents write to JSON files, poll with Read
+- Sub-agents do NOT inherit rules but can read from `~/.claude/rules/*.md` and `.claude/rules/*.md`
 
 ### Background Bash
 
@@ -126,14 +117,9 @@ Call after creating plan header, reading existing plan, and after status changes
 
 ### ⛔ Dispatcher Integrity
 
-**The `/spec` dispatcher is a thin router, not a thinking step.** Its only permitted tool calls are:
+**The `/spec` dispatcher is a thin router.** Only permitted tool calls: `AskUserQuestion` and `Skill()`.
 
-1. `AskUserQuestion` (worktree choice + type confirmation when ambiguous, new plans only)
-2. `Skill()` invocation
-
-**Any other tool use in the dispatcher — Read (except plan files), Bash, Grep, Glob, WebFetch, Task, or ANY research/exploration tool — is a workflow violation.** All substantive work (research, brainstorming, exploration, web fetches, file reads) happens inside the invoked Skill phase, never in the dispatcher.
-
-**Why this matters:** If the dispatcher does substantive work instead of invoking a Skill, no plan file is created, no stop guard fires, and the entire spec workflow silently disappears. The user typed `/spec` expecting a structured workflow, and gets freeform chat instead.
+**Any other tool use (Read except plan files, Bash, Grep, Glob, Task, etc.) is a workflow violation.** If the dispatcher does substantive work, no plan file is created and the spec workflow silently disappears.
 
 ### Phase Dispatch
 
@@ -158,7 +144,7 @@ Call after creating plan header, reading existing plan, and after status changes
 spec-verify (or spec-bugfix-verify) finds issues → Status: PENDING → spec-implement fixes → COMPLETE → verify → ... → VERIFIED
 ```
 
-### ⛔ Only THREE User Interaction Points
+### ⛔ Only THREE User Interaction Points — No Stopping
 
 1. **Worktree Choice + Type Confirmation** (new plans only, in dispatcher — type only asked when ambiguous)
 2. **Plan Approval** (in spec-plan or spec-bugfix-plan)
@@ -166,28 +152,20 @@ spec-verify (or spec-bugfix-verify) finds issues → Status: PENDING → spec-im
 
 Everything else is automatic. **NEVER ask "Should I fix these findings?"** — verification fixes are part of the approved plan.
 
+**Stop Guard:** When the stop guard blocks a stop during `/spec`, do NOT acknowledge it, output resume instructions, or say goodbye. Continue working — proceed with next task or invoke the next phase.
+
 **Status values:** `PENDING` (awaiting implementation), `COMPLETE` (ready for verification), `VERIFIED` (done)
 
 ### Worktree Isolation (Optional)
 
 Controlled by `Worktree:` field in plan header (default: `No`). User chooses at START of `/spec`.
 
-**When `Worktree: Yes`:** Worktree created during planning phase (spec-plan) at `.worktrees/spec-<slug>-<hash>/`, so the plan file lives inside the worktree from the start. All implementation happens there, squash merged after verification.
+**When `Worktree: Yes`:** Worktree created during planning phase at `.worktrees/spec-<slug>-<hash>/`. All implementation happens there, squash merged after verification.
 
 **When `Worktree: No`:** Direct implementation on current branch.
-
-**Worktree CLI:** `pilot worktree detect|create|diff|sync|cleanup|status --json <slug>` (see `cli-tools.md`)
 
 ---
 
 ## Task Completion Tracking
 
 Update plan file after EACH task: `[ ]` → `[x]`, increment Done, decrement Left. Do this immediately.
-
-## No Stopping — Automatic Continuation
-
-The ONLY user interaction points are worktree choice (+ type confirmation when ambiguous), plan approval, and worktree sync approval.
-
-### ⛔ Stop Guard — NEVER Acknowledge Blocked Stops
-
-When the stop guard blocks a stop during `/spec`, **do NOT acknowledge the stop, output resume instructions, or say goodbye.** Continue working as if nothing happened — either proceed with the next pending task or invoke the appropriate phase transition, whichever applies.

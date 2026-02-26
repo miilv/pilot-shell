@@ -1,87 +1,17 @@
-"""Python file checker — comment stripping, ruff."""
+"""Python file checker — ruff."""
 
 from __future__ import annotations
 
-import io
 import re
 import shutil
 import subprocess
-import tokenize
 from pathlib import Path
 
 from _util import check_file_length
 
 
-def strip_python_comments(file_path: Path) -> bool:
-    """Remove inline comments from Python file using tokenizer."""
-    try:
-        content = file_path.read_text()
-    except Exception:
-        return False
-
-    preserve_patterns = [
-        r"#!",
-        r"#\s*type:",
-        r"#\s*noqa",
-        r"#\s*pragma:",
-        r"#\s*pylint:",
-        r"#\s*pyright:",
-        r"#\s*ruff:",
-        r"#\s*fmt:",
-        r"#\s*TODO",
-        r"#\s*FIXME",
-        r"#\s*XXX",
-        r"#\s*NOTE",
-    ]
-    preserve_re = re.compile("|".join(preserve_patterns), re.IGNORECASE)
-
-    try:
-        tokens = list(tokenize.generate_tokens(io.StringIO(content).readline))
-    except tokenize.TokenError:
-        return False
-
-    lines = content.splitlines(keepends=True)
-    comments_to_remove: list[tuple[int, int, int]] = []
-
-    for tok in tokens:
-        if tok.type == tokenize.COMMENT:
-            if preserve_re.search(tok.string):
-                continue
-            start_row, start_col = tok.start
-            _, end_col = tok.end
-            comments_to_remove.append((start_row, start_col, end_col))
-
-    if not comments_to_remove:
-        return False
-
-    new_lines = list(lines)
-    lines_to_delete: set[int] = set()
-
-    for line_num, start_col, _ in reversed(comments_to_remove):
-        idx = line_num - 1
-        if idx >= len(new_lines):
-            continue
-        line = new_lines[idx]
-        before_comment = line[:start_col].rstrip()
-        if before_comment:
-            new_lines[idx] = before_comment + "\n"
-        else:
-            lines_to_delete.add(idx)
-
-    for idx in sorted(lines_to_delete, reverse=True):
-        del new_lines[idx]
-
-    new_content = "".join(new_lines)
-    if new_content != content:
-        file_path.write_text(new_content)
-        return True
-    return False
-
-
 def check_python(file_path: Path) -> tuple[int, str]:
     """Check Python file with ruff. Returns (0, reason)."""
-    strip_python_comments(file_path)
-
     if "test_" in file_path.name or "spec" in file_path.name:
         return 0, ""
 
