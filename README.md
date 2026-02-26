@@ -426,6 +426,14 @@ Details and licensing at [pilot-shell.com](https://pilot-shell.com).
 
 ---
 
+## Rolling Out for Your Team?
+
+Let's figure out if Pilot Shell is the right fit for your team and get everyone set up.
+
+**[Book a Call](https://calendly.com/rittermax/pilot-shell)** · **[Send an Email](mailto:mail@maxritter.net)** · **[Connect on LinkedIn](https://www.linkedin.com/in/rittermax/)**
+
+---
+
 ## FAQ
 
 <details>
