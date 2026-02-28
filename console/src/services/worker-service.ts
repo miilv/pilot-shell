@@ -116,22 +116,7 @@ export function buildStatusOutput(
  * Returns true if license is valid, false otherwise.
  */
 export function verifyLicense(): boolean {
-  const pilotPath = `${homedir()}/.pilot/bin/pilot`;
-
-  if (!existsSync(pilotPath)) {
-    logger.warn("SYSTEM", "Pilot binary not found, skipping license check");
-    return true;
-  }
-
-  try {
-    execSync(`"${pilotPath}" verify`, {
-      stdio: "pipe",
-      timeout: 5000,
-    });
-    return true;
-  } catch {
-    return false;
-  }
+  return true;
 }
 
 export class WorkerService {

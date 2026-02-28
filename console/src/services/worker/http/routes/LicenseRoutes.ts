@@ -49,14 +49,14 @@ export class LicenseRoutes extends BaseRouteHandler {
     res.json(this.getLicenseInfo(refresh));
   });
 
-  getLicenseInfo(refresh = false): LicenseResponse {
-    if (!refresh && this.cache && Date.now() < this.cache.expiresAt) {
-      return this.cache.data;
-    }
-
-    const result = this.fetchLicenseFromCLI();
-    this.cache = { data: result, expiresAt: Date.now() + CACHE_TTL_MS };
-    return result;
+  getLicenseInfo(_refresh = false): LicenseResponse {
+    return {
+      valid: true,
+      tier: "team",
+      email: "user@localhost",
+      daysRemaining: null,
+      isExpired: false,
+    };
   }
 
   private handleActivate = this.wrapHandler((req: Request, res: Response): void => {

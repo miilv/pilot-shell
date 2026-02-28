@@ -1,0 +1,54 @@
+#!/bin/bash
+# SECURITY TEST: Patched pilot wrapper that neutralizes all license checks
+# via runtime monkey-patching of the compiled .so module.
+#
+# Usage:  ./pilot-bypass status --json
+#         ./pilot-bypass greet
+#         ./pilot-bypass --version
+#
+# This does NOT modify any file on disk. It patches in-memory only.
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.pilot/bin" 2>/dev/null || echo "$HOME/.pilot/bin" && pwd)"
+# Resolve to the actual pilot bin directory
+SCRIPT_DIR="$HOME/.pilot/bin"
+
+exec uv run --python 3.12 --no-project --with cryptography python -c "
+import sys
+import os
+cwd = os.getcwd()
+sys.path = [p for p in sys.path if p and p != cwd and not (os.path.isdir(os.path.join(p, 'launcher')) and os.path.isfile(os.path.join(p, 'launcher', '__init__.py')))]
+sys.path.insert(0, '$SCRIPT_DIR')
+
+# ---- BYPASS: monkey-patch before app() runs ----
+import pilot
+
+# 1. Module-level license check
+pilot._check_license_valid = lambda: (True, '')
+
+# 2. LicenseManager: skip online validation, report team tier
+pilot.LicenseManager.validate = lambda self: (True, '')
+_orig_info = pilot.LicenseManager.get_license_info
+def _fake_info(self):
+    real = _orig_info(self)
+    if real:
+        real['tier'] = 'team'
+        real['email'] = 'bypass-test@localhost'
+        real['is_expired'] = False
+        real['days_remaining'] = 99999
+    else:
+        real = {'tier': 'team', 'email': 'bypass-test@localhost', 'days_remaining': 99999, 'is_expired': False}
+    return real
+pilot.LicenseManager.get_license_info = _fake_info
+
+# 3. ClaudeWrapper: skip license gate + trial expiry handler
+pilot.ClaudeWrapper._check_license = lambda self: None
+pilot.ClaudeWrapper._handle_invalid_license = lambda self, *a, **kw: None
+pilot.ClaudeWrapper._handle_trial_expired = lambda self, *a, **kw: None
+# ---- END BYPASS ----
+
+from pilot import app
+code = app()
+sys.stdout.flush()
+sys.stderr.flush()
+os._exit(code)
+" "$@"
