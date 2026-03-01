@@ -2,6 +2,16 @@
 
 All notable changes to Pilot Shell will be documented in this file.
 
+## [7.1.0] - 2026-03-01
+
+### Features
+
+- Merge 5 spec sub-agents into 2 unified agents for optimized token usage
+
+### Miscellaneous
+
+- Add team rollout section with contact links to README
+
 ## [7.0.6] - 2026-02-26
 
 ### Bug Fixes
