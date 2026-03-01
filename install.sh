@@ -679,6 +679,10 @@ pilot.ClaudeWrapper._check_license = lambda self: (True, 'team', False, '')
 pilot.ClaudeWrapper._handle_invalid_license = lambda self, *a, **kw: None
 pilot.ClaudeWrapper._handle_trial_expired = lambda self, *a, **kw: None
 
+# Block auto-update (would overwrite this wrapper with upstream install.sh)
+# Still prints that an update is available, just will not auto-apply
+pilot.run_update_and_exit = lambda *a, **kw: None
+
 from pilot import app
 code = app()
 sys.stdout.flush()
