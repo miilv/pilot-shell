@@ -2,6 +2,12 @@
 
 All notable changes to Pilot Shell will be documented in this file.
 
+## [7.1.2] - 2026-03-02
+
+### Bug Fixes
+
+- Strengthen spec stop guard to prevent premature stops during /spec
+
 ## [7.1.1] - 2026-03-02
 
 ### Bug Fixes
