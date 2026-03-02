@@ -153,7 +153,7 @@ spec-verify (or spec-bugfix-verify) finds issues → Status: PENDING → spec-im
 
 Everything else is automatic. **NEVER ask "Should I fix these findings?"** — verification fixes are part of the approved plan.
 
-**Stop Guard:** When the stop guard blocks a stop during `/spec`, do NOT acknowledge it, output resume instructions, or say goodbye. Continue working — proceed with next task or invoke the next phase.
+**Stop Guard:** When the stop guard blocks a stop during `/spec`, do NOT acknowledge it, output resume instructions, or say goodbye. Your **very next action** must be a tool call (TaskList, Read plan file, or code change). Never produce a text-only response after a stop block — immediately resume the current task or invoke the next phase. This also applies after user interruptions ("Continue", new messages mid-task) — re-read the plan and resume from where you left off.
 
 **Status values:** `PENDING` (awaiting implementation), `COMPLETE` (ready for verification), `VERIFIED` (done)
 
