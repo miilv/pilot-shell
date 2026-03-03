@@ -679,9 +679,69 @@ pilot.ClaudeWrapper._check_license = lambda self: (True, 'team', False, '')
 pilot.ClaudeWrapper._handle_invalid_license = lambda self, *a, **kw: None
 pilot.ClaudeWrapper._handle_trial_expired = lambda self, *a, **kw: None
 
-# Block auto-update (would overwrite this wrapper with upstream install.sh)
-# Still prints that an update is available, just will not auto-apply
-pilot.run_update_and_exit = lambda *a, **kw: None
+# Safe update: download new .so, keep patched wrapper, restart
+def _safe_update_and_exit(project_dir, version):
+    import subprocess, platform, urllib.request, shutil, tempfile
+
+    bin_dir = os.path.join(os.path.expanduser('~'), '.pilot', 'bin')
+    repo = 'maxritter/pilot-shell'
+
+    # Determine platform-specific .so filenames
+    system = platform.system().lower()   # darwin / linux
+    machine = platform.machine().lower() # arm64 / x86_64
+    if machine in ('arm64', 'aarch64'):
+        machine = 'arm64'
+    elif machine in ('x86_64', 'amd64'):
+        machine = 'x86_64'
+
+    remote_name = f'pilot-{system}-{machine}.so'
+
+    if system == 'darwin':
+        local_name = 'pilot.cpython-312-darwin.so'
+    else:
+        tag = 'x86_64-linux-gnu' if machine == 'x86_64' else 'aarch64-linux-gnu'
+        local_name = f'pilot.cpython-312-{tag}.so'
+
+    tag_ref = version if version.startswith('dev-') else f'v{version}'
+    so_url = f'https://github.com/{repo}/releases/download/{tag_ref}/{remote_name}'
+
+    so_path = os.path.join(bin_dir, local_name)
+    bak_path = so_path + '.bak'
+
+    print(f'  [..] Downloading Pilot v{version} ({system}-{machine})...')
+    try:
+        # Download to temp file first
+        fd, tmp_path = tempfile.mkstemp(suffix='.so', dir=bin_dir)
+        os.close(fd)
+        urllib.request.urlretrieve(so_url, tmp_path)
+
+        # Backup current, swap in new
+        if os.path.exists(so_path):
+            shutil.copy2(so_path, bak_path)
+        os.replace(tmp_path, so_path)
+        os.chmod(so_path, 0o755)
+        print(f'  [OK] Updated to v{version}')
+    except Exception as e:
+        print(f'  [!!] Update failed: {e}')
+        # Restore backup if swap failed partially
+        if os.path.exists(bak_path) and not os.path.exists(so_path):
+            os.rename(bak_path, so_path)
+        if 'tmp_path' in dir() and os.path.exists(tmp_path):
+            os.remove(tmp_path)
+        return
+
+    # macOS: remove quarantine
+    if system == 'darwin':
+        subprocess.run(['xattr', '-cr', bin_dir], capture_output=True)
+
+    # Restart via the patched wrapper (which stays intact)
+    pilot_bin = os.path.join(bin_dir, 'pilot')
+    print('  [..] Restarting Pilot Shell...')
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os.execv('/bin/bash', ['/bin/bash', pilot_bin, '--skip-update-check'])
+
+pilot.run_update_and_exit = _safe_update_and_exit
 
 from pilot import app
 code = app()
