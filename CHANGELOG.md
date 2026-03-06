@@ -2,6 +2,17 @@
 
 All notable changes to Pilot Shell will be documented in this file.
 
+## [7.2.1] - 2026-03-06
+
+### Bug Fixes
+
+- Redesign bugfix /spec flow with root cause investigation and make reviewers mandatory
+
+### Miscellaneous
+
+- Improve install section after-install guidance
+- Streamline landing page sections and remove Under the Hood
+
 ## [7.2.0] - 2026-03-05
 
 ### Features
