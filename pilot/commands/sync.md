@@ -3,12 +3,11 @@ description: Sync project rules and skills with codebase - reads existing rules/
 user-invocable: true
 model: sonnet
 ---
-
 # /sync - Sync Project Rules & Skills
 
 **Sync custom rules and skills with the current codebase.** Reads existing rules/skills, explores code patterns, identifies gaps, updates documentation, creates new skills.
 
-**Flow:** Read existing → Explore → Compare → Sync project/MCP/skills → Discover rules/skills → Cross-check → Summary
+**Flow:** Read existing → Migrate → Quality audit → Explore → Compare → Sync project/MCP/skills → Discover rules/skills → Cross-check → Summary
 
 **Team sharing:** Use the Teams page in the Console dashboard to push/pull assets via sx.
 
@@ -45,12 +44,13 @@ Use unique names (not `plan`, `implement`, `verify`, `standards-*`) for custom s
 
 ### Error Handling
 
-| Issue | Action |
-|-------|--------|
-| Probe not installed | Use Grep/Glob for codebase exploration |
-| No MCP servers | Skip MCP documentation |
-| No README.md | Ask user for description |
-| No package.json/pyproject.toml | Infer from file extensions |
+| Issue                          | Action                                                                  |
+| ------------------------------ | ----------------------------------------------------------------------- |
+| Probe not installed            | Use Grep/Glob for codebase exploration (all Probe steps have fallbacks) |
+| `/learn` skill not available | Create skills manually (write SKILL.md directly)                        |
+| No MCP servers                 | Skip MCP documentation                                                  |
+| No README.md                   | Ask user for description                                                |
+| No package.json/pyproject.toml | Infer from file extensions                                              |
 
 ### Writing Rules
 
@@ -66,6 +66,47 @@ Rules load every session — every word costs tokens.
 - **Portable paths** — use relative paths or variables, not absolute paths that break on other machines (`cd tests/unit`, not `cd /home/user/project/tests/unit`)
 - **Current syntax** — use modern tool versions and command syntax (e.g., `docker compose` not `docker-compose`)
 
+### Claude Code Best Practices Reference
+
+From the official Claude Code documentation — use these as the quality baseline for the Quality Audit (Phase 3).
+
+**What belongs in rules (loaded every session):**
+
+- Bash commands Claude can't guess
+- Code style rules that differ from defaults
+- Testing instructions and preferred test runners
+- Repository etiquette (branch naming, PR conventions)
+- Architectural decisions specific to the project
+- Developer environment quirks (required env vars)
+- Common gotchas or non-obvious behaviors
+
+**What does NOT belong in rules:**
+
+- Anything Claude can figure out by reading code
+- Standard language conventions Claude already knows
+- Detailed API documentation (link to docs instead)
+- Information that changes frequently
+- Long explanations or tutorials
+- File-by-file descriptions of the codebase
+- Self-evident practices like "write clean code"
+
+**Structure & size:**
+
+- Target under 200 lines per file — longer files reduce adherence
+- Use markdown headers and bullets — organized sections > dense paragraphs
+- Write instructions concrete enough to verify: "Use 2-space indentation" not "Format code properly"
+- Remove conflicting instructions — contradictions cause arbitrary behavior
+- Use emphasis ("IMPORTANT", "YOU MUST") for critical rules
+- Use `@path/to/import` syntax to reference external files instead of inlining
+
+**Scoping:**
+
+- Use `paths` frontmatter in `.claude/rules/` to scope rules to specific file types — reduces noise and saves context
+- Domain knowledge or workflows only relevant sometimes → skills (loaded on demand), not rules (loaded every session)
+- Use `CLAUDE.local.md` for personal project preferences not shared via git
+
+**Litmus test for every instruction:** "Would removing this cause Claude to make mistakes?" If not, cut it.
+
 ---
 
 ## Phase 1: Read Existing Rules & Skills
@@ -76,36 +117,124 @@ Rules load every session — every word costs tokens.
 2. `ls -la .claude/rules/*.md 2>/dev/null` — read each rule file
 3. `ls -la .claude/skills/*/SKILL.md 2>/dev/null` — read each skill file
 4. Check for legacy CLAUDE.md: `ls CLAUDE.md claude.md .claude.md 2>/dev/null` — read if found
-5. **Detect unscoped legacy files** — look for `project.md`, `mcp-servers.md`, or any rule/skill without the `{slug}-` prefix. Flag for migration in Phase 1 Step 6.
+5. **Detect unscoped legacy files** — look for `project.md`, `mcp-servers.md`, or any rule/skill without the `{slug}-` prefix. Flag for migration in Phase 2.
 6. **Detect monorepo structure** — check for subdirectories with their own `.claude/rules/` or `CLAUDE.md`. If found, note each sub-project for per-directory sync in later phases.
 7. Build inventory: documented rules, skills, CLAUDE.md contents, gaps, outdated items, legacy files, sub-projects
 
-### Step 1.5: Migrate Unscoped Assets — CONDITIONAL
+## Phase 2: Migrate Unscoped Assets — CONDITIONAL
 
 **Only if Phase 1 found unscoped files.**
 
 AskUserQuestion: "Found unscoped assets that should be prefixed with '{slug}-' for better Team sharing. Migrate now?"
+
 - **"Yes, migrate all"** — rename each to `{slug}-{name}`, update internal references, delete old file
 - **"Review each"** — show each file, let user decide per-file
 - **"Skip"** — leave as-is, continue sync
 
 **Migration rules:**
-- `project.md` → `{slug}-project.md` | `mcp-servers.md` → `{slug}-mcp-servers.md` | `{topic}.md` → `{slug}-{topic}.md` (unless Pilot-managed)
+
+- `project.md` → `{slug}-project.md` | `mcp-servers.md` → `{slug}-mcp-servers.md` | `{topic}.md` → `{slug}-{topic}.md` (unless managed by a framework like Pilot Shell)
 - `.claude/skills/{name}/` → `.claude/skills/{slug}-{name}/` (update `name:` in frontmatter too)
-- Do NOT migrate files from `~/.claude/rules/` — those are global Pilot rules
+- Do NOT migrate files from `~/.claude/rules/` — those are global user rules
 
-## Phase 2: Explore Codebase
+## Phase 3: Quality Audit
 
-### Step 2.1: Setup
+**Audit all existing rules and CLAUDE.md files against Claude Code best practices (Phase 0 → Best Practices Reference).** Present findings as improvement suggestions — do NOT modify files without user confirmation.
 
-1. Check `probe --version` — if not installed, inform user, use Grep/Glob as fallback for all Probe steps below
+**Skip this phase if:** No existing rules or CLAUDE.md files found in Phase 1 (nothing to audit).
+
+### Step 3.1: Run Checks
+
+For each rule file and CLAUDE.md found in Phase 1, evaluate:
+
+| Check                          | What to look for                                                                                                                                 | Severity |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| **Size**                 | Files over 200 lines (context bloat, reduced adherence)                                                                                          | Warning  |
+| **Specificity**          | Vague instructions: "format properly", "write clean code", "keep organized" — suggest concrete alternatives                                     | Warning  |
+| **Redundancy**           | Standard conventions Claude already knows (e.g., "use const for immutable variables" in a JS project)                                            | Info     |
+| **Conflicts**            | Contradicting instructions across different files (e.g., one rule says "use tabs", another says "use spaces")                                    | Error    |
+| **Path-scoping**         | Rules that mention specific file types/directories but lack `paths` frontmatter — these load every session unnecessarily                      | Info     |
+| **Skills candidates**    | Domain knowledge, multi-step workflows, or tool integration guides in rules that would be better as skills (loaded on demand, not every session) | Info     |
+| **Structure**            | Dense paragraphs without headers/bullets, poor scanability, missing section organization                                                         | Warning  |
+| **Stale references**     | References to files, commands, paths, or tools that no longer exist in the codebase — verify with `ls` or Probe                               | Error    |
+| **Import opportunities** | Large files that could split content using `@path/to/import` syntax                                                                            | Info     |
+| **Emphasis gaps**        | Critical rules (security, data loss, breaking changes) without emphasis markers ("IMPORTANT", "YOU MUST")                                        | Info     |
+| **CLAUDE.md overlap**    | Content duplicated between CLAUDE.md and `.claude/rules/` files                                                                                | Warning  |
+
+**How to check for specificity:** Look for adjectives without measurable criteria ("good", "clean", "proper", "nice"), instructions that restate language defaults, and rules without concrete examples or verifiable outcomes.
+
+**How to check for stale references:** For each file path, command, or tool name referenced in rules, verify existence:
+
+```bash
+# File paths
+ls -la <referenced-path> 2>/dev/null
+
+# Commands
+which <referenced-command> 2>/dev/null
+
+# Code patterns (Probe if available, otherwise Grep)
+probe search "<referenced-pattern>" ./ --max-results 1 --max-tokens 500
+# Fallback: Grep(pattern="<referenced-pattern>", head_limit=5)
+```
+
+### Step 3.2: Present Findings
+
+Group findings by severity and present to user:
+
+```
+## Quality Audit Results
+
+### Errors (should fix)
+- ❌ **Conflict:** `.claude/rules/style.md` says "use tabs" but `CLAUDE.md` says "use 2-space indent"
+- ❌ **Stale:** `.claude/rules/project.md` references `src/legacy/` which no longer exists
+
+### Warnings (recommended)
+- ⚠️ **Size:** `CLAUDE.md` is 340 lines — split into modular rules or use @imports (target: <200 lines)
+- ⚠️ **Vague:** `.claude/rules/style.md` line 12: "Format code properly" → suggest: "Run `prettier --write` before committing"
+- ⚠️ **Overlap:** Authentication instructions appear in both `CLAUDE.md` and `.claude/rules/auth.md`
+
+### Suggestions (nice to have)
+- 💡 **Path-scope:** `.claude/rules/testing.md` only mentions `*.test.ts` files — add `paths: ["**/*.test.ts"]` frontmatter
+- 💡 **Skill candidate:** `.claude/rules/deployment.md` contains a 40-line deployment workflow — convert to a skill
+- 💡 **Emphasis:** `.claude/rules/security.md` line 5: "Never commit secrets" — add "IMPORTANT:" prefix
+- 💡 **Import:** `CLAUDE.md` inlines API docs — replace with `@docs/api-reference.md`
+```
+
+### Step 3.3: User Decision
+
+AskUserQuestion (multiSelect): "Select improvements to apply:"
+
+- List each finding with checkbox
+- Group by file for clarity
+- Options: **"Fix all errors & warnings"** | **"Review each"** | **"Fix errors only"** | **"Skip audit"**
+
+### Step 3.4: Apply Selected Fixes
+
+For each selected improvement:
+
+1. Read the target file
+2. Apply the specific fix (rewrite vague instruction, add `paths` frontmatter, split large file, remove stale reference, add emphasis, resolve conflict)
+3. Show the diff to user before writing
+4. Write the updated file
+
+**For skill conversions:** Extract the content from the rule, create a new skill via `Skill(skill="learn")` if available — otherwise create the `.claude/skills/{slug}-{name}/SKILL.md` directly with proper frontmatter (`name`, `description`). Remove the content from the rule, add a brief note pointing to the skill.
+
+**For file splits:** When splitting a file over 200 lines, create new modular files in `.claude/rules/` with the `{slug}-` prefix and add `@path` imports in the original if appropriate.
+
+**For conflict resolution:** Present both conflicting instructions, ask user which is correct, update both files to be consistent.
+
+## Phase 4: Explore Codebase
+
+### Step 4.1: Setup
+
+1. Check `probe --version` — if available, use Probe for semantic exploration (Step 4.2). If not installed, skip Step 4.2 and use Grep/Glob/Read in Step 4.3.
 2. **Directory structure:** `tree -L 3 -I 'node_modules|.git|__pycache__|dist|build|.venv|.next|coverage|.cache|cdk.out'`
 3. **Technologies:** Check `package.json`, `pyproject.toml`, `tsconfig.json`, `go.mod`
 4. **Source documents:** Find and read canonical docs — `docs/`, `**/ARCHITECTURE.md`, `**/CONTRIBUTING.md`, `**/docs/*.md`. These are the source of truth for generated rules — keep them open when writing.
 
-### Step 2.2: Probe Deep Exploration
+### Step 4.2: Semantic Exploration with Probe — OPTIONAL
 
-Use `probe search` (via Bash) to understand each area that rules need to cover. **Always use `--max-results 5 --max-tokens 2000`** to keep context lean. Adapt queries to what the project actually does — these are starting points, not a checklist:
+**Skip if Probe is not installed.** Use `probe search` (via Bash) to understand each area that rules need to cover. **Always use `--max-results 5 --max-tokens 2000`** to keep context lean. Adapt queries to what the project actually does — these are starting points, not a checklist:
 
 ```bash
 # Architecture & structure
@@ -129,43 +258,49 @@ probe search "CI/CD pipeline configuration" ./ --max-results 5 --max-tokens 2000
 ```
 
 **Follow up with `probe extract`** to pull concrete examples for rules:
+
 ```bash
 probe extract src/routes/users.ts#createUser
 probe extract tests/conftest.py:1-30
 ```
 
-### Step 2.3: Fill Gaps
+### Step 4.3: Fill Gaps
 
-1. **Grep:** naming conventions, import patterns, response structures — for patterns Probe didn't surface
-2. **Read** 5-10 representative files in key areas identified by Probe results
-3. For each gap from Phase 1: run a targeted Probe query to find current patterns
+**This is the primary exploration step when Probe is not available.**
 
-**Monorepo:** Repeat steps 2.1-2.3 for each sub-project identified in Phase 1. Each sub-project gets its own exploration context.
+1. **Grep** for key patterns — entry points, route definitions, config loading, error handling, auth, test organization
+2. **Glob** for file structure — `**/*.test.*`, `**/routes/**`, `**/config/**`, `**/middleware/**`
+3. **Read** 5-10 representative files in key directories
+4. For each gap from Phase 1: run a targeted search (Probe if available, otherwise Grep) to find current patterns
+5. **Use subagents** (Agent tool with `subagent_type="Explore"`) for broader exploration when simpler searches aren't sufficient
 
-## Phase 3: Compare & Identify Gaps
+**Monorepo:** Repeat Steps 4.1-4.3 for each sub-project identified in Phase 1. Each sub-project gets its own exploration context.
+
+## Phase 5: Compare & Identify Gaps
 
 1. For each existing rule: still accurate? new patterns? tech stack changed? commands/paths correct?
 2. Identify gaps: undocumented tribal knowledge, new conventions, changed patterns
 3. AskUserQuestion to confirm findings: "Update all" | "Review each" | "Show details" | "Skip updates"
 
-## Phase 4: Sync Project Rule
+## Phase 6: Sync Project Rule
 
 **Update `.claude/rules/{slug}-project.md` with current project state.**
 
 Also look for a legacy unscoped `project.md` — if found, migrate its content into `{slug}-project.md` and delete the old file.
 
-### Step 4.0: Handle Existing CLAUDE.md — CONDITIONAL
+### Step 6.1: Handle Existing CLAUDE.md — CONDITIONAL
 
 **Only if Phase 1 found a CLAUDE.md file.**
 
 If both CLAUDE.md AND `{slug}-project.md` exist: merge unique content from CLAUDE.md into the project rule. If fully redundant, suggest removing CLAUDE.md.
 
 If CLAUDE.md exists but NO `{slug}-project.md`: AskUserQuestion:
+
 - **"Migrate to modular rules (Recommended)"** — Split into `{slug}-project.md` + topic-specific files. Read CLAUDE.md, identify logical sections, create rule files, confirm split before writing. Then ask: "Remove CLAUDE.md?" | "Rename to .bak" | "Keep both".
 - **"Keep CLAUDE.md as-is"** — Skip project rule creation.
 - **"Create alongside"** — Keep both. Project rule gets tech stack/structure, CLAUDE.md keeps custom instructions.
 
-### Step 4.1: Create or Update {slug}-project.md
+### Step 6.2: Create or Update {slug}-project.md
 
 If exists: compare tech stack, verify structure/commands, update timestamp, preserve custom sections. Re-read source docs while writing — every significant section in the source must have corresponding coverage in the generated rules.
 
@@ -199,17 +334,18 @@ If doesn't exist, create:
 
 **Monorepo:** Create a root `{slug}-project.md` with the overall structure, then per-sub-project rules (e.g., `{slug}-{subdir}-project.md`) for sub-project-specific tech stacks, commands, and conventions. Cross-reference between root and sub-project rules.
 
-## Phase 5: Sync MCP Rules
+## Phase 7: Sync MCP Rules
 
-**Document user-configured MCP servers (skip Pilot core: context7, mem-search, web-search, web-fetch, grep-mcp).**
+**Document user-configured MCP servers.** Skip framework-provided servers (e.g., Pilot core: context7, mem-search, web-search, web-fetch, grep-mcp) — only document servers the user added themselves.
 
-### Step 5.1: Discover
+### Step 7.1: Discover
 
-Parse `.mcp.json`, exclude Pilot core servers.
+Parse `.mcp.json`, exclude framework-provided servers (Pilot core servers if present: context7, mem-search, web-search, web-fetch, grep-mcp).
 
-### Step 5.2: Smoke-Test
+### Step 7.2: Smoke-Test
 
 For each user server:
+
 1. `ToolSearch(query="+server-name keyword")` to discover tools
 2. Call each tool with minimal read-only arguments (**safety: only read-only tools**)
 3. Record per-tool: success | auth error | connection error | schema error | timeout
@@ -221,13 +357,13 @@ For each user server:
    ```
 5. If issues: AskUserQuestion "Document working tools only" | "Document all with status notes" | "Skip MCP sync"
 
-### Step 5.3: Document
+### Step 7.3: Document
 
 Compare against existing `{slug}-mcp-servers.md`. If changes detected, ask user: "Update all" | "Review each" | "Skip"
 
 Also look for a legacy unscoped `mcp-servers.md` — if found, migrate content into `{slug}-mcp-servers.md` and delete the old file.
 
-### Step 5.4: Write
+### Step 7.4: Write
 
 Create/update `.claude/rules/{slug}-mcp-servers.md`:
 
@@ -243,11 +379,12 @@ Create/update `.claude/rules/{slug}-mcp-servers.md`:
 **Example:** `ToolSearch(query="+server-name keyword")` then call directly.
 ```
 
-**Skip if:** no `.mcp.json`, only Pilot core servers, user declines.
+**Skip if:** no `.mcp.json`, no user-added servers, user declines.
 
-## Phase 6: Sync Existing Skills
+## Phase 8: Sync Existing Skills
 
 For each skill from Phase 1:
+
 1. **Relevance:** Does the workflow/tool still exist? Has process changed?
 2. **Currency:** Steps accurate? APIs changed? Examples working?
 3. **Triggers:** Description still accurate for discovery?
@@ -256,45 +393,52 @@ If updates needed: AskUserQuestion (multiSelect) with what changed and why. For 
 
 If obsolete: AskUserQuestion "Yes, remove it" | "Keep it" | "Update instead". If removing: delete the skill directory.
 
-## Phase 7: Discover New Rules
+## Phase 9: Discover New Rules
 
-1. List undocumented areas (comparing Phase 1 + Phase 2)
-2. For each candidate area, use Probe to find the actual patterns before drafting:
+1. List undocumented areas (comparing Phase 1 + Phase 4)
+2. For each candidate area, find the actual patterns before drafting:
    ```bash
+   # With Probe (preferred)
    probe search "how is [pattern] implemented across the codebase" ./ --max-results 5 --max-tokens 2000
    probe extract src/example.ts#patternFunction
+
+   # Without Probe (fallback)
+   # Grep(pattern="[pattern]", head_limit=10)
+   # Read representative files directly
    ```
 3. Prioritize by: frequency, uniqueness, mistake likelihood
 4. AskUserQuestion (multiSelect): which areas to document
-5. For each: ask clarifying questions, draft rule using Probe results and extracted examples, confirm before creating
+5. For each: ask clarifying questions, draft rule using search results and code examples, confirm before creating
 6. Write to `.claude/rules/{slug}-{pattern-name}.md`
 
-**Rule format:** Standard Name → When to Apply → The Pattern (code from `probe extract`) → Why (if not obvious) → Common Mistakes → Good/Bad examples.
+**Rule format:** Standard Name → When to Apply → The Pattern (code examples) → Why (if not obvious) → Common Mistakes → Good/Bad examples.
 
-## Phase 8: Discover & Create Skills
+## Phase 10: Discover & Create Skills
 
 Skills are appropriate for: multi-step workflows, tool integrations, reusable scripts, domain expertise.
 
 1. Identify candidates from exploration: repeated workflows, complex tool usage, bundled scripts
 2. AskUserQuestion (multiSelect): which to create
-3. For each: invoke `Skill(skill="learn")` to handle creation
+3. For each: invoke `Skill(skill="learn")` if available — otherwise create `.claude/skills/{slug}-{name}/SKILL.md` directly with frontmatter (`name`, `description`, optionally `user-invocable: true`)
 4. Verify: skill directory exists, SKILL.md has proper frontmatter
 
-## Phase 9: Cross-Check
+## Phase 11: Cross-Check
 
 **Re-read all generated/updated files and verify against source docs and each other.**
 
 1. **Build entity index** — collect all services, entry points, modules, config keys, and enum values mentioned across generated files
 2. **Cross-file completeness** — for each entity, verify it appears in all related files (e.g., a service in `{slug}-deployment.md` must also be in `{slug}-architecture.md` and `{slug}-project.md`)
-3. **Source fidelity** — for each identifier in generated rules, `probe search` or grep source docs to confirm exact spelling. If spelling differs between source and generated rule, fix the rule to match the source verbatim
+3. **Source fidelity** — for each identifier in generated rules, search source docs (Probe if available, otherwise Grep) to confirm exact spelling. If spelling differs between source and generated rule, fix the rule to match the source verbatim
 4. **Section coverage** — for each significant section in source docs (CLAUDE.md, `docs/`), confirm a corresponding rule section exists
 5. **Reference validity** — cross-references between files point to files that actually exist
 
 Auto-fix any issues found. Report fixes in summary.
 
-## Phase 10: Summary
+## Phase 12: Summary
 
 Report:
+
+- Quality audit: errors fixed, warnings addressed, suggestions applied, skipped
 - Rules: created, updated, unchanged
 - Skills: created, updated, removed, unchanged
 - Cross-check: issues found and fixed (if any)
