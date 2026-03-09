@@ -71,8 +71,10 @@ When resuming same session (same `CLAUDE_CODE_TASK_LIST_ID`): run `TaskList` fir
 | `spec-plan` 1.7 (all features) | plan-reviewer | `pilot:plan-reviewer` |
 | `spec-verify` 3.1, 3.4 (features only) | spec-reviewer | `pilot:spec-reviewer` |
 
-**Plan-reviewer is mandatory** for all feature specs. Spec-reviewer is mandatory during verification.
+**Plan-reviewer runs by default** for all feature specs (can be disabled in Console Settings → Reviewers → Plan Review). **Spec-reviewer runs by default** during verification (can be disabled in Console Settings → Reviewers → Code Review). Both are enabled out of the box — disabling skips the agent launch step entirely.
 **Bugfixes skip sub-agents** in both planning and verification — the regression test proves the fix, the full suite proves preservation.
+
+The env vars `$PILOT_PLAN_REVIEWER_ENABLED` and `$PILOT_SPEC_REVIEWER_ENABLED` control this at runtime (set by the Pilot wrapper from config.json). When unset (non-Pilot invocations), agents run as usual.
 
 **Rules:**
 - Launch with `run_in_background=true`

@@ -19,7 +19,7 @@ hooks:
 
 ## ⛔ KEY CONSTRAINTS
 
-1. **NEVER SKIP code review** — Step 3.1 launches `spec-reviewer` via `Task(subagent_type="pilot:spec-reviewer")`. Mandatory.
+1. **Run code review when enabled** — Step 3.1 launches `spec-reviewer` via `Task(subagent_type="pilot:spec-reviewer")` when `$PILOT_SPEC_REVIEWER_ENABLED` is not `"false"`. To disable, use Console Settings → Reviewers → Code Review toggle.
 2. **NO stopping** — Everything automatic. Never ask "Should I fix these?"
 3. **Fix ALL findings** — must_fix AND should_fix. No permission needed.
 4. **Code changes finish BEFORE runtime testing** — Phase A then Phase B.
@@ -62,7 +62,9 @@ Read the plan's Runtime Environment section (if present) and the changed file ty
 
 ### Step 3.1: Launch Code Review Agent (Early)
 
-Launch the reviewer IMMEDIATELY — it works in the background while you run automated checks.
+**⛔ Check:** Run `echo $PILOT_SPEC_REVIEWER_ENABLED` before starting this step. If the output is `"false"`, skip this step entirely and proceed to Step 3.2. (Automated checks in Step 3.2 still run; only the agent-based review is skipped.)
+
+**When enabled:** Launch the reviewer IMMEDIATELY — it works in the background while you run automated checks.
 
 #### 3.1a: Gather Context
 
@@ -128,7 +130,9 @@ Skip unless the plan has a Feature Inventory section.
 
 ### Step 3.4: Collect Review Results
 
-**⛔ MANDATORY. Never skip** — even if you're confident, context is high, or tests pass.
+**⛔ Check:** If `$PILOT_SPEC_REVIEWER_ENABLED` is `"false"` (Step 3.1 was skipped), skip this step entirely and proceed to Step 3.6 (Phase B). There are no findings to collect.
+
+**When enabled — mandatory. Never skip** — even if you're confident, context is high, or tests pass.
 
 **⛔ NEVER use `TaskOutput`** to retrieve results — it dumps the full agent transcript into context, wasting thousands of tokens.
 
@@ -161,7 +165,9 @@ For each fix: implement → run relevant tests → log "Fixed: [title]"
 
 ### Step 3.5: Re-verification (Only for Structural Fixes)
 
-**Skip** when fixes were localized (terminology, error handling, test updates, minor bugs). Run tests + lint to confirm, proceed to Phase B.
+**⛔ Check:** If `$PILOT_SPEC_REVIEWER_ENABLED` is `"false"` (Steps 3.1/3.4 were skipped), skip this step entirely and proceed to Phase B.
+
+**When enabled:** **Skip** when fixes were localized (terminology, error handling, test updates, minor bugs). Run tests + lint to confirm, proceed to Phase B.
 
 **Re-verify** when fixes required new functionality, changed APIs, or significant new code paths: re-launch spec-reviewer, fix new findings. Max 2 iterations before adding remaining issues to plan.
 

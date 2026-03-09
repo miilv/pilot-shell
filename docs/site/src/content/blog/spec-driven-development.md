@@ -50,11 +50,13 @@ Each task is tracked with progress indicators. If Claude discovers something une
 
 ### Phase 3: Verify
 
-After all tasks are complete, three automated review agents check the work in parallel:
+After all tasks are complete, an automated review agent checks the work:
 
 - **Compliance review** — Does the code match the plan? Are all tasks actually done?
 - **Quality review** — Code quality, test coverage, security, error handling
 - **Goal review** — Does the implementation achieve its intended outcome? Are all artifacts substantive and wired together?
+
+> **Optional:** The review agent is enabled by default and can be toggled in Console Settings → Reviewers.
 
 Issues found during verification are fixed automatically. The verify phase loops back to implementation if needed, then re-verifies until clean.
 
@@ -81,7 +83,7 @@ Pilot Shell's `/spec` command orchestrates the entire workflow:
 
 This triggers the full plan → implement → verify pipeline. Pilot handles:
 
-- **Plan verification** — Review agents challenge the plan before you see it
+- **Plan verification** — Review agents challenge the plan before you see it (optional, configurable in Console Settings → Reviewers)
 - **Worktree isolation** — Implementation happens on a separate branch so your main branch stays clean
 - **TDD enforcement** — Hooks ensure tests are written before production code
 - **Automatic context management** — If context fills up, auto-compaction preserves state and work continues seamlessly

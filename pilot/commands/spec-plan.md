@@ -20,8 +20,8 @@ hooks:
 
 ## ⛔ Critical Constraints
 
-- **NO sub-agents during planning** except Step 1.7 (plan-reviewer)
-- **NEVER skip plan-reviewer** — it runs for every feature spec, regardless of size. Context level is NOT a valid reason to skip.
+- **NO sub-agents during planning** except Step 1.7 (plan-reviewer, when enabled in settings)
+- **Run plan-reviewer when enabled** — it runs for every feature spec when `$PILOT_PLAN_REVIEWER_ENABLED` is not `"false"`. Context level is NOT a valid reason to skip. To disable, use Console Settings → Reviewers → Plan Review toggle.
 - **NEVER write code during planning** — planning and implementation are separate phases
 - **NEVER assume — verify by reading files**
 - **ONLY stopping point is plan approval** — everything else is automatic. Never ask "Should I fix these?"
@@ -290,7 +290,9 @@ Type: Feature
 
 ### Step 1.7: Plan Verification
 
-**Always run plan-reviewer for every feature spec.** Small plans benefit from a second pair of eyes just as much as large ones — missing edge cases and unclear DoD criteria are size-independent.
+**⛔ Check:** Run `echo $PILOT_PLAN_REVIEWER_ENABLED` before starting this step. If the output is `"false"`, skip this step entirely and proceed to Step 1.8.
+
+**When enabled:** Run plan-reviewer for every feature spec. Small plans benefit from a second pair of eyes just as much as large ones — missing edge cases and unclear DoD criteria are size-independent.
 
 ```bash
 SESS_ID=$(echo $PILOT_SESSION_ID)

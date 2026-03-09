@@ -20,7 +20,7 @@ const phases = [
     steps: [
       "Explores codebase with semantic search, asks clarifying questions",
       "Writes detailed spec with scope, tasks, and definition of done",
-      "Plan-reviewer sub-agent validates completeness on every spec",
+      "Plan-reviewer sub-agent validates completeness (optional, enabled by default)",
       "Waits for your approval — edit the plan directly before accepting",
     ],
   },
@@ -45,7 +45,7 @@ const phases = [
     borderColor: "border-violet-400/30",
     steps: [
       "Full test suite + type checking + lint + build verification",
-      "Features: unified review sub-agent (compliance + quality + goal)",
+      "Features: unified review sub-agent (optional, enabled by default)",
       "Bugfixes: regression test + full suite — no sub-agents needed",
       "Auto-fixes findings, loops back until all checks pass",
     ],
@@ -163,7 +163,7 @@ const SpecSection = () => {
                 "Codebase exploration with Probe semantic search",
                 "Architecture design decisions via Q&A",
                 "Full plan with scope, risks, and DoD",
-                "Unified verification agent (compliance + quality + goal)",
+                "Unified verification agent (optional, configurable in Console Settings)",
               ].map((item) => (
                 <div
                   key={item}
