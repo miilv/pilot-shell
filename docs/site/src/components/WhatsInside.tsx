@@ -1,12 +1,12 @@
 import {
   Workflow,
-  FileCode2,
   Plug2,
-  ShieldCheck,
-  Infinity as InfinityIcon,
-  Users,
   GitBranch,
   Lightbulb,
+  Infinity as InfinityIcon,
+  Search,
+  Stethoscope,
+  Terminal,
 } from "lucide-react";
 import { useInView } from "@/hooks/use-in-view";
 
@@ -26,32 +26,32 @@ const insideItems: InsideItem[] = [
       "A structured workflow with human review gates, sequential TDD, mandatory verification, and independent code review. Loops back automatically if any check fails.",
   },
   {
-    icon: ShieldCheck,
-    title: "Quality Automation",
-    description: "Hooks on every file edit",
-    summary:
-      "Auto-formatting, linting, and type checking for Python, TypeScript, and Go. TDD enforcer warns when code changes lack tests. Status line shows live session info.",
-  },
-  {
-    icon: FileCode2,
-    title: "Rules, Commands & Standards",
-    description: "Rules · Commands · Standards",
-    summary:
-      "Production-tested best practices loaded every session. Coding standards activate by file type. Structured workflows via /spec, /sync, /learn. Team sharing via Console dashboard. Custom rules survive updates.",
-  },
-  {
     icon: InfinityIcon,
-    title: "Persistent Memory",
-    description: "Context carries across sessions",
+    title: "Unlimited Context",
+    description: "Auto-compaction, zero interruptions",
     summary:
-      "Decisions, discoveries, and debugging insights captured automatically. Pick up any project after days or weeks — Claude already knows your architecture and past work.",
+      "Decisions, plans, and progress are preserved across context boundaries. Sessions run indefinitely — no manual restarts, no lost work.",
   },
   {
     icon: Plug2,
-    title: "Enhanced Context",
-    description: "MCP servers + language servers",
+    title: "MCP Servers",
+    description: "Pre-configured external context",
     summary:
-      "Library docs, persistent memory, web search, GitHub code search, and real-time LSP diagnostics — all pre-configured. No setup, no API keys, always available.",
+      "Library docs, web search, GitHub code search, and persistent memory — all pre-configured MCP servers. No setup, no API keys, always available.",
+  },
+  {
+    icon: Stethoscope,
+    title: "LSP Diagnostics",
+    description: "Real-time type checking & linting",
+    summary:
+      "Language servers for Python, TypeScript, and Go provide live diagnostics. Errors surface immediately — not after a failed build.",
+  },
+  {
+    icon: Search,
+    title: "Semantic Search",
+    description: "Find code by intent, not keywords",
+    summary:
+      "Probe CLI indexes your codebase for instant semantic search. Find authentication flows, error handling patterns, or any concept in under 300ms.",
   },
   {
     icon: Lightbulb,
@@ -61,18 +61,18 @@ const insideItems: InsideItem[] = [
       "Extracts non-obvious debugging discoveries, workarounds, and tool integrations into reusable skills. Knowledge compounds — solutions found once are available forever.",
   },
   {
-    icon: Users,
-    title: "Team Sharing",
-    description: "Share knowledge across your team",
-    summary:
-      "Push and pull rules, commands, and skills via a private Git repo. Automatic versioning, scoped installs, and works with GitHub, GitLab, and Bitbucket.",
-  },
-  {
     icon: GitBranch,
     title: "Isolated Workspaces",
     description: "Safe experimentation, clean git history",
     summary:
       "Spec work runs in isolated git worktrees. Review changes independently, squash merge when verified, or discard without touching your main branch.",
+  },
+  {
+    icon: Terminal,
+    title: "Console Dashboard",
+    description: "Monitor, configure, and browse",
+    summary:
+      "Web-based dashboard for memory browsing, model configuration, team asset management, and real-time session notifications. Runs locally on port 41777.",
   },
 ];
 
@@ -120,9 +120,9 @@ const WhatsInside = () => {
             return (
               <div
                 key={item.title}
-                className={`group relative rounded-2xl p-5 border border-border/50 bg-card/30 backdrop-blur-sm
-                  hover:border-primary/50 hover:bg-card/50 hover:shadow-lg hover:shadow-primary/5
-                  hover:-translate-y-1 transition-all duration-300
+                className={`group relative rounded-lg p-5 border border-border/50 bg-card
+                  hover:border-primary/50 hover:bg-card hover:border-primary/50
+                  transition-all duration-300
                   ${gridInView ? `animate-fade-in-up ${animationDelays[index]}` : "opacity-0"}`}
               >
                 {/* Icon and Title */}
@@ -149,7 +149,7 @@ const WhatsInside = () => {
                 </p>
 
                 {/* Subtle gradient overlay on hover */}
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
               </div>
             );
           })}

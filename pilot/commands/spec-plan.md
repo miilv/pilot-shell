@@ -31,9 +31,23 @@ hooks:
 
 ---
 
+## Step 0: Read Toggle Configuration
+
+**⛔ Run FIRST, before any other step.** Read all toggle env vars in a single Bash call:
+
+```bash
+echo "QUESTIONS=$PILOT_PLAN_QUESTIONS_ENABLED REVIEWER=$PILOT_PLAN_REVIEWER_ENABLED APPROVAL=$PILOT_PLAN_APPROVAL_ENABLED"
+```
+
+Reference these values throughout: Steps 1.2/1.3b/1.4 (questions), 1.7 (reviewer), and 1.8 (approval).
+
+---
+
 ## Asking User Questions
 
-**⛔ ALWAYS use the `AskUserQuestion` tool** — never list numbered questions in plain text. Each question gets its own entry with predefined options users can select. This provides a structured form UI that is much easier to answer than freeform numbered lists.
+**⛔ If `PILOT_PLAN_QUESTIONS_ENABLED` is `"false"` (from Step 0),** skip ALL `AskUserQuestion` calls in Steps 1.2, 1.3b, and 1.4. Make reasonable default choices and document them in the plan under an "Autonomous Decisions" sub-section. Continue to the next step immediately.
+
+**⛔ ALWAYS use the `AskUserQuestion` tool** (when questions are enabled) — never list numbered questions in plain text. Each question gets its own entry with predefined options users can select. This provides a structured form UI that is much easier to answer than freeform numbered lists.
 
 **⛔ Default is to ASK, not skip.** Every plan benefits from at least one round of user alignment. Only skip questions when the task is a single-file change with zero ambiguity.
 
@@ -255,13 +269,6 @@ Type: Feature
 
 ## Feature Inventory (only for migration/refactoring — see Migration section)
 
-## Progress Tracking
-- [ ] Task 1: [summary]
-**Total Tasks:** N | **Completed:** 0 | **Remaining:** N
-
-## Implementation Tasks
-[Tasks from Step 1.5]
-
 ## Assumptions
 - [What you assume] — supported by [finding/file:line] — Tasks N, M depend on this
 - [What you assume] — supported by [finding/file:line] — Task N depends on this
@@ -284,13 +291,20 @@ Type: Feature
 ### Artifacts
 ### Key Links
 
+## Progress Tracking
+- [ ] Task 1: [summary]
+**Total Tasks:** N | **Completed:** 0 | **Remaining:** N
+
+## Implementation Tasks
+[Tasks from Step 1.5]
+
 ## Open Questions (only if any remain)
 ### Deferred Ideas (only if any surfaced)
 ```
 
 ### Step 1.7: Plan Verification
 
-**⛔ Check:** Run `echo $PILOT_PLAN_REVIEWER_ENABLED` before starting this step. If the output is `"false"`, skip this step entirely and proceed to Step 1.8.
+**⛔ If `PILOT_PLAN_REVIEWER_ENABLED` is `"false"` (from Step 0),** skip this step entirely and proceed to Step 1.8.
 
 **When enabled:** Run plan-reviewer for every feature spec. Small plans benefit from a second pair of eyes just as much as large ones — missing edge cases and unclear DoD criteria are size-independent.
 
@@ -337,7 +351,9 @@ Then Read the file once. If not READY after 5 min, re-launch synchronously.
 
 ### Step 1.8: Get User Approval
 
-**⛔ MANDATORY APPROVAL GATE**
+**⛔ If `PILOT_PLAN_APPROVAL_ENABLED` is `"false"` (from Step 0),** skip this step: set `Approved: Yes` in the plan file automatically and immediately invoke `Skill(skill='spec-implement', args='<plan-path>')`. No AskUserQuestion, no notification.
+
+**When `PILOT_PLAN_APPROVAL_ENABLED` is NOT `"false"` — MANDATORY APPROVAL GATE:**
 
 0. Notify:
    ```bash

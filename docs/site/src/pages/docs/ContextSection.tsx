@@ -89,7 +89,7 @@ const ContextSection = () => {
         </div>
 
         {/* Effective context display */}
-        <div className="rounded-xl p-4 border border-border/50 bg-card/30 mb-5">
+        <div className="rounded-xl p-4 border border-border/50 bg-card mb-5">
           <h3 className="font-semibold text-foreground text-sm mb-2">
             Effective context display
           </h3>

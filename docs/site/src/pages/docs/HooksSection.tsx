@@ -183,7 +183,7 @@ const HooksSection = () => {
           {hookGroups.map((group) => (
             <div
               key={group.event}
-              className={`rounded-xl border ${group.borderColor} bg-card/30`}
+              className={`rounded-xl border ${group.borderColor} bg-card`}
             >
               <div className={`px-4 py-3 border-b ${group.borderColor}`}>
                 <div className="flex items-center gap-2">

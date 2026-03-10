@@ -67,7 +67,7 @@ const ConsoleSection = () => {
 
           <div className="max-w-4xl mx-auto">
             {/* Main image */}
-            <div className="rounded-xl overflow-hidden border border-border/50 shadow-2xl shadow-primary/10">
+            <div className="rounded-xl overflow-hidden border border-border/50">
               <ImageModal
                 src={slide.src}
                 alt={slide.alt}
@@ -95,7 +95,7 @@ const ConsoleSection = () => {
                   className={`group/thumb relative rounded-lg overflow-hidden border-2 transition-all duration-200
                     ${
                       i === index
-                        ? "border-primary shadow-md shadow-primary/20"
+                        ? "border-primary"
                         : "border-transparent opacity-60 hover:opacity-100 hover:border-border"
                     }`}
                 >

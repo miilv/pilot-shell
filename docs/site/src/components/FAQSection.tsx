@@ -94,7 +94,7 @@ const FAQSection = () => {
 
         <div
           ref={contentRef}
-          className={`rounded-2xl border border-border/50 bg-card/30 backdrop-blur-sm overflow-hidden ${contentInView ? "animate-fade-in-up" : "opacity-0"}`}
+          className={`rounded-lg border border-border/50 bg-card overflow-hidden ${contentInView ? "animate-fade-in-up" : "opacity-0"}`}
         >
           <Accordion type="single" collapsible className="px-6">
             {faqItems.map((item, index) => (

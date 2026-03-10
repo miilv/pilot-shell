@@ -125,8 +125,8 @@ const ComparisonSection = () => {
             return (
               <div
                 key={agent.name}
-                className={`group rounded-2xl p-5 border ${agent.borderColor} bg-card/30 backdrop-blur-sm
-                  hover:bg-card/50 hover:-translate-y-1 transition-all duration-300`}
+                className={`group rounded-lg p-5 border ${agent.borderColor} bg-card
+                  hover:bg-card transition-all duration-300`}
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div

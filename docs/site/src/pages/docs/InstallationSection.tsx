@@ -93,7 +93,7 @@ const InstallationSection = () => {
         </div>
 
         {/* Install command */}
-        <div className="glass rounded-xl p-5 relative overflow-hidden glow-primary mb-6">
+        <div className="rounded-xl p-5 relative overflow-hidden mb-6">
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
           <div className="flex items-center gap-2 mb-3">
             <Terminal className="h-4 w-4 text-primary" />
@@ -153,7 +153,7 @@ const InstallationSection = () => {
           {installerSteps.map((s) => (
             <div
               key={s.step}
-              className="flex items-start gap-3 rounded-xl p-3 border border-border/50 bg-card/30"
+              className="flex items-start gap-3 rounded-xl p-3 border border-border/50 bg-card"
             >
               <span className="w-5 h-5 bg-primary/10 text-primary rounded-full text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
                 {s.step}
@@ -170,7 +170,7 @@ const InstallationSection = () => {
 
         {/* Version pinning and Uninstall */}
         <div className="grid sm:grid-cols-2 gap-4">
-          <div className="rounded-xl p-4 border border-border/50 bg-card/30">
+          <div className="rounded-xl p-4 border border-border/50 bg-card">
             <div className="flex items-center gap-2 mb-2">
               <RefreshCw className="h-4 w-4 text-primary" />
               <h3 className="font-semibold text-foreground text-sm">
@@ -201,7 +201,7 @@ const InstallationSection = () => {
             </p>
           </div>
 
-          <div className="rounded-xl p-4 border border-border/50 bg-card/30">
+          <div className="rounded-xl p-4 border border-border/50 bg-card">
             <div className="flex items-center gap-2 mb-2">
               <Trash2 className="h-4 w-4 text-rose-400" />
               <h3 className="font-semibold text-foreground text-sm">

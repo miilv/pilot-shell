@@ -134,7 +134,7 @@ const RulesSection = () => {
             return (
               <div
                 key={cat.category}
-                className="rounded-xl p-4 border border-border/50 bg-card/30"
+                className="rounded-xl p-4 border border-border/50 bg-card"
               >
                 <div className="flex items-center gap-2 mb-2">
                   <Icon className="h-4 w-4 text-primary" />
@@ -168,7 +168,7 @@ const RulesSection = () => {
         <div className="rounded-xl border border-border/50 overflow-hidden mb-5">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border/50 bg-card/40">
+              <tr className="border-b border-border/50 bg-card">
                 <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground">
                   Standard
                 </th>

@@ -45,7 +45,7 @@ const TestimonialsSection = () => {
           {testimonials.map((t, i) => (
             <div
               key={i}
-              className="relative rounded-2xl p-6 border border-border/50 bg-card/30 backdrop-blur-sm hover:border-primary/30 hover:bg-card/50 transition-all duration-300"
+              className="relative rounded-lg p-6 border border-border/50 bg-card hover:border-primary/30 hover:bg-card transition-all duration-300"
             >
               <Quote className="h-8 w-8 text-primary/20 mb-4" />
               <p className="text-muted-foreground text-sm leading-relaxed mb-4">

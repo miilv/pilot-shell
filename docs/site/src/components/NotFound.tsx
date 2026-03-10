@@ -12,7 +12,7 @@ const NotFoundComponent = () => {
         description="The page you're looking for doesn't exist. Return to Pilot Shell Academy homepage."
         canonicalUrl="https://pilot-shell.com/404"
       />
-      <main className="min-h-screen flex items-center justify-center px-6 bg-gradient-dark">
+      <main className="min-h-screen flex items-center justify-center px-6 bg-background">
         <div className="text-center">
           <h1 className="text-9xl font-bold text-primary mb-4">404</h1>
           <h2 className="text-3xl font-semibold mb-4">Page Not Found</h2>
@@ -22,7 +22,7 @@ const NotFoundComponent = () => {
           <Button
             size="lg"
             onClick={() => navigate('/')}
-            className="bg-gradient-primary hover:shadow-primary transition-all duration-300"
+            className="bg-primary transition-all duration-300"
           >
             Return to Homepage
           </Button>

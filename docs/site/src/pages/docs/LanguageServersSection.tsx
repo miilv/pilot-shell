@@ -87,7 +87,7 @@ const LanguageServersSection = () => {
           {lspServers.map((lsp) => (
             <div
               key={lsp.language}
-              className={`rounded-xl border ${lsp.border} bg-card/30 p-4`}
+              className={`rounded-xl border ${lsp.border} bg-card p-4`}
             >
               <div className="flex items-center gap-3 mb-3">
                 <div

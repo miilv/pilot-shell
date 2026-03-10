@@ -79,7 +79,7 @@ const SyncSection = () => {
         <div className="rounded-xl border border-border/50 overflow-hidden mb-6">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border/50 bg-card/40">
+              <tr className="border-b border-border/50 bg-card">
                 <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground w-16">
                   Phase
                 </th>

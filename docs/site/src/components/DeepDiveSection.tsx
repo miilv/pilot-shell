@@ -226,7 +226,7 @@ const DeepDiveSection = () => {
             {hooksPipeline.map((stage) => (
               <div
                 key={stage.trigger}
-                className={`rounded-2xl p-5 border ${stage.borderColor} bg-card/30 backdrop-blur-sm`}
+                className={`rounded-lg p-5 border ${stage.borderColor} bg-card`}
               >
                 <div className="mb-3">
                   <div
@@ -259,7 +259,7 @@ const DeepDiveSection = () => {
           </div>
 
           {/* Context Preservation — the hooks working together */}
-          <div className="mt-6 rounded-2xl p-5 border border-violet-400/20 bg-gradient-to-r from-violet-500/5 via-sky-500/5 to-violet-500/5 backdrop-blur-sm">
+          <div className="mt-6 rounded-lg p-5 border border-violet-400/20 bg-gradient-to-r from-violet-500/5 via-sky-500/5 to-violet-500/5">
             <div className="flex items-start gap-4">
               <div className="w-9 h-9 bg-violet-400/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
                 <RefreshCw className="h-4 w-4 text-violet-400" />
@@ -302,7 +302,7 @@ const DeepDiveSection = () => {
           </div>
 
           <div className="grid md:grid-cols-2 gap-4 mb-4">
-            <div className="rounded-2xl p-5 border border-violet-400/30 bg-violet-400/5 backdrop-blur-sm">
+            <div className="rounded-lg p-5 border border-violet-400/30 bg-violet-400/5">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-sm font-mono font-semibold text-violet-400 bg-violet-400/10 px-3 py-1 rounded-lg">
                   OPUS
@@ -315,7 +315,7 @@ const DeepDiveSection = () => {
                 downstream.
               </p>
             </div>
-            <div className="rounded-2xl p-5 border border-primary/30 bg-primary/5 backdrop-blur-sm">
+            <div className="rounded-lg p-5 border border-primary/30 bg-primary/5">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-sm font-mono font-semibold text-primary bg-primary/10 px-3 py-1 rounded-lg">
                   SONNET
@@ -332,7 +332,7 @@ const DeepDiveSection = () => {
             </div>
           </div>
 
-          <div className="rounded-2xl p-4 border border-border/30 bg-card/20 backdrop-blur-sm">
+          <div className="rounded-lg p-4 border border-border/30 bg-card/20">
             <p className="text-xs text-muted-foreground text-center">
               Implementation is the easy part when the plan is good and
               verification is thorough. All model assignments are configurable
@@ -367,7 +367,7 @@ const DeepDiveSection = () => {
               return (
                 <div
                   key={cat.category}
-                  className="rounded-2xl p-5 border border-border/50 bg-card/30 backdrop-blur-sm hover:border-primary/30 transition-colors"
+                  className="rounded-lg p-5 border border-border/50 bg-card hover:border-primary/30 transition-colors"
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <Icon className="h-5 w-5 text-primary" />
@@ -419,7 +419,7 @@ const DeepDiveSection = () => {
                   return (
                     <div
                       key={server.name}
-                      className="flex items-start gap-3 rounded-xl p-3 border border-border/50 bg-card/30"
+                      className="flex items-start gap-3 rounded-xl p-3 border border-border/50 bg-card"
                     >
                       <Icon className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                       <div>
@@ -452,7 +452,7 @@ const DeepDiveSection = () => {
                 </div>
               </div>
               <div className="space-y-3">
-                <div className="rounded-xl p-4 border border-border/50 bg-card/30">
+                <div className="rounded-xl p-4 border border-border/50 bg-card">
                   <div className="flex items-center gap-2 mb-2">
                     <FileCode2 className="h-4 w-4 text-primary" />
                     <span className="font-medium text-foreground text-sm">
@@ -463,7 +463,7 @@ const DeepDiveSection = () => {
                     basedpyright — strict type checking, auto-restart on crash
                   </p>
                 </div>
-                <div className="rounded-xl p-4 border border-border/50 bg-card/30">
+                <div className="rounded-xl p-4 border border-border/50 bg-card">
                   <div className="flex items-center gap-2 mb-2">
                     <FileCode2 className="h-4 w-4 text-primary" />
                     <span className="font-medium text-foreground text-sm">
@@ -474,7 +474,7 @@ const DeepDiveSection = () => {
                     vtsls — full TypeScript support with Vue compatibility
                   </p>
                 </div>
-                <div className="rounded-xl p-4 border border-border/50 bg-card/30">
+                <div className="rounded-xl p-4 border border-border/50 bg-card">
                   <div className="flex items-center gap-2 mb-2">
                     <FileCode2 className="h-4 w-4 text-primary" />
                     <span className="font-medium text-foreground text-sm">

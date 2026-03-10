@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
-"""Hook to redirect built-in tools to better MCP/CLI alternatives.
-
-Two severity levels via JSON stdout:
-- BLOCK: permissionDecision=deny — tool is broken or conflicts with workflow.
-- HINT: additionalContext — better alternative exists but tool still works.
-
-Note: Task management tools (TaskCreate, TaskList, etc.) are ALLOWED.
-"""
+"""Hook to block built-in WebSearch/WebFetch in favor of MCP alternatives."""
 
 from __future__ import annotations
 
@@ -15,93 +8,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from _util import pre_tool_use_context, pre_tool_use_deny
+from _util import pre_tool_use_deny
 
-SEMANTIC_PHRASES = [
-    "where is",
-    "where are",
-    "how does",
-    "how do",
-    "how to",
-    "find the",
-    "find all",
-    "locate the",
-    "locate all",
-    "what is",
-    "what are",
-    "search for",
-    "looking for",
-]
-
-CODE_PATTERNS = [
-    "def ",
-    "class ",
-    "import ",
-    "from ",
-    "= ",
-    "==",
-    "!=",
-    "->",
-    "::",
-    "\\(",
-    "\\{",
-    "function ",
-    "const ",
-    "let ",
-    "var ",
-    "type ",
-    "interface ",
-]
-
-
-def is_semantic_pattern(pattern: str) -> bool:
-    """Check if a pattern appears to be a semantic/intent-based search.
-
-    Returns True for natural language queries like "where is config loaded"
-    Returns False for code patterns like "def save_config" or "class Handler"
-    """
-    pattern_lower = pattern.lower()
-
-    for code_pattern in CODE_PATTERNS:
-        if code_pattern in pattern_lower:
-            return False
-
-    return any(phrase in pattern_lower for phrase in SEMANTIC_PHRASES)
-
-
-EXPLORE_BLOCK = {
-    "message": "Explore agent is blocked — use Probe CLI first (instant, semantic, <0.3s)",
-    "alternative": "Run multiple `probe search` calls via Bash. Only use Explore after Probe AND Grep/Glob both fail.",
-    "example": 'Bash: probe search "model config for sync command" ./ --max-results 5 --max-tokens 2000',
-}
-
-HINTS: dict[str, dict] = {
-    "Grep": {
-        "message": "Semantic pattern detected — Probe CLI `probe search` may give better results",
-        "alternative": "Probe CLI for intent-based file discovery",
-        "example": 'Bash: probe search "<pattern>" ./ --max-results 5 --max-tokens 2000',
-        "condition": lambda data: is_semantic_pattern(
-            data.get("tool_input", {}).get("pattern", "") if isinstance(data.get("tool_input"), dict) else ""
-        ),
-    },
-    "Task": {
-        "message": "Consider using Read, Grep, Glob, Bash directly (less context overhead)",
-        "alternative": "Direct tool calls avoid sub-agent context cost",
-        "example": "Read/Grep/Glob for exploration, TaskCreate for tracking",
-        "condition": lambda data: (
-            data.get("tool_input", {}).get("subagent_type", "")
-            not in (
-                "pilot:plan-reviewer",
-                "pilot:spec-reviewer",
-                "claude-code-guide",
-            )
-            if isinstance(data.get("tool_input"), dict)
-            else True
-        ),
-    },
-}
-
-BLOCKS: dict[str, dict] = {
+BLOCKS: dict[str, dict[str, str]] = {
     "WebSearch": {
         "message": "WebSearch is blocked (use MCP alternative)",
         "alternative": "Use ToolSearch to load mcp__plugin_pilot_web-search__search, then call it directly",
@@ -112,68 +21,24 @@ BLOCKS: dict[str, dict] = {
         "alternative": "Use ToolSearch to load mcp__plugin_pilot_web-fetch__fetch_url, then call it directly",
         "example": 'ToolSearch(query="+web-fetch fetch") then mcp__plugin_pilot_web-fetch__fetch_url(url="...")',
     },
-    "Task": {
-        "message": "Task(subagent_type='Plan') is blocked (project uses /spec workflow)",
-        "alternative": "Do planning work directly with Read, Grep, Glob tools. Use /spec for structured planning.",
-        "example": "Read files directly, use AskUserQuestion for decisions, write plan to file",
-        "condition": lambda data: (
-            isinstance(data.get("tool_input"), dict) and data["tool_input"].get("subagent_type") == "Plan"
-        ),
-    },
 }
 
 
-def _format_example(redirect_info: dict, pattern: str | None = None) -> str:
-    example = redirect_info["example"]
-    if pattern and "<pattern>" in example:
-        example = example.replace("<pattern>", pattern)
-    return example
-
-
-def block(redirect_info: dict, pattern: str | None = None) -> int:
-    """Output deny JSON to stdout and return 2 (non-zero reinforces block)."""
-    example = _format_example(redirect_info, pattern)
-    reason = f"{redirect_info['message']}\n-> {redirect_info['alternative']}\nExample: {example}"
-    sys.stderr.write(f"\033[0;31m[Pilot] {redirect_info['message']}\033[0m\n")
-    print(pre_tool_use_deny(reason))
-    return 2
-
-
-def hint(redirect_info: dict, pattern: str | None = None) -> int:
-    """Output additionalContext JSON to stdout and return 0."""
-    example = _format_example(redirect_info, pattern)
-    context = f"{redirect_info['message']}\nExample: {example}"
-    print(pre_tool_use_context(context))
-    return 0
-
-
 def run_tool_redirect() -> int:
-    """Check if tool should be redirected (block) or hinted (allow)."""
+    """Block WebSearch/WebFetch, allow everything else."""
     try:
         hook_data = json.load(sys.stdin)
     except (json.JSONDecodeError, OSError):
         return 0
 
     tool_name = hook_data.get("tool_name", "")
-    tool_input = hook_data.get("tool_input", {}) if isinstance(hook_data.get("tool_input"), dict) else {}
-
-    if tool_name == "Task" and tool_input.get("subagent_type") == "Explore":
-        return block(EXPLORE_BLOCK)
 
     if tool_name in BLOCKS:
-        redirect = BLOCKS[tool_name]
-        condition = redirect.get("condition")
-        if condition is None or condition(hook_data):
-            return block(redirect)
-
-    if tool_name in HINTS:
-        redirect = HINTS[tool_name]
-        condition = redirect.get("condition")
-        if condition is None or condition(hook_data):
-            pattern = None
-            if tool_name == "Grep":
-                pattern = tool_input.get("pattern", "") if isinstance(tool_input, dict) else ""
-            return hint(redirect, pattern)
+        info = BLOCKS[tool_name]
+        reason = f"{info['message']}\n-> {info['alternative']}\nExample: {info['example']}"
+        sys.stderr.write(f"\033[0;31m[Pilot] {info['message']}\033[0m\n")
+        print(pre_tool_use_deny(reason))
+        return 2
 
     return 0
 

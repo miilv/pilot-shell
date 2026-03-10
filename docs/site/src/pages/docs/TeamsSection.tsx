@@ -78,7 +78,7 @@ const TeamsSection = () => {
           {teamsFeatures.map((f) => (
             <div
               key={f.title}
-              className="rounded-xl p-4 border border-border/50 bg-card/30"
+              className="rounded-xl p-4 border border-border/50 bg-card"
             >
               <h3 className="font-semibold text-foreground text-sm mb-1">
                 {f.title}
@@ -110,7 +110,7 @@ const TeamsSection = () => {
         <div className="rounded-xl border border-border/50 overflow-hidden mb-5">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border/50 bg-card/40">
+              <tr className="border-b border-border/50 bg-card">
                 <th className="text-left px-4 py-2 text-xs font-semibold text-muted-foreground">
                   Type
                 </th>
@@ -157,7 +157,7 @@ const TeamsSection = () => {
               repo, visible to all contributors.
             </p>
           </div>
-          <div className="rounded-xl p-4 border border-border/50 bg-card/30">
+          <div className="rounded-xl p-4 border border-border/50 bg-card">
             <h4 className="font-medium text-foreground text-sm mb-1">Global</h4>
             <p className="text-xs text-muted-foreground">
               Assets install to <code className="text-primary">~/.claude/</code>{" "}
@@ -166,7 +166,7 @@ const TeamsSection = () => {
           </div>
         </div>
 
-        <div className="mt-4 rounded-xl p-3 border border-border/50 bg-card/30">
+        <div className="mt-4 rounded-xl p-3 border border-border/50 bg-card">
           <div className="flex items-start gap-2">
             <CheckCircle2 className="h-3.5 w-3.5 text-primary flex-shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground leading-relaxed">

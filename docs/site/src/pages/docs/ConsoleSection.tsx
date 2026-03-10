@@ -87,7 +87,7 @@ const ConsoleSection = () => {
           {consoleViews.map((item) => (
             <div
               key={item.view}
-              className="rounded-xl p-3 border border-border/50 bg-card/30 flex items-start gap-3"
+              className="rounded-xl p-3 border border-border/50 bg-card flex items-start gap-3"
             >
               <span className="text-base flex-shrink-0">{item.icon}</span>
               <div>
@@ -128,7 +128,7 @@ const ConsoleSection = () => {
           </div>
         </div>
 
-        <div className="mt-4 rounded-xl p-3 border border-border/50 bg-card/30">
+        <div className="mt-4 rounded-xl p-3 border border-border/50 bg-card">
           <p className="text-xs text-muted-foreground leading-relaxed">
             <span className="text-primary font-medium">Settings tab:</span>{" "}
             Configure model selection per component — Planning (Opus),

@@ -100,6 +100,8 @@ This rule is about git commands, not file operations. Editing files is always al
 
 **⛔ Write commands need permission:** `git add`, `commit`, `push`, `pull`, `merge`, `rebase`, `reset`, `stash`, `checkout`, etc. "Fix this bug" ≠ "commit it."
 
+**⛔ NEVER `git checkout --` on unstaged changes.** This is an **irreversible, destructive operation** — unstaged work is permanently lost, not recoverable through git. If the user wants to discard changes, tell them the consequences and let THEM run the command. No exceptions. "Remove this" or "revert this" does NOT mean "discard all unstaged work via git checkout." Use the Edit tool to make targeted changes instead.
+
 **⛔ Never `git add -f`.** If gitignored, tell the user — don't force-add.
 
 **⛔ Never selectively unstage.** Commit ALL staged changes as-is.

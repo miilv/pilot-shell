@@ -233,6 +233,7 @@ sx.json
 playwright/
 .claude.backup.*
 *.backup
+.skillshare/
 .claude/skills/
 .claude/rules/
 .claude/commands/

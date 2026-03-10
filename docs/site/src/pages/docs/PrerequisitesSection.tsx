@@ -97,7 +97,7 @@ const PrerequisitesSection = () => {
               {subscriptionTiers.map((tier) => (
                 <div
                   key={tier.name}
-                  className="rounded-xl p-3 border border-border/50 bg-card/30"
+                  className="rounded-xl p-3 border border-border/50 bg-card"
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-medium text-foreground">
@@ -129,7 +129,7 @@ const PrerequisitesSection = () => {
               {systemReqs.map((req) => (
                 <div
                   key={req.platform}
-                  className="rounded-xl p-3 border border-border/50 bg-card/30 flex items-start gap-3"
+                  className="rounded-xl p-3 border border-border/50 bg-card flex items-start gap-3"
                 >
                   <span className="text-sm font-medium text-foreground w-20 flex-shrink-0">
                     {req.platform}

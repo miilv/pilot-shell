@@ -35,8 +35,21 @@ If you haven't completed Step 1.2, you cannot propose fixes. Symptom fixes are f
 - **Right-size the plan** — small bugs get lean plans. Don't over-engineer.
 - **Plan file is source of truth** — survives across auto-compaction cycles
 - **ALWAYS use `AskUserQuestion` tool** for clarifications — never list numbered questions in plain text
+- **⛔ If `PILOT_PLAN_QUESTIONS_ENABLED` is `"false"` (from Step 0),** skip all `AskUserQuestion` calls (Steps 1.2.1, 1.2.5 escalation). Make reasonable default assumptions and document them in the plan. Continue autonomously.
 
 > **NOTE: During `/spec`, use the structured workflow below — not CC's native plan mode.**
+
+---
+
+## Step 0: Read Toggle Configuration
+
+**⛔ Run FIRST, before any other step.** Read all toggle env vars in a single Bash call:
+
+```bash
+echo "QUESTIONS=$PILOT_PLAN_QUESTIONS_ENABLED APPROVAL=$PILOT_PLAN_APPROVAL_ENABLED"
+```
+
+Reference these values throughout: Steps 1.2.1/1.2.5 (questions) and 1.5 (approval).
 
 ---
 
@@ -221,6 +234,10 @@ Type: Bugfix
 ---
 
 ## Step 1.5: Get User Approval
+
+**⛔ If `PILOT_PLAN_APPROVAL_ENABLED` is `"false"` (from Step 0),** skip this step: set `Approved: Yes` in the plan file automatically and immediately invoke `Skill(skill='spec-implement', args='<plan-path>')`. No AskUserQuestion, no notification.
+
+**When `PILOT_PLAN_APPROVAL_ENABLED` is NOT `"false"`:**
 
 0. Notify:
    ```bash

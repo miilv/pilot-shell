@@ -116,7 +116,7 @@ const SpecSection = () => {
         </div>
 
         {/* Workflow diagram */}
-        <div className="rounded-xl p-4 border border-border/50 bg-card/30 mb-6">
+        <div className="rounded-xl p-4 border border-border/50 bg-card mb-6">
           <div className="flex items-center gap-1.5 flex-wrap text-sm">
             {workflowSteps.map((step, i, arr) => (
               <span key={step} className="flex items-center gap-1.5">
@@ -145,7 +145,7 @@ const SpecSection = () => {
 
         {/* Spec Types */}
         <div className="grid sm:grid-cols-2 gap-4 mb-6">
-          <div className="rounded-xl p-4 border border-sky-400/30 bg-card/30">
+          <div className="rounded-xl p-4 border border-sky-400/30 bg-card">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-7 h-7 bg-sky-400/10 rounded-lg flex items-center justify-center">
                 <Zap className="h-3.5 w-3.5 text-sky-400" />
@@ -176,7 +176,7 @@ const SpecSection = () => {
             </div>
           </div>
 
-          <div className="rounded-xl p-4 border border-amber-400/30 bg-card/30">
+          <div className="rounded-xl p-4 border border-amber-400/30 bg-card">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-7 h-7 bg-amber-400/10 rounded-lg flex items-center justify-center">
                 <Wrench className="h-3.5 w-3.5 text-amber-400" />
@@ -218,7 +218,7 @@ const SpecSection = () => {
             return (
               <div
                 key={phase.name}
-                className={`rounded-xl p-5 border ${phase.borderColor} bg-card/30`}
+                className={`rounded-xl p-5 border ${phase.borderColor} bg-card`}
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div

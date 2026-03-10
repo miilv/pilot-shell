@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Github, Menu, X, ScrollText } from "lucide-react";
+import { Github, Menu, X, ScrollText, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { navigateToSection } from "@/utils/navigateToSection";
+import { useTheme } from "@/hooks/useTheme";
 import boxPng from "@/assets/box.png";
 
 const navLinks = [
@@ -18,6 +19,11 @@ const NavBar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { resolvedTheme, setThemePreference } = useTheme();
+
+  const toggleTheme = () => {
+    setThemePreference(resolvedTheme === "dark" ? "light" : "dark");
+  };
 
   const handleSectionClick = (href: string) => {
     navigateToSection(href, location.pathname, navigate);
@@ -25,7 +31,7 @@ const NavBar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-background via-background/95 to-transparent backdrop-blur-md">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-5 flex justify-between items-center">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 sm:gap-3">
@@ -86,6 +92,17 @@ const NavBar = () => {
           >
             <Github className="h-5 w-5" />
           </a>
+          <button
+            onClick={toggleTheme}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+            title={resolvedTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {resolvedTheme === "dark" ? (
+              <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
+          </button>
           <Button
             onClick={() => handleSectionClick("#installation")}
             className="hidden sm:inline-flex"
@@ -108,7 +125,7 @@ const NavBar = () => {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-card/95 backdrop-blur-xl border-t border-border px-4 sm:px-6 py-4 animate-fade-in">
+        <div className="lg:hidden bg-card border-t border-border px-4 sm:px-6 py-4 animate-fade-in">
           {navLinks.map((link) => (
             <button
               key={link.href}

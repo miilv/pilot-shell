@@ -48,7 +48,7 @@ const WorkflowSteps = () => {
           className={`grid md:grid-cols-2 gap-6 mb-12 ${modesInView ? "animate-fade-in-up" : "opacity-0"}`}
         >
           {/* Spec-Driven Mode */}
-          <div className="group relative rounded-2xl p-6 border border-primary/50 bg-card/30 backdrop-blur-sm hover:bg-card/50 transition-all duration-300">
+          <div className="group relative rounded-lg p-6 border border-primary/50 bg-card hover:bg-card transition-all duration-300">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-11 h-11 bg-primary/20 rounded-xl flex items-center justify-center">
                 <FileText className="h-5 w-5 text-primary" />
@@ -74,7 +74,7 @@ const WorkflowSteps = () => {
           </div>
 
           {/* Quick Mode */}
-          <div className="group relative rounded-2xl p-6 border border-border/50 bg-card/30 backdrop-blur-sm hover:border-primary/30 hover:bg-card/50 transition-all duration-300">
+          <div className="group relative rounded-lg p-6 border border-border/50 bg-card hover:border-primary/30 hover:bg-card transition-all duration-300">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-11 h-11 bg-primary/10 rounded-xl flex items-center justify-center">
                 <Zap className="h-5 w-5 text-primary" />
@@ -99,7 +99,7 @@ const WorkflowSteps = () => {
         {/* Spec-Driven Workflow Diagram */}
         <div
           ref={diagramRef}
-          className={`rounded-2xl p-6 border border-border/50 bg-card/30 backdrop-blur-sm mb-12 ${diagramInView ? "animate-fade-in-up animation-delay-200" : "opacity-0"}`}
+          className={`rounded-lg p-6 border border-border/50 bg-card mb-12 ${diagramInView ? "animate-fade-in-up animation-delay-200" : "opacity-0"}`}
         >
           <h3 className="text-base font-semibold text-foreground mb-6 text-center">
             <code className="text-primary">/spec</code> Workflow
@@ -168,7 +168,7 @@ const WorkflowSteps = () => {
         {/* All Commands */}
         <div
           ref={commandsRef}
-          className={`rounded-2xl p-6 border border-border/50 bg-card/30 backdrop-blur-sm ${commandsInView ? "animate-fade-in-up" : "opacity-0"}`}
+          className={`rounded-lg p-6 border border-border/50 bg-card ${commandsInView ? "animate-fade-in-up" : "opacity-0"}`}
         >
           <h3 className="text-lg font-semibold text-foreground mb-5 text-center">
             All Commands

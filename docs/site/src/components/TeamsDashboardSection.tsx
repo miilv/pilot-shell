@@ -54,7 +54,7 @@ const TeamsDashboardSection = () => {
 
           {/* Screenshot */}
           <div className="max-w-4xl mx-auto mb-10">
-            <div className="rounded-xl overflow-hidden border border-border/50 shadow-2xl shadow-primary/10">
+            <div className="rounded-xl overflow-hidden border border-border/50">
               <ImageModal
                 src="/console/teams.png"
                 alt="Teams Dashboard — shared asset management with project-scoped versioning"
@@ -68,7 +68,7 @@ const TeamsDashboardSection = () => {
             {features.map((f) => (
               <div
                 key={f.title}
-                className="rounded-lg border border-border/50 bg-card/50 p-4"
+                className="rounded-lg border border-border/50 bg-card p-4"
               >
                 <f.icon className="h-5 w-5 text-primary mb-2" />
                 <h3 className="font-semibold text-foreground text-sm mb-1">

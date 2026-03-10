@@ -55,9 +55,9 @@ const PricingSection = () => {
         <div ref={cardsRef} className="grid md:grid-cols-3 gap-6 sm:gap-8">
           {/* Trial */}
           <div
-            className={`group relative rounded-2xl p-4 sm:p-6 md:p-8 border border-border/50 bg-card/30 backdrop-blur-sm
-              hover:border-sky-400/50 hover:bg-card/50 hover:shadow-lg hover:shadow-sky-400/10
-              hover:-translate-y-1 transition-all duration-300
+            className={`group relative rounded-lg p-4 sm:p-6 md:p-8 border border-border/50 bg-card
+              hover:border-sky-400/50 hover:bg-card hover:border-sky-400/50
+              transition-all duration-300
               ${cardsInView ? "animate-fade-in-up animation-delay-0" : "opacity-0"}`}
           >
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-sky-400 to-transparent" />
@@ -99,9 +99,9 @@ const PricingSection = () => {
 
           {/* Solo - Featured */}
           <div
-            className={`group relative rounded-2xl p-4 sm:p-6 md:p-8 border-2 border-primary/50 bg-card/40 backdrop-blur-sm
-              hover:border-primary hover:bg-card/60 hover:shadow-xl hover:shadow-primary/20
-              hover:-translate-y-2 transition-all duration-300 scale-[1.02]
+            className={`group relative rounded-lg p-4 sm:p-6 md:p-8 border-2 border-primary/50 bg-card
+              hover:border-primary hover:bg-card hover:border-primary
+              transition-all duration-300 scale-[1.02]
               ${cardsInView ? "animate-fade-in-up animation-delay-100" : "opacity-0"}`}
           >
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
@@ -164,9 +164,9 @@ const PricingSection = () => {
 
           {/* Team */}
           <div
-            className={`group relative rounded-2xl p-4 sm:p-6 md:p-8 border border-border/50 bg-card/30 backdrop-blur-sm
-              hover:border-indigo-500/50 hover:bg-card/50 hover:shadow-lg hover:shadow-indigo-500/10
-              hover:-translate-y-1 transition-all duration-300
+            className={`group relative rounded-lg p-4 sm:p-6 md:p-8 border border-border/50 bg-card
+              hover:border-indigo-500/50 hover:bg-card hover:border-indigo-500/50
+              transition-all duration-300
               ${cardsInView ? "animate-fade-in-up animation-delay-200" : "opacity-0"}`}
           >
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />

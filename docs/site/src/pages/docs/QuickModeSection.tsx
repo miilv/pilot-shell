@@ -65,7 +65,7 @@ const QuickModeSection = () => {
           </div>
         </div>
 
-        <div className="rounded-xl p-4 border border-border/50 bg-card/30 mb-5">
+        <div className="rounded-xl p-4 border border-border/50 bg-card mb-5">
           <h3 className="font-semibold text-foreground text-sm mb-3">
             Quality guardrails active in quick mode
           </h3>

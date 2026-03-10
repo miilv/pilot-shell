@@ -36,7 +36,7 @@ const InstallSection = () => {
         {/* Install command */}
         <div
           ref={codeRef}
-          className={`glass rounded-xl p-5 relative overflow-hidden glow-primary animate-on-scroll ${codeInView ? "in-view" : ""}`}
+          className={`rounded-xl p-5 relative overflow-hidden animate-on-scroll ${codeInView ? "in-view" : ""}`}
         >
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
 
@@ -103,7 +103,7 @@ const InstallSection = () => {
         </div>
 
         {/* Demo GIF */}
-        <div className="mt-10 rounded-xl overflow-hidden border border-border/50 shadow-2xl shadow-primary/10">
+        <div className="mt-10 rounded-xl overflow-hidden border border-border/50">
           <ImageModal
             src="/demo.gif"
             alt="Pilot Shell in action — spec-driven development with Claude Code"

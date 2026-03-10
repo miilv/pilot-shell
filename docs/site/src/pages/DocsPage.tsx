@@ -118,7 +118,7 @@ const TocList = ({
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all duration-150 ${
                   activeId === item.id
                     ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted-foreground hover:text-foreground hover:bg-card/50"
+                    : "text-muted-foreground hover:text-foreground hover:bg-card"
                 }`}
               >
                 {activeId === item.id && (

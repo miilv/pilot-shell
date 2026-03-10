@@ -19,13 +19,25 @@ hooks:
 
 ## ⛔ KEY CONSTRAINTS
 
-1. **Run code review when enabled** — Step 3.1 launches `spec-reviewer` via `Task(subagent_type="pilot:spec-reviewer")` when `$PILOT_SPEC_REVIEWER_ENABLED` is not `"false"`. To disable, use Console Settings → Reviewers → Code Review toggle.
+1. **Run code review when enabled** — Step 3.1 launches `spec-reviewer` via `Task(subagent_type="pilot:spec-reviewer")` when `PILOT_SPEC_REVIEWER_ENABLED` is not `"false"` (read in Step 0). To disable, use Console Settings → Reviewers → Code Review toggle.
 2. **NO stopping** — Everything automatic. Never ask "Should I fix these?"
 3. **Fix ALL findings** — must_fix AND should_fix. No permission needed.
 4. **Code changes finish BEFORE runtime testing** — Phase A then Phase B.
 5. **Plan file is source of truth** — re-read it after auto-compaction, don't rely on conversation memory.
 6. **Re-verification after fixes is MANDATORY** — fixes can introduce new bugs.
 7. **Quality over speed** — never rush due to context pressure.
+
+---
+
+## Step 0: Read Toggle Configuration
+
+**⛔ Run FIRST, before any other step.** Read the reviewer toggle env var:
+
+```bash
+echo "REVIEWER=$PILOT_SPEC_REVIEWER_ENABLED"
+```
+
+Reference this value in Steps 3.1, 3.4, and 3.5.
 
 ---
 
@@ -62,7 +74,7 @@ Read the plan's Runtime Environment section (if present) and the changed file ty
 
 ### Step 3.1: Launch Code Review Agent (Early)
 
-**⛔ Check:** Run `echo $PILOT_SPEC_REVIEWER_ENABLED` before starting this step. If the output is `"false"`, skip this step entirely and proceed to Step 3.2. (Automated checks in Step 3.2 still run; only the agent-based review is skipped.)
+**⛔ If `PILOT_SPEC_REVIEWER_ENABLED` is `"false"` (from Step 0),** skip this step entirely and proceed to Step 3.2. (Automated checks in Step 3.2 still run; only the agent-based review is skipped.)
 
 **When enabled:** Launch the reviewer IMMEDIATELY — it works in the background while you run automated checks.
 
@@ -130,7 +142,7 @@ Skip unless the plan has a Feature Inventory section.
 
 ### Step 3.4: Collect Review Results
 
-**⛔ Check:** If `$PILOT_SPEC_REVIEWER_ENABLED` is `"false"` (Step 3.1 was skipped), skip this step entirely and proceed to Step 3.6 (Phase B). There are no findings to collect.
+**⛔ If `PILOT_SPEC_REVIEWER_ENABLED` is `"false"` (from Step 0 — Step 3.1 was skipped),** skip this step entirely and proceed to Step 3.6 (Phase B). There are no findings to collect.
 
 **When enabled — mandatory. Never skip** — even if you're confident, context is high, or tests pass.
 
@@ -165,7 +177,7 @@ For each fix: implement → run relevant tests → log "Fixed: [title]"
 
 ### Step 3.5: Re-verification (Only for Structural Fixes)
 
-**⛔ Check:** If `$PILOT_SPEC_REVIEWER_ENABLED` is `"false"` (Steps 3.1/3.4 were skipped), skip this step entirely and proceed to Phase B.
+**⛔ If `PILOT_SPEC_REVIEWER_ENABLED` is `"false"` (from Step 0 — Steps 3.1/3.4 were skipped),** skip this step entirely and proceed to Phase B.
 
 **When enabled:** **Skip** when fixes were localized (terminology, error handling, test updates, minor bugs). Run tests + lint to confirm, proceed to Phase B.
 

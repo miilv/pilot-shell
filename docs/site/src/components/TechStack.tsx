@@ -34,7 +34,7 @@ const TechStack = () => {
               <div
                 key={tech.name}
                 className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border/40 bg-card/20
-                  hover:border-primary/30 hover:bg-card/40 transition-all duration-200"
+                  hover:border-primary/30 hover:bg-card transition-all duration-200"
               >
                 <span className="text-sm font-medium text-foreground">{tech.name}</span>
                 <span className="text-[10px] text-muted-foreground">{tech.detail}</span>

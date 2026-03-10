@@ -76,6 +76,18 @@ When resuming same session (same `CLAUDE_CODE_TASK_LIST_ID`): run `TaskList` fir
 
 The env vars `$PILOT_PLAN_REVIEWER_ENABLED` and `$PILOT_SPEC_REVIEWER_ENABLED` control this at runtime (set by the Pilot wrapper from config.json). When unset (non-Pilot invocations), agents run as usual.
 
+### Spec Workflow Toggles
+
+Three toggles in **Console Settings → Spec Workflow** control user interaction points. All default to `true` (enabled). When all three are disabled, `/spec` runs end-to-end without any user interaction.
+
+| Toggle | Env Var | Default | When Disabled |
+|--------|---------|---------|---------------|
+| Worktree Support | `$PILOT_WORKTREE_ENABLED` | `true` | `/spec` never asks about worktree; always passes `--worktree=no` |
+| Ask Questions During Planning | `$PILOT_PLAN_QUESTIONS_ENABLED` | `true` | `spec-plan` and `spec-bugfix-plan` skip all `AskUserQuestion` calls; make autonomous default choices |
+| Plan Approval | `$PILOT_PLAN_APPROVAL_ENABLED` | `true` | Plan is auto-approved (`Approved: Yes`); implementation starts immediately |
+
+These env vars are set by the Pilot wrapper from `~/.pilot/config.json → specWorkflow`. When unset (non-Pilot invocations), all three default to enabled.
+
 **Rules:**
 - Launch with `run_in_background=true`
 - ⛔ NEVER use `TaskOutput` (wastes tokens) — agents write to JSON files, poll with bash file-existence loop then Read once
@@ -124,9 +136,9 @@ Call after creating plan header, reading existing plan, and after status changes
 
 ### ⛔ Dispatcher Integrity
 
-**The `/spec` dispatcher is a thin router.** Only permitted tool calls: `AskUserQuestion` and `Skill()`.
+**The `/spec` dispatcher is a thin router.** Only permitted tool calls: `Bash` (env var reads only), `Read` (plan files only), `AskUserQuestion`, and `Skill()`.
 
-**Any other tool use (Read except plan files, Bash, Grep, Glob, Task, etc.) is a workflow violation.** If the dispatcher does substantive work, no plan file is created and the spec workflow silently disappears.
+**Any other tool use (Grep, Glob, Task, Edit, Write, etc.) is a workflow violation.** If the dispatcher does substantive work, no plan file is created and the spec workflow silently disappears.
 
 ### Phase Dispatch
 
@@ -153,11 +165,13 @@ spec-verify (or spec-bugfix-verify) finds issues → Status: PENDING → spec-im
 
 ### ⛔ Only THREE User Interaction Points
 
-1. **Worktree Choice + Type Confirmation** (new plans only, in dispatcher — type only asked when ambiguous)
-2. **Plan Approval** (in spec-plan or spec-bugfix-plan)
+1. **Worktree Choice + Type Confirmation** (new plans only, in dispatcher — type only asked when ambiguous; skipped when `$PILOT_WORKTREE_ENABLED=false`)
+2. **Plan Approval** (in spec-plan or spec-bugfix-plan; skipped when `$PILOT_PLAN_APPROVAL_ENABLED=false`)
 3. **Worktree Sync Approval** (in spec-verify/spec-bugfix-verify, only when `Worktree: Yes`)
 
 Everything else is automatic. **NEVER ask "Should I fix these findings?"** — verification fixes are part of the approved plan.
+
+**Zero-interaction mode:** When `$PILOT_WORKTREE_ENABLED=false`, `$PILOT_PLAN_QUESTIONS_ENABLED=false`, and `$PILOT_PLAN_APPROVAL_ENABLED=false`, `/spec` runs completely autonomously from invocation to verified completion. Configure via Console Settings → Spec Workflow.
 
 **Stop Guard:** When the stop guard blocks a stop during `/spec`, do NOT acknowledge it, output resume instructions, or say goodbye. Your **very next action** must be a tool call (TaskList, Read plan file, or code change). Never produce a text-only response after a stop block — immediately resume the current task or invoke the next phase. This also applies after user interruptions ("Continue", new messages mid-task) — re-read the plan and resume from where you left off.
 
