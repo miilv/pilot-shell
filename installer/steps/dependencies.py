@@ -140,11 +140,12 @@ def install_probe() -> bool:
 def install_skillshare() -> bool:
     """Install Skillshare CLI binary and configure extras.
 
-    Only installs the binary and sets up extras config (non-destructive).
-    Does NOT run init, collect, sync, or backup — users should use the CLI
-    or the Console Share page for guidance on initialization.
+    Skillshare is normally installed via Homebrew in the prerequisites step.
+    This function only runs the curl fallback if brew wasn't available (e.g.
+    dev containers). It then configures extras (non-destructive).
     """
     if not command_exists("skillshare"):
+        # Fallback for environments without Homebrew (dev containers, minimal Linux)
         if not _run_bash_with_retry(
             "curl -fsSL https://raw.githubusercontent.com/runkids/skillshare/main/install.sh | sh",
             timeout=120,
@@ -197,25 +198,6 @@ def _configure_skillshare_extras() -> None:
     for name in ("rules", "commands", "agents"):
         (base / name).mkdir(parents=True, exist_ok=True)
 
-
-def update_skillshare() -> bool:
-    """Update Skillshare CLI if a newer version is available."""
-    if not command_exists("skillshare"):
-        return False
-
-    try:
-        result = subprocess.run(
-            ["skillshare", "upgrade", "--dry-run"],
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-        if "Already up to date" in result.stdout:
-            return True
-    except (subprocess.TimeoutExpired, FileNotFoundError):
-        pass
-
-    return _run_bash_with_retry("skillshare upgrade --force")
 
 
 def _is_vtsls_installed() -> bool:
@@ -727,7 +709,6 @@ class DependenciesStep(BaseStep):
 
         if _install_with_spinner(ui, "Skillshare (skill sharing)", install_skillshare):
             installed.append("skillshare")
-            _install_with_spinner(ui, "skillshare upgrade", update_skillshare)
 
         if _install_with_spinner(ui, "MCP server packages", _precache_npx_mcp_servers, ui):
             installed.append("mcp_npx_cache")

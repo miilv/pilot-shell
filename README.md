@@ -14,7 +14,7 @@ Start a task, grab a coffee, come back to production-grade code.</br>
 [![Downloads](https://img.shields.io/github/downloads/maxritter/pilot-shell/total?color=3B82F6)](https://github.com/maxritter/pilot-shell/releases)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-10B981.svg)](https://github.com/maxritter/pilot-shell/pulls)
 
-⭐ [Star this repo](https://github.com/maxritter/pilot-shell) · 🌐 [Website](https://pilot-shell.com) · 🔔 [Follow for updates](https://www.linkedin.com/in/rittermax/) · 📋 [Changelog](https://pilot.openchangelog.com/) · 📄 [License](LICENSE)
+⭐ [Star this repo](https://github.com/maxritter/pilot-shell) · 🌐 [Website](https://pilot-shell.com) · 📖 [Documentation](https://pilot-shell.com/docs) · 🆕 [Updates](https://www.linkedin.com/in/rittermax/) · 📋 [Changelog](https://pilot.openchangelog.com/)
 
 <br>
 
@@ -56,9 +56,7 @@ This isn't a vibe coding tool, it's true agentic engineering, but without the ad
 curl -fsSL https://raw.githubusercontent.com/maxritter/pilot-shell/main/install.sh | bash
 ```
 
-Installs directly on your system using Homebrew — works on macOS, Linux, and Windows (WSL2). Run from any directory; all tools and rules install globally to `~/.pilot/` and `~/.claude/`.
-
-After installation, `cd` into any project and run `pilot` or `ccp` to start Pilot Shell.
+Installs globally on macOS, Linux, and Windows (WSL2). All tools and rules go to `~/.pilot/` and `~/.claude/`. After installation, `cd` into any project and run `pilot` or `ccp` to start.
 
 <details>
 <summary><b>What the installer does</b></summary>
@@ -189,22 +187,24 @@ Manage sharing via the `skillshare` CLI and view all shared assets on the Consol
 
 ### Pilot Shell Console
 
-A local web dashboard with 7 views and real-time notifications when Claude needs your input:
+A local web dashboard with different views and real-time notifications when Claude needs your input:
 
 <img src="docs/img/dashboard.png" alt="Pilot Shell Console — Dashboard" width="700">
 
 <details>
 <summary><b>All views</b></summary>
 
-| View               | What it shows                                                                            |
-| ------------------ | ---------------------------------------------------------------------------------------- |
-| **Dashboard**      | Workspace status, active sessions, spec progress, git info, recent activity              |
-| **Specifications** | All spec plans with task progress, phase tracking, and iteration history                 |
-| **Memories**       | Browsable observations — decisions, discoveries, bugfixes — with type filters and search |
-| **Sessions**       | Active and past sessions with observation counts and duration                            |
-| **Usage**          | Daily token costs, model routing breakdown, and usage trends                             |
-| **Share**          | Skill sharing — view assets, source/sync status, CLI reference (read-only dashboard)     |
-| **Settings**       | Model selection per command/sub-agent, extended context toggle                           |
+| View              | What it shows                                                                            |
+| ----------------- | ---------------------------------------------------------------------------------------- |
+| **Dashboard**     | Workspace status, active sessions, spec progress, git info, recent activity              |
+| **Specification** | All spec plans with task progress, phase tracking, and iteration history                 |
+| **Changes**       | Git diff viewer with staged/unstaged files, branch info, and worktree context            |
+| **Memories**      | Browsable observations — decisions, discoveries, bugfixes — with type filters and search |
+| **Sessions**      | Active and past sessions with observation counts and duration                            |
+| **Share**         | Skill sharing — view assets, source/sync status, CLI reference                           |
+| **Usage**         | Daily token costs, model routing breakdown, and usage trends                             |
+| **Settings**      | Model selection per command/sub-agent, extended context toggle, spec workflow toggles     |
+| **Help**          | Documentation, guides, and quick-start resources                                         |
 
 </details>
 

@@ -161,9 +161,9 @@ show_macos_gatekeeper_warning() {
 confirm_local_install() {
 	echo ""
 	echo "  Local installation will:"
-	echo "    • Install Homebrew packages: python, node, nvm, pnpm, bun, uv, go, gopls, ripgrep, git, gh"
 	echo "    • Add 'pilot' and 'ccp' command to your favorite shell config (~/.bashrc, ~/.zshrc, fish)"
 	echo "    • Configure Claude Code to Pilot best-practices (~/.claude.json, ~/.claude/settings.json)"
+	echo "    • Install additional tool dependencies via Homebrew or NPM on your system"
 	echo ""
 	confirm=""
 	if [ -t 0 ]; then

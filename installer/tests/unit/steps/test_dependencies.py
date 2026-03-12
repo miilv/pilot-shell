@@ -32,7 +32,6 @@ class TestDependenciesStep:
             assert step.check(ctx) is False
 
     @patch("installer.steps.dependencies.install_skillshare", return_value=True)
-    @patch("installer.steps.dependencies.update_skillshare", return_value=True)
     @patch("installer.steps.dependencies._install_probe_with_ui", return_value=True)
     @patch("installer.steps.dependencies._install_playwright_cli_with_ui", return_value=True)
     @patch("installer.steps.dependencies.install_ccusage", return_value=True)
@@ -64,7 +63,6 @@ class TestDependenciesStep:
         _mock_playwright,
         _mock_probe_ui,
         _mock_skillshare,
-        _mock_update_skillshare,
     ):
         """DependenciesStep installs all dependencies including Python tools."""
         from installer.context import InstallContext
@@ -556,63 +554,6 @@ class TestConfigureSkillshareExtras:
         with patch("installer.steps.dependencies.Path.home", return_value=tmp_path):
             _configure_skillshare_extras()  # Should not raise
 
-
-class TestUpdateSkillshare:
-    """Tests for update_skillshare() — Skillshare upgrade."""
-
-    def test_update_skillshare_exists(self):
-        """update_skillshare function exists and is callable."""
-        from installer.steps.dependencies import update_skillshare
-
-        assert callable(update_skillshare)
-
-    @patch("installer.steps.dependencies.command_exists", return_value=False)
-    def test_update_skillshare_returns_false_when_not_installed(self, _mock_cmd):
-        """update_skillshare returns False when skillshare binary not found."""
-        from installer.steps.dependencies import update_skillshare
-
-        result = update_skillshare()
-
-        assert result is False
-
-    @patch("installer.steps.dependencies.subprocess")
-    @patch("installer.steps.dependencies._run_bash_with_retry", return_value=True)
-    @patch("installer.steps.dependencies.command_exists", return_value=True)
-    def test_update_skillshare_runs_upgrade_when_needed(self, _mock_cmd, mock_run, mock_subprocess):
-        """update_skillshare runs upgrade when dry-run shows update available."""
-        from installer.steps.dependencies import update_skillshare
-
-        # dry-run doesn't say "Already up to date" → upgrade needed
-        mock_subprocess.run.return_value.stdout = "Would upgrade to v0.17.0"
-        result = update_skillshare()
-
-        assert result is True
-        mock_run.assert_called_once_with("skillshare upgrade --force")
-
-    @patch("installer.steps.dependencies.subprocess")
-    @patch("installer.steps.dependencies._run_bash_with_retry")
-    @patch("installer.steps.dependencies.command_exists", return_value=True)
-    def test_update_skillshare_skips_when_up_to_date(self, _mock_cmd, mock_run, mock_subprocess):
-        """update_skillshare skips upgrade when already up to date."""
-        from installer.steps.dependencies import update_skillshare
-
-        mock_subprocess.run.return_value.stdout = "Already up to date"
-        result = update_skillshare()
-
-        assert result is True
-        mock_run.assert_not_called()
-
-    @patch("installer.steps.dependencies.subprocess")
-    @patch("installer.steps.dependencies._run_bash_with_retry", return_value=False)
-    @patch("installer.steps.dependencies.command_exists", return_value=True)
-    def test_update_skillshare_returns_false_on_upgrade_failure(self, _mock_cmd, mock_run, mock_subprocess):
-        """update_skillshare returns False when upgrade command fails."""
-        from installer.steps.dependencies import update_skillshare
-
-        mock_subprocess.run.return_value.stdout = "Would upgrade"
-        result = update_skillshare()
-
-        assert result is False
 
 
 class TestInstallNodejsPathUpdate:
